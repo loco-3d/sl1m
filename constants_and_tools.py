@@ -264,8 +264,10 @@ def default_transform_from_pos_normal(pos, normal):
     return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
 
 import os
-insdir = os.environ['DEVEL_HPP_DIR'] + '/install/share/'
-
+if "INSTALL_HPP_DIR" in os.environ:
+    insdir = os.environ['INSTALL_HPP_DIR'] + '/share/'
+else if "DEVEL_HPP_DIR" in os.environ:
+    insdir = os.environ['DEVEL_HPP_DIR'] + '/install/share/'
 
 # load hrp2 constraints
 
