@@ -266,7 +266,7 @@ def default_transform_from_pos_normal(pos, normal):
 import os
 if "INSTALL_HPP_DIR" in os.environ:
     insdir = os.environ['INSTALL_HPP_DIR'] + '/share/'
-else if "DEVEL_HPP_DIR" in os.environ:
+elif "DEVEL_HPP_DIR" in os.environ:
     insdir = os.environ['DEVEL_HPP_DIR'] + '/install/share/'
 
 # load hrp2 constraints
