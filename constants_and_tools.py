@@ -1,5 +1,4 @@
 import numpy as np
-from hpp.corbaserver.rbprm.hrp2 import Robot as rob
 from hpp.corbaserver.rbprm.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities, inequalities_to_Inequalities_object
 from hpp_centroidal_dynamics import *
 from hpp_spline import *
