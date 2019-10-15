@@ -77,7 +77,7 @@ def getContactsFromConfig(q, limbs = [Robot.rLegId, Robot.lLegId]):
 #~ s = getContactsFromConfig ( q = fullBody.getCurrentConfig())
 
 
-from mpcroc.planner_scenarios.stairs_10cm import *
+from sl1m.planner_scenarios.stairs_10cm import *
 
 pb, coms, footpos, allfeetpos, res = solve() 
 

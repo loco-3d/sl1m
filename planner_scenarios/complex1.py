@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
@@ -11,10 +11,10 @@ from numpy.linalg import norm
 #~ from hpp_bezier_com_traj import *
 #~ from qp import solve_lp
 
-from mpcroc.planner import *
+from sl1m.planner import *
 
 
-from mpcroc.plot_plytopes import *
+from sl1m.plot_plytopes import *
 
 floor2  = [[-3., 0.4  , 0.  ], [-2.7 ,  0.4, 0. ], [-2.7 , 0.1, 0.  ], [-03., 0.1, 0.  ], ]
 floor  = [[-0.23, 0.54  , 0.  ], [-0.1 ,  0.54, 0. ], [-0.1 , -0.46, 0.  ], [-0.23, -0.46, 0.  ], ]
@@ -143,7 +143,7 @@ def min_dist(size):
 
 
 def solveL1():    
-    from mpcroc.planner_l1 import *
+    from sl1m.planner_l1 import *
     #~ draw_rectangle(l,ax)
     #~ plt.show()
     
@@ -204,7 +204,7 @@ def solveL1():
         for i, idx in enumerate(solutionIndices):
             pb["phaseData"][idx]["S"] = [surfaces[i][solutionComb[i]]]
             
-        from mpcroc.planner import *
+        from sl1m.planner import *
             
         t1 = clock()
         A, b, E, e = convertProblemToLp(pb)

@@ -8,7 +8,7 @@ from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
 from numpy.linalg import norm
 
-import mpcroc.planner_scenarios.talos.complex1 as lp
+import sl1m.planner_scenarios.talos.complex1 as lp
 tp = lp.tp
 pb, coms, footpos, allfeetpos, res = lp.solve() 
 

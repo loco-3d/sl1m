@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
@@ -20,7 +20,7 @@ import qp
 NUM_COM_PER_PHASES = 1
 
 ############### Problem definition #############
-from mpcroc.problem_definition import *
+from sl1m.problem_definition import *
 
 def getTotalNumVariablesAndIneqConstraints(pb):
     cols    = sum([phase["S"][0].shape[1] + NUM_COM_PER_PHASES for  phase in pb["phaseData"] ])
@@ -397,7 +397,7 @@ def timMs(t1, t2):
 ####################### MAIN ###################"
 
 if __name__ == '__main__':
-    from mpcroc.planner_scenarios.flat_ground import genFlatGroundProblem
+    from sl1m.planner_scenarios.flat_ground import genFlatGroundProblem
     pb = genFlatGroundProblem([0.,0.05,0.],[0.,-0.05,0.], 10)
     
     t1 = clock()

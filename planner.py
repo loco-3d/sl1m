@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
@@ -18,7 +18,7 @@ import qp
 
 
 ############### Problem definition #############
-from mpcroc.problem_definition import *
+from sl1m.problem_definition import *
 
 #~ NUM VARIABLES
 
@@ -263,7 +263,7 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
 ####################### MAIN ###################"
 
 if __name__ == '__main__':
-    from mpcroc.planner_scenarios.flat_ground import genFlatGroundProblem
+    from sl1m.planner_scenarios.flat_ground import genFlatGroundProblem
     pb = genFlatGroundProblem([0.,0.05,0.],[0.,-0.05,0.], 10)
     
     t1 = clock()

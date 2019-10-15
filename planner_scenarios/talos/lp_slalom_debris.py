@@ -9,7 +9,7 @@ from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, 
 from numpy.linalg import norm
 import random
 from math import isnan
-import mpcroc.planner_scenarios.talos.slalom_debris as lp
+import sl1m.planner_scenarios.talos.slalom_debris as lp
 tp = lp.tp
 pb, coms, footpos, allfeetpos, res = lp.solve() 
 

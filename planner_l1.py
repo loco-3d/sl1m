@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
@@ -20,7 +20,7 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 
 ############### Problem definition #############
 
-from mpcroc.problem_definition import *
+from sl1m.problem_definition import *
     
 
         
@@ -522,11 +522,11 @@ def min_dist(size):
     return C, c
 
 if __name__ == '__main__':
-    #~ from mpcroc.planner_scenarios.flat_ground import genFlatGroundProblem,  draw_scene
+    #~ from sl1m.planner_scenarios.flat_ground import genFlatGroundProblem,  draw_scene
     #~ pb = genFlatGroundProblem([0.,0.05,0.],[0.,-0.05,0.], 10)
-    from mpcroc.planner_scenarios.complex import gen_stair_pb,  draw_scene
+    from sl1m.planner_scenarios.complex import gen_stair_pb,  draw_scene
     pb = gen_stair_pb()
-    #~ from mpcroc.planner_scenarios.escaliers import gen_stair_pb,  draw_scene
+    #~ from sl1m.planner_scenarios.escaliers import gen_stair_pb,  draw_scene
     #~ pb = gen_stair_pb()
     
     

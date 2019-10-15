@@ -1,11 +1,11 @@
 
 from numpy import arange
-from mpcroc.test import contactSurfaces,getCollidingAffIndex,removeDuplicates
+from sl1m.test import contactSurfaces,getCollidingAffIndex,removeDuplicates
 from tools.display_tools import displaySurfaceFromPoints
 from pinocchio import XYZQUATToSe3
 import numpy as np
 from numpy import array
-from mpcroc.problem_definition import LF
+from sl1m.problem_definition import LF
 
 MAX_SURFACE = 0.3 # if a contact surface is greater than this value, the intersection is used instead of the whole surface
 

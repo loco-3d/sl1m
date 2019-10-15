@@ -96,7 +96,7 @@ discretisationStep = 0.8
 configs = []
 
 from numpy import arange
-from mpcroc.test import *
+from sl1m.test import *
 from tools.display_tools import displaySurfaceFromPoints
 
 # get configuration along the path

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
@@ -11,7 +11,7 @@ from numpy.linalg import norm
 #~ from hpp_bezier_com_traj import *
 #~ from qp import solve_lp
 
-from mpcroc.planner import *
+from sl1m.planner import *
 
 
 from plot_plytopes import *
@@ -82,7 +82,7 @@ def draw_scene(ax = None, color = "p"):
 
 if __name__ == '__main__':
     
-    from mpcroc.fix_sparsity import solveL1
+    from sl1m.fix_sparsity import solveL1
     
     pb = gen_stair_pb()
     

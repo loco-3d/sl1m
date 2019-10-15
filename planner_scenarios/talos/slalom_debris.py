@@ -2,9 +2,9 @@ import numpy as np
 print "Plan guide trajectory ..."
 import lp_slalom_debris_path as tp
 print "Guide planned."
-from mpcroc.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
+from sl1m.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
 
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
@@ -14,10 +14,10 @@ import random
 #~ from hpp_bezier_com_traj import *
 #~ from qp import solve_lp
 
-from mpcroc.planner import *
+from sl1m.planner import *
 Z_AXIS = np.array([0,0,1]).T
 """
-from mpcroc.plot_plytopes import *
+from sl1m.plot_plytopes import *
 rubB1 =   [[-0.5079353885643417, 1.282387089736744, 0.0021999916093061456],  [-0.5079353885643416, 1.2444260597154655, 0.0021999916093061456],  [-0.4555532842024058, 1.244426054175804, 0.016235816474940087],  [-0.4555533048779398, 1.2823870841970821, 0.016235812378438574]]
 rubB2 =   [[-0.49591913077286087, 1.1089893205877919, 0.004305334067727976],  [-0.4959192866539029, 1.0723211830469714, 0.014130502161835578],  [-0.4416887364162, 1.0723216355962044, 0.014130432868663537],  [-0.4416885369888308, 1.1089893095084922, 0.004305337036416214]]
 rubB3 =   [[-0.48205335101433644, 0.8487340468277829, 0.016235827387680896],  [-0.42967124312103594, 0.8487340681209311, 0.00219999743865322],  [-0.4296712416379183, 0.8866951153800525, 0.002199995597725976],  [-0.4820533288556889, 0.886695094086905, 0.016235821450252305]]
@@ -147,7 +147,7 @@ def draw_scene(surfaces,ax = None):
     
 ############# main ###################    
 def solve():
-    from mpcroc.fix_sparsity import solveL1
+    from sl1m.fix_sparsity import solveL1
     success = False
     maxIt = 50
     it = 0
@@ -170,7 +170,7 @@ def solve():
     return pb, coms, footpos, allfeetpos, res
 
 if __name__ == '__main__':
-    from mpcroc.fix_sparsity import solveL1
+    from sl1m.fix_sparsity import solveL1
 
     R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.,True,False)
     

@@ -1,7 +1,7 @@
 import numpy as np
 
 import lp_complex1_path as tp
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
@@ -11,10 +11,10 @@ from numpy.linalg import norm
 #~ from hpp_bezier_com_traj import *
 #~ from qp import solve_lp
 
-from mpcroc.planner import *
+from sl1m.planner import *
 
 
-from mpcroc.plot_plytopes import *
+from sl1m.plot_plytopes import *
 
 floor  = [[-0.30, 0.54  , 0.  ], [-0.1 ,  0.54, 0. ], [-0.1 , -0.46, 0.  ], [-0.30, -0.46, 0.  ], ]
 step1  = [[ 0.01, 0.54  , 0.1 ], [0.31 ,  0.54, 0.1], [0.31 , -0.46, 0.1 ], [ 0.01, -0.46, 0.1 ], ]
@@ -162,7 +162,7 @@ def min_dist(size):
 
 
 def solveL1():    
-    from mpcroc.planner_l1 import *
+    from sl1m.planner_l1 import *
     #~ draw_rectangle(l,ax)
     #~ plt.show()
     
@@ -189,7 +189,7 @@ def solveL1():
         #phase["S"] = [surfaces[i][indices[i]]]
         phase["S"] = [seqs[i][indices[i]]]
         
-    from mpcroc.planner import *
+    from sl1m.planner import *
         
     t1 = clock()
     A, b, E, e = convertProblemToLp(pb)
@@ -225,7 +225,7 @@ def solve(R, seqs, surfaces, plot = False):
     with open('problem_gen_8.txt', 'wb') as f:
         pickle.dump(pb, f)
         
-    from mpcroc.planner_l1 import *
+    from sl1m.planner_l1 import *
     t1 = clock()
     A, b, E, e = convertProblemToLp(pb)
     
@@ -281,7 +281,7 @@ def solve(R, seqs, surfaces, plot = False):
         for i, idx in enumerate(solutionIndices):
             pb["phaseData"][idx]["S"] = [seqs[i][solutionComb[i]]]
             
-        from mpcroc.planner import *
+        from sl1m.planner import *
             
         t1 = clock()
         A, b, E, e = convertProblemToLp(pb)
@@ -317,7 +317,7 @@ def solve(R, seqs, surfaces, plot = False):
 
 if __name__ == '__main__':
     
-    from mpcroc.fix_sparsity import solveL1
+    from sl1m.fix_sparsity import solveL1
     
     pb = gen_pb(tp.R, tp.seqs)
     

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from mpcroc.constants_and_tools import *
+from sl1m.constants_and_tools import *
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
 from numpy.linalg import norm
@@ -15,8 +15,8 @@ from numpy import squeeze, asarray
 import qp
 
 
-from mpcroc import planner_l1 as pl1
-from mpcroc import planner    as pl
+from sl1m import planner_l1 as pl1
+from sl1m import planner    as pl
 
 
 import mpl_toolkits.mplot3d as a3

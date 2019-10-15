@@ -8,7 +8,7 @@ from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
 from numpy.linalg import norm
 
-import mpcroc.planner_scenarios.talos.complex1 as lp
+import sl1m.planner_scenarios.talos.complex1 as lp
 tp = lp.tp
 pb, coms, footpos, allfeetpos, res = lp.solve(tp.R, tp.seqs, tp.surfaces, plot = True) 
 
@@ -64,7 +64,7 @@ fullBody.resetJointsBounds()
 from hpp.corbaserver.rbprm.rbprmstate import State,StateHelper
 
 
-from mpcroc.planner_scenarios.talos.complex1 import *
+from sl1m.planner_scenarios.talos.complex1 import *
 pb, coms, footpos, allfeetpos, res = solve(plot = False) 
 
 def computeCenterOfSupportPolygon(s):

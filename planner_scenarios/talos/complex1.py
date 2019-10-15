@@ -3,18 +3,18 @@ print "Plan guide trajectory ..."
 import lp_complex1_path as tp
 #import lp_ramp_path as tp
 print "Guide planned."
-from mpcroc.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
-from mpcroc.constants_and_tools import *
+from sl1m.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
+from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
 from numpy.linalg import norm
 
 
-from mpcroc.planner import *
+from sl1m.planner import *
 
 
-from mpcroc.plot_plytopes import *
+from sl1m.plot_plytopes import *
 
 Z_AXIS = np.array([0,0,1]).T
 
@@ -156,7 +156,7 @@ def draw_scene(surfaces,ax = None):
     
 ############# main ###################    
 def solve():
-    from mpcroc.fix_sparsity import solveL1
+    from sl1m.fix_sparsity import solveL1
     R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.,True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
@@ -164,7 +164,7 @@ def solve():
     return solveL1(pb, surfaces, draw_scene)
 
 if __name__ == '__main__':
-    from mpcroc.fix_sparsity import solveL1
+    from sl1m.fix_sparsity import solveL1
 
     R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.,True)
 
