@@ -1,14 +1,14 @@
 import numpy as np
 from hpp.corbaserver.rbprm.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities, inequalities_to_Inequalities_object
-from hpp_centroidal_dynamics import *
-from hpp_spline import *
+#~ from hpp_centroidal_dynamics import *
+#~ from curves import *
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
 from numpy.linalg import norm
 import numpy as np
 
 from scipy.spatial import ConvexHull
-from hpp_bezier_com_traj import *
+#~ from hpp_bezier_com_traj import *
 from qp import solve_lp
 
 import eigenpy
@@ -19,7 +19,7 @@ from random import randint as rdi
 from numpy import squeeze, asarray
 
 
-Id = matrix([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
+Id = array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
 g = array([0.,0.,-9.81])
 g6 = array([0.,0.,-9.81,0.,0.,0.])
 
@@ -117,38 +117,27 @@ def canon(A,b):
     matcdd = cdd.Matrix(m); matcdd.rep_type = 1
     H = cdd.Polyhedron(matcdd)
     bmA = H.get_inequalities()
-    #~ bmA.canonicalize()
     Ares = zeros((bmA.row_size,bmA.col_size-1))
     bres = zeros((bmA.row_size,1 ))
     for i in range(bmA.row_size):
-        #~ print "line ", array(bmA[i])
-        #~ print "A ", A[i][:]
-        #~ print "b ", b[i]
         l = array(bmA[i])
         Ares[i,:] = -l[1:]
         bres[i]   =  l[0]
-        #~ print "Ares ",Ares[i,:]
-        #~ print "bres ",bres[i]
     return Ares, bres
-
-
 
 def getCrocStateForward(c0, dc0, ddc0, x):
     c0a = array(c0.T.tolist()[0])
     dc0a = array(dc0.T.tolist()[0])
     ddc0a = array(ddc0.T.tolist()[0])
-    #~ end_vel = (x - ddc0a) * 3. / 1.
     end_vel = (x - dc0a) * 3. / 1.
     end_acc = (-2.*dc0a  + x + ddc0a) * 3. * 2. / 1.
     return (matrix(x).T, matrix(end_vel).T, matrix(end_acc).T)
-    #~ return (x, end_vel, end_acc)
     
 def getCrocBackward(x, ddc1, dc1, c1, T):
     n = 3
     start_vel = n / T * (ddc1 - x)
     start_acc = n * (n-1) / (T*T) * (dc1 - 2* ddc1 + x)
     return (x,start_vel,start_acc)
-    #~ return (x, end_vel, end_acc)
 
 def genPolytope(A,b):
     pts, H = generators(A,b)
@@ -178,21 +167,8 @@ def convex_hull_ineq(pts):
     
     resA = vstack([A, K])
     resb = concatenate([b, k]).reshape((-1,1))
-    
-    #DEBUG
-    allpts = generators(resA,resb)[0]
-    error = False
-    for pt in allpts:
-        print "pt ", pt
-        assert (resA.dot(pt.reshape((-1,1))) - resb).max() <0.001, "antecedent point not in End polytope"  + str((resA.dot(pt.reshape((-1,1))) - resb).max())
-        if (H.dot(w(m,pt).reshape((-1,1))) - h).max() > 0.001:
-            error = True
-            print "antecedent point not in End polytope"  + str((H.dot(w(m,pt).reshape((-1,1))) - h).max())
-    assert not error, str (len(allpts))
-    
+        
     return (resA, resb)
-    #~ return (A, b)
-    #~ return (vstack([A, K]), None)
 
 def vectorProjection (v, n):    
     v = v / norm(v)
@@ -244,8 +220,6 @@ def default_transform_from_pos_normal_(transform, pos, normal):
     
 
 def default_transform_from_pos_normal(pos, normal):
-    #~ print "pos ", pos
-    #~ print "normal ", normal
     f = array([0.,0.,1.])
     t = array(normal)
     t = t / norm(t)
@@ -281,70 +255,25 @@ __ineq_left_foot_hrp2_reduced  = None
 def right_foot_hrp2_constraints(transform):
     global __ineq_right_foot_hrp2
     if __ineq_right_foot_hrp2 is None:
-        #~ filekin = rob.rLegKinematicConstraints.replace("package://", insdir)
         filekin = insdir +"hrp2-rbprm/com_inequalities/feet_quasi_flat/hrp2_COM_constraints_in_RF_effector_frame_REDUCED.obj"
-        #~ filekin = insdir +"hrp2-rbprm/com_inequalities/feet_quasi_flat/hrp2_COM_constraints_in_RF_effector_frame.obj"            
-        #~ filekin = filekin.replace(".obj", "_reduced.obj")
         obj = load_obj(filekin)
         __ineq_right_foot_hrp2 = as_inequalities(obj)
     transform2 = transform.copy()
     transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.01
-    #~ transform2[2,3] += 0.105
     ine = rotate_inequalities(__ineq_right_foot_hrp2, transform2)
     return (ine.A, ine.b)
-    
-def right_foot_hrp2_constraints_reduced(transform):
-    global __ineq_right_foot_hrp2_reduced
-    if __ineq_right_foot_hrp2_reduced is None:
-        #~ filekin = rob.rLegKinematicConstraints.replace("package://", insdir)
-        filekin = insdir +"hrp2-rbprm/com_inequalities/feet_quasi_flat/hrp2_COM_constraints_in_RF_effector_frame_REDUCED.obj"
-        obj = load_obj(filekin)
-        right_foot_hrp2_constraints_reduced = as_inequalities(obj)
-    transform2 = transform.copy()
-    transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.01
-    #~ transform2[2,3] += 0.105
-    ine = rotate_inequalities(__ineq_right_foot_hrp2_reduced, transform2)
-    return (ine.A, ine.b)
-        
+            
 def left_foot_hrp2_constraints(transform):
     global __ineq_left_foot_hrp2
     if __ineq_left_foot_hrp2 is None:
-        #~ filekin = rob.lLegKinematicConstraints.replace("package://", insdir)
         filekin = insdir +"hrp2-rbprm/com_inequalities/feet_quasi_flat/hrp2_COM_constraints_in_LF_effector_frame_REDUCED.obj"
-        #~ filekin = insdir +"hrp2-rbprm/com_inequalities/feet_quasi_flat/hrp2_COM_constraints_in_LF_effector_frame.obj"
-        #~ filekin = filekin.replace(".obj", "_reduced.obj")
         obj = load_obj(filekin)
         __ineq_left_foot_hrp2 = as_inequalities(obj)
     transform2 = transform.copy()
     transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.01
-    #~ transform2[2,3] += 0.105
     ine = rotate_inequalities(__ineq_left_foot_hrp2, transform2)
     return (ine.A, ine.b)
     
-def left_foot_hrp2_constraints_reduced(transform):
-    global __ineq_left_foot_hrp2_reduced
-    if __ineq_left_foot_hrp2_reduced is None:
-        filekin = insdir +"hrp2-rbprm/com_inequalities/feet_quasi_flat/hrp2_COM_constraints_in_LF_effector_frame_REDUCED.obj"
-        obj = load_obj(filekin)
-        __ineq_left_foot_hrp2_reduced = as_inequalities(obj)
-    transform2 = transform.copy()
-    transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.105
-    #~ transform2[2,3] += 0.01
-    #~ transform2[2,3] += 0.105
-    ine = rotate_inequalities(__ineq_left_foot_hrp2_reduced, transform2)
-    return (ine.A, ine.b)
-
 def right_foot_talos_constraints(transform):
     global __ineq_right_foot_hrp2
     if __ineq_right_foot_hrp2 is None:
@@ -371,23 +300,20 @@ __ineq_lf_in_rf_hrp2  = None
 def right_foot_in_lf_frame_hrp2_constraints(transform):
     global __ineq_rf_in_rl_hrp2
     if __ineq_rf_in_rl_hrp2 is None:
-        filekin = insdir +"hrp2-rbprm/relative_effector_positions/hrp2_LF_constraints_in_RF_quasi_flat_REDUCED.obj"
-        #~ filekin = filekin.replace(".obj", "_reduced.obj")
+        filekin = insdir +"hrp2-rbprm/relative_effector_positions/hrp2_RF_constraints_in_LF_quasi_flat_REDUCED.obj"
         obj = load_obj(filekin)
         __ineq_rf_in_rl_hrp2 = as_inequalities(obj)
     transform2 = transform.copy()
-    #~ transform2[2,3] += 0.105
     ine = rotate_inequalities(__ineq_rf_in_rl_hrp2, transform2)
     return (ine.A, ine.b)
         
 def left_foot_in_rf_frame_hrp2_constraints(transform):
     global __ineq_lf_in_rf_hrp2
     if __ineq_lf_in_rf_hrp2 is None:
-        filekin = insdir +"hrp2-rbprm/relative_effector_positions/hrp2_RF_constraints_in_LF_quasi_flat_REDUCED.obj"
+        filekin = insdir +"hrp2-rbprm/relative_effector_positions/hrp2_LF_constraints_in_RF_quasi_flat_REDUCED.obj"
         obj = load_obj(filekin)
         __ineq_lf_in_rf_hrp2 = as_inequalities(obj)
     transform2 = transform.copy()
-    #~ transform2[2,3] += 0.105
     ine = rotate_inequalities(__ineq_lf_in_rf_hrp2, transform2)
     return (ine.A, ine.b)
     
@@ -410,10 +336,7 @@ def left_foot_in_rf_frame_talos_constraints(transform):
         __ineq_lf_in_rf_hrp2 = as_inequalities(obj)
     ine = rotate_inequalities(__ineq_lf_in_rf_hrp2, transform.copy())
     return (ine.A, ine.b)
-    
-    
-#~ def projectAlongAxis(S, n):
-    
+        
     
 #last is equality
 def surfacePointsToIneq(S, normal):
@@ -453,7 +376,6 @@ if __name__ == '__main__':
         a = [el / total for el in a]
         weighted = [array(S_flat[i]) * a[i] for i in range(l)]
         pt = sum(weighted)
-        #~ if (A[:-2,:].dot(pt) - b[:-2]).max() > 0.:
         if (A.dot(pt) - b).max() > 0.00001:
             print "fail", (A.dot(pt) - b).max(), " pt ", pt
             break

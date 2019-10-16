@@ -346,7 +346,6 @@ def genCombinatorialRec(pb, indices, wrongsurfaces, res):
         pb1 = copy.deepcopy(pb)
         for i, idx in enumerate(indices):
             pb1["phaseData"][idx]["S"] = wrongsurfaces[i][comb[i]]
-            #~ print "added surface ", wrongsurfaces[comb[i]]
         res += [[pb1, comb, indices]]
         
     
@@ -367,7 +366,6 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
     
     
 def bestSelectedSurfaces(pb, res):
-    #~ print "wrongsurfaces ",  wrongsurfaces
     surfaces = []
     indices  = []
     cIdx = 0
@@ -383,10 +381,7 @@ def bestSelectedSurfaces(pb, res):
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
             assert betas >= -0.00000001
             bestIdx = betas.index(array(betas).min())
-            bestIdx = betas.index(array(betas).min())
             surfaces = surfaces + [phase["S"][bestIdx]]
-            
-            #~ print "adding surfaces", phase["S"][bestIdx].shape
             
             indices = indices + [bestIdx]
         cIdx += phaseVars
@@ -404,7 +399,6 @@ def retrieve_points_from_res(pb, res):
         coms = [pb["c0"]]
         
     if pb["p0"] is not None:
-    #~ if False:
         footPos = [[pb["p0"][LF]],[pb["p0"][RF]]]
         allFeetPos = [footPos[0][0], footPos[1][0]]
     else:
@@ -443,7 +437,6 @@ from plot_plytopes import plot_polytope_H_rep
    
 def plotConstraints(ax, pb, allfeetpos, coms):
     for i, phase in enumerate(pb["phaseData"][:]):
-        #~ if i == 0:
         if i <1 :
             continue
         fixed =   phase["fixed"]  
@@ -474,7 +467,6 @@ def plotConstraints(ax, pb, allfeetpos, coms):
                 #~ plot_polytope_H_rep(K,k.reshape((-1,1)), ax = ax)
             except: 
                 print "qhullfailed"
-        #~ oldpos = pos
     
         
 def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True):

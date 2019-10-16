@@ -69,7 +69,9 @@ def tovals(variables):
 def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):    
     import gurobipy
     import cvxpy as cp
-    print "hello"
+    import time
+    gurobipy.setParam('LogFile', '')
+    gurobipy.setParam('OutputFlag', 0)
        
     A, b, E, e = pl1.convertProblemToLp(pb)   
     slackMatrix = pl1.slackSelectionMatrix(pb)
@@ -83,7 +85,6 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     constraints = [constraintNormalIneq, constraintNormalEq]
     #creating boolean vars
     
-    
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
     numSlackVariables = len([el for el in slackMatrix if el > 0])
     boolvars = cp.Variable(numSlackVariables, boolean=True)    
@@ -95,7 +96,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
         currentSum = []
         previousL = 0
         for i, el in enumerate(slackIndices):
-            if i!= 0 and el- previousL > 2.:
+            if i!= 0 and el - previousL > 2.:
                 assert len(currentSum) > 0
                 constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
                 currentSum = []
@@ -105,20 +106,19 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
             obj = cp.Minimize(ones(numSlackVariables) * boolvars)
     prob = cp.Problem(obj, constraints)
     t1 = clock()
-    res = prob.solve(solver=cp.GUROBI, verbose=True )
+    res = prob.solve(solver=cp.GUROBI, verbose=False )
     t2 = clock()
     res = tovals(varReal)
-    
     print "time to solve MIP ", timMs(t1,t2)
+
     
-    #~ coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pb, res)
+    plot = plot and draw_scene is not None 
+    if plot:
+        ax = draw_scene(surfaces)
+        pl1.plotQPRes(pb, res, ax=ax, plot_constraints = False)
     
-    #~ plot = plot and draw_scene is not None 
-    #~ if plot:
-        #~ ax = draw_scene()
-        #~ pl1.plotQPRes(pb, res, ax=ax, plot_constraints = False)
-    
-    #~ return pb, coms, footpos, allfeetpos, res
+    return timMs(t1,t2)
+        
 
 def solveL1(pb, surfaces, draw_scene = None, plot = True):     
     A, b, E, e = pl1.convertProblemToLp(pb)    
@@ -127,10 +127,10 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
         
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
     
-    plot = plot and draw_scene is not None 
-    if plot:
-        ax = draw_scene(surfaces)
-        pl1.plotQPRes(pb, res, ax=ax, plot_constraints = False)
+    #~ plot = plot and draw_scene is not None 
+    #~ if plot:
+        #~ ax = draw_scene(surfaces)
+        #~ pl1.plotQPRes(pb, res, ax=ax, plot_constraints = False)
     
     
     ok = pl1.isSparsityFixed(pb, res)
@@ -138,12 +138,8 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     solutionComb = None
     if not ok:
         pbs = pl1.generateAllFixedScenariosWithFixedSparsity(pb, res)
-        #~ pbs.reverse()
         
         t3 = clock()
-        
-        
-        #print "time to solve relaxed init ", timMs(t1,t2)
         
         for (pbComb, comb, indices) in pbs:
             A, b, E, e = pl1.convertProblemToLp(pbComb, convertSurfaces = False)
@@ -151,13 +147,11 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
             c = pl1.slackSelectionMatrix(pbComb)
             try:
                 res = qp.quadprog_solve_qp(C, c,A,b,E,e)
-                if pl1.isSparsityFixed(pbComb, res):
-                    print "solved sparsity"                    
+                if pl1.isSparsityFixed(pbComb, res):       
                     coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pbComb, res)
                     pb = pbComb
                     ok = True
                     solutionIndices = indices[:]
-                    #~ print "indices ", solutionIndices   
                     solutionComb = comb
                     if plot:
                         ax = draw_scene(surfaces)
@@ -170,15 +164,13 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
         t4 = clock()      
         
         print "time to solve combinatorial ", timMs(t3,t4)
-        #print "total time to solve relaxed ", timMs(t3,t4) + timMs(t1,t2)
     
     if ok:
         surfacesret, indices = pl1.bestSelectedSurfaces(pb, res)        
         for i, phase in enumerate(pb["phaseData"]): 
             phase["S"] = [surfaces[i][indices[i]]]
         if solutionIndices is not None:
-            #print "surfaces = ",surfaces
             for i, idx in enumerate(solutionIndices):
                 pb["phaseData"][idx]["S"] = [surfaces[idx][solutionComb[i]]]
         
-        return solve(pb,surfaces, draw_scene = draw_scene, plot = plot )  
+        return solve(pb,surfaces, draw_scene = draw_scene, plot = True )  
