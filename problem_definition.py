@@ -27,7 +27,7 @@ def normalize(Ab):
 
 
 # added: align foot orientation with the root orientation
-def genKinematicConstraints(index = 0, rotation = [Id,Id], normals = [z, z], min_height = None):   #assume that root transform is given in 3x3 rotation matrix
+def genKinematicConstraints(lf_constraints_fun, rf_constraints_fun, index = 0, rotation = [Id,Id], normals = [z, z], min_height = None):   #assume that root transform is given in 3x3 rotation matrix
     res = [None, None]
     if index == 0 :
         trLF = default_transform_from_pos_normal_(rotation[index], zero3, normals[LF])
@@ -42,8 +42,10 @@ def genKinematicConstraints(index = 0, rotation = [Id,Id], normals = [z, z], min
 
     #~ KLF = left_foot_talos_constraints  (trLF)
     #~ KRF = right_foot_talos_constraints (trRF)
-    KLF = left_foot_hrp2_constraints (trLF)
-    KRF = right_foot_hrp2_constraints  (trRF)
+    #~ KLF = left_foot_hrp2_constraints (trLF)
+    #~ KRF = right_foot_hrp2_constraints  (trRF)
+    KLF = lf_constraints_fun (trLF)
+    KRF = rf_constraints_fun  (trRF)
     if min_height is None:
         res [LF] = KLF
         res [RF] = KRF
@@ -53,7 +55,7 @@ def genKinematicConstraints(index = 0, rotation = [Id,Id], normals = [z, z], min
     return res
      
 # added: align foot orientation with the root orientation
-def genFootRelativeConstraints(index = 0, rotation = [Id,Id], normals = [z, z]): #assume that root transform is given in 3x3 rotation matrix
+def genFootRelativeConstraints(rf_in_lf_frame_constraints_fun,  lf_in_rf_frame_constraints_fun, index = 0, rotation = [Id,Id], normals = [z, z]): #assume that root transform is given in 3x3 rotation matrix
     res = [None, None]
     if index == 0 :
         trLF = default_transform_from_pos_normal_(rotation[index], zero3, normals[LF])
@@ -64,11 +66,14 @@ def genFootRelativeConstraints(index = 0, rotation = [Id,Id], normals = [z, z]):
     elif index % 2 == RF : # right foot is moving
         trLF = default_transform_from_pos_normal_(rotation[index-1], zero3, normals[LF])
         trRF = default_transform_from_pos_normal_(transform[index], zero3, normals[RF])
-    KRF = right_foot_in_lf_frame_talos_constraints  (trLF)
-    KLF = left_foot_in_rf_frame_talos_constraints (trRF)   
+    #~ KRF = right_foot_in_lf_frame_talos_constraints  (trLF)
+    #~ KLF = left_foot_in_rf_frame_talos_constraints (trRF)   
     
-    KRF = right_foot_in_lf_frame_hrp2_constraints  (trLF)
-    KLF = left_foot_in_rf_frame_hrp2_constraints (trRF)     
+    #~ KRF = right_foot_in_lf_frame_hrp2_constraints  (trLF)
+    #~ KLF = left_foot_in_rf_frame_hrp2_constraints (trRF)    
+     
+    KRF = rf_in_lf_frame_constraints_fun  (trLF)
+    KLF = lf_in_rf_frame_constraints_fun (trRF)     
     res [LF] = KLF #constraints of right foot in lf frame. Same idea as COM in lf frame
     res [RF] = KRF
     return res

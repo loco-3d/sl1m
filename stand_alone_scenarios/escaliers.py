@@ -11,6 +11,8 @@ from sl1m.planner import *
 
 from plot_plytopes import *
 
+from constraints import *
+
 floor = [ [0.16, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.16, -1., 0.]  ]
 
 step1 = [[0.3, 0.6, 0.15],[0.3, -0.16, 0.15],[0.6, -0.16, 0.15],[0.6, 0.6, 0.15]]
@@ -38,8 +40,8 @@ astep4 = array(step4).T
 surfaces = [[afloor], [afloor], [astep1,astep2,astep3],[astep2,astep3,astep1], [astep3,astep2,astep1,astep4], [astep3,astep4], [astep4],[astep4]]
 
 def gen_stair_pb():
-    kinematicConstraints = genKinematicConstraints(min_height = None)
-    relativeConstraints = genFootRelativeConstraints()
+    kinematicConstraints = genKinematicConstraints(left_foot_constraints, right_foot_constraints)
+    relativeConstraints = genFootRelativeConstraints(right_foot_in_lf_frame_constraints, left_foot_in_rf_frame_constraints)
     nphases = len(surfaces)
     p0 = None
     p0 = [array([0.,0., 0.]), array([0.,0., 0.])];

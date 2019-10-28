@@ -9,6 +9,7 @@ from numpy.linalg import norm
 
 from sl1m.planner import *
 
+from constraints import *
 
 from plot_plytopes import *
 
@@ -75,8 +76,8 @@ surfaces = [[arub2],[arub3,arub2],[arub4,arub5],[arub5],[arub6,arub7],[arub6,aru
 #~ surfaces = [[arub2],[arub3,arub2],[arub4],[arub5],[arub6],[arub7],[arub75],allrub,[afloor],[afloor, astep1],[afloor, astep1],[astep1,astep2,astep3],[astep4,astep2,astep3],[astep4,astep2,astep3],[astep4,astep2,astep5],[astep6,astep2,astep5],[astep6],[astep7],end,end,[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[aplatfo] ]
 
 def gen_stair_pb():
-    kinematicConstraints = genKinematicConstraints(min_height = None)
-    relativeConstraints = genFootRelativeConstraints()
+    kinematicConstraints = genKinematicConstraints(left_foot_constraints, right_foot_constraints)
+    relativeConstraints = genFootRelativeConstraints(right_foot_in_lf_frame_constraints, left_foot_in_rf_frame_constraints)
             
     nphases = len(surfaces)
     
