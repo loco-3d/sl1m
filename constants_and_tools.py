@@ -1,18 +1,15 @@
 import numpy as np
-from hpp.corbaserver.rbprm.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities, inequalities_to_Inequalities_object
-#~ from hpp_centroidal_dynamics import *
-#~ from curves import *
+from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities, inequalities_to_Inequalities_object
+
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
 from numpy.linalg import norm
 import numpy as np
 
 from scipy.spatial import ConvexHull
-#~ from hpp_bezier_com_traj import *
 from qp import solve_lp
 
-import eigenpy
-import cdd
+#~ import eigenpy
 #from curves import bezier3
 from random import random as rd
 from random import randint as rdi
@@ -29,6 +26,8 @@ x = array([1.,0.,0.])
 z = array([0.,0.,1.])
 zero3 = zeros(3) 
 
+
+eps =0.000001
 
 #### surface to inequalities ####    
 def convert_surface_to_inequality(s):
@@ -47,44 +46,6 @@ def replace_surfaces_with_ineq_in_phaseData(phase):
 def replace_surfaces_with_ineq_in_problem(pb):
     [ replace_surfaces_with_ineq_in_phaseData(phase) for phase in pb ["phaseData"]]
 
-
-def addHeightConstraint(K,k, val):
-    K1 = vstack([K, -z])
-    k1 = concatenate([k, -ones(1) * val]).reshape((-1,))    
-    return K1, k1
-
-def skew(x):
-    res = zeros((3,3));
-    res[0][1] = - x[2]; res[0][2] =   x[1];
-    res[1][0] =   x[2]; res[1][2] = - x[0];
-    res[2][0] = - x[1]; res[2][1] =   x[0];
-    return res;
-
-gX = skew(g)
-
-def vec3to6(x):
-    res = zeros((6,))
-    res[:3] = x
-    return res
-
-def w(m, c, ddc = zeros(3)):
-    res = zeros(6)
-    res[:3] = m * (ddc-g )
-    res[3:] = cross(c,res[:3])
-    return res
-
-def generators(A,b, Aeq = None, beq = None):
-    m = np.hstack([b,-A])
-    matcdd = cdd.Matrix(m); matcdd.rep_type = cdd.RepType.INEQUALITY
-    
-    if Aeq is not None:
-        meq = np.hstack([beq,-Aeq])
-        matcdd.extend(meq.tolist(), True)
-    
-    H = cdd.Polyhedron(matcdd)
-    g = H.get_generators()
-    
-    return [array(g[el][1:]) for el in range(g.row_size)], H
     
 def filter(pts):
     hull = ConvexHull(pts, qhull_options='Q12')

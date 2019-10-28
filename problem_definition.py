@@ -1,19 +1,8 @@
-import numpy as np
+from sl1m.constants_and_tools import *
 
-
-from constants_and_tools import *
-
-from numpy import array, asmatrix, matrix, zeros, ones
-from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
-from numpy.linalg import norm
-
-from scipy.spatial import ConvexHull
-from hpp_bezier_com_traj import *
-
-from random import random as rd
-from random import randint as rdi
-from numpy import squeeze, asarray
 import qp
+
+np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 
 #LP contact planner using inequality formulation
 

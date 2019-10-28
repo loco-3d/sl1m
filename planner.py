@@ -1,21 +1,3 @@
-import numpy as np
-
-
-from sl1m.constants_and_tools import *
-
-from numpy import array, asmatrix, matrix, zeros, ones
-from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
-from numpy.linalg import norm
-
-from scipy.spatial import ConvexHull
-from hpp_bezier_com_traj import *
-
-from random import random as rd
-from random import randint as rdi
-from numpy import squeeze, asarray
-import qp
-
-
 
 ############### Problem definition #############
 from sl1m.problem_definition import *
@@ -172,22 +154,7 @@ def retrieve_points_from_res(pb, res):
         allFeetPos += [pos]
         col += nvarPhase
     return coms, footPos, allFeetPos
-    
-def plotBezier(bez, ax, color = "b", label = None, linewidth = 2.0, D3 = True, mx = None):
-        step = 1000.
-        if mx is None:
-                mx = bez.max()
-        points1 =  np.array([(bez(i/step*mx)[0],bez(i/step*mx)[1],bez(i/step*mx)[2]) for i in range(int(step))])
-        x = points1[:,0]
-        y = points1[:,1]
-        if(D3):                
-                z = points1[:,2]
-                z = [el[0] for el in z]
-                ax.plot(x.tolist(),y.tolist(),z,color)
-        else:
-                ax.plot(x.tolist(),y.tolist() ,color,linewidth=linewidth, label=label)
-        return points1
-    
+        
 def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     x = array(wps)[:,0]
     y = array(wps)[:,1]
@@ -195,47 +162,14 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
             z = array(wps)[:,2]
             ax.scatter(x, y, z, c=color, marker='o', linewidth = 5) 
     else:
-            ax.scatter(x,y,color=color, linewidth = linewidth)  
-   
-from plot_plytopes import plot_polytope_H_rep
-   
-def plotConstraints(ax, pb, allfeetpos, coms):
-    for i, phase in enumerate(pb["phaseData"][:]):
-        if i <1 :
-            continue
-        fixed =   phase["fixed"]  
-        moving = phase["moving"]   
-        oldK, oldk = pb["phaseData"][i-1]["K"][0][fixed]
-        oldK = oldK.copy()
-        oldk = oldk.copy()
-        oldk += oldK.dot(allfeetpos[i-1])
-        K, k = phase["K"][0][moving]  
-        K = K.copy()
-        k = k.copy()
-        pos =  allfeetpos[i]
-        com = coms[i]
-        relK, relk = pb["phaseData"][i-1]["relativeK"][0]
-        relK = relK.copy()
-        relk = relk.copy()
-        relk += relK.dot(allfeetpos[i-1])
+            ax.scatter(x,y,color=color, linewidth = linewidth)       
         
-        k = k + K.dot(pos)
-        resK = vstack([oldK,K])
-        resk = concatenate([oldk, k]).reshape((-1,)) 
-        if True:
-            try :                
-                plot_polytope_H_rep(relK,relk.reshape((-1,1)), ax = ax)
-            except: 
-                print "qhullfailed"
-    
-        
-def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True):
+def plotQPRes(pb, res, linewidth=2, ax = None, show = True):
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     ax.grid(False)
-    #~ ax.set_autoscale_on(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
     
     plotPoints(ax, coms, color = "b")
@@ -250,11 +184,7 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     py = [c[1] for c in allfeetpos]
     pz = [c[2] for c in allfeetpos]
     ax.plot(px, py, pz)
-    
-    
-    if plot_constraints:
-        plotConstraints(ax, pb, allfeetpos, coms)
-        
+            
     if show:
         plt.draw()
         plt.show()
@@ -263,15 +193,13 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
 ####################### MAIN ###################"
 
 if __name__ == '__main__':
-    from sl1m.planner_scenarios.flat_ground import genFlatGroundProblem
-    pb = genFlatGroundProblem([0.,0.05,0.],[0.,-0.05,0.], 10)
+    from sl1m.stand_alone_scenarios.escaliers import gen_stair_pb, draw_scene
+    pb = gen_stair_pb()
     
     t1 = clock()
-    A, b, E, e = convertProblemToLp(pb)
-    
-    print 'A.shape', A.shape
-    
-    C, c = least_square_cost_function (pb, A.shape[1], comTarget = array([30.,10.,0.2]))
+    A, b, E, e = convertProblemToLp(pb)    
+    C= identity(A.shape[1])
+    c = zeros(A.shape[1])
     t2 = clock()
     res = qp.solve_least_square(C,c,A,b,E,e)
     t3 = clock()
@@ -282,8 +210,7 @@ if __name__ == '__main__':
     print "total time"             , timMs(t1,t3)
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
-    
-    plotQPRes(pb, res, plot_constraints = False)
-    #~ plotQPRes(pb, res, plot_constraints = True)
+    ax = draw_scene(None)
+    plotQPRes(pb, res, ax = ax)
     
         
