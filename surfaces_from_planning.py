@@ -1,7 +1,6 @@
 
 from numpy import arange
 from sl1m.test import contactSurfaces,getCollidingAffIndex,removeDuplicates
-from tools.display_tools import displaySurfaceFromPoints
 from pinocchio import XYZQUATToSe3
 import numpy as np
 from numpy import array
@@ -24,7 +23,7 @@ def listToArray (seqs):
             nseq.append(array(surface).T)
         nseqs.append(nseq)
     return nseqs
-  return R
+
 
 def area(s):
     #print "in area, s = ",s
@@ -115,6 +114,8 @@ def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,pId,viewer = None,ste
 
 
 def getSurfacesFromGuide(rbprmBuilder,ps,afftool,pId,viewer = None,discretisationStep = 0.6,useIntersection = False, mergeCandidates = False):
+  if viewer : 
+    from tools.display_tools import displaySurfaceFromPoints
   pathLength = ps.pathLength(pId) #length of the path
   configs = []
   # get configuration along the path
