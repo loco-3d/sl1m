@@ -157,7 +157,7 @@ def solve():
     while not success and it < maxIt:
       if it > 0 :
         step = defaultStep + random.uniform(-variation,variation)
-      R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,step,True,True)
+      R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,None,step,True)
       pb = gen_pb(tp.q_init,R,surfaces)
       try:
         pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, None)
@@ -171,9 +171,8 @@ def solve():
 
 if __name__ == '__main__':
     from sl1m.fix_sparsity import solveL1
-
-    R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.,True,False)
-    
+    step = 1.
+    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,None,step,True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
 
