@@ -20,7 +20,7 @@ eigenpy.switchToNumpyArray()
 
 
 
-from constants_and_tools import *
+from sl1m.constants_and_tools import *
 
 
 
