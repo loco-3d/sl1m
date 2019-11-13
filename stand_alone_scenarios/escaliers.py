@@ -1,20 +1,17 @@
 import numpy as np
 
-
-from sl1m.constants_and_tools import *
-
 from numpy import array, asmatrix, matrix, zeros, ones
 from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
 from numpy.linalg import norm
 
-#~ from scipy.spatial import ConvexHull
-#~ from hpp_bezier_com_traj import *
-#~ from qp import solve_lp
 
+from sl1m.constants_and_tools import *
 from sl1m.planner import *
 
 
 from plot_plytopes import *
+
+from constraints import *
 
 floor = [ [0.16, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.16, -1., 0.]  ]
 
@@ -43,15 +40,13 @@ astep4 = array(step4).T
 surfaces = [[afloor], [afloor], [astep1,astep2,astep3],[astep2,astep3,astep1], [astep3,astep2,astep1,astep4], [astep3,astep4], [astep4],[astep4]]
 
 def gen_stair_pb():
-    #~ kinematicConstraints = genKinematicConstraints(min_height = 0.6)
-    kinematicConstraints = genKinematicConstraints(min_height = None)
-    relativeConstraints = genFootRelativeConstraints()
+    kinematicConstraints = genKinematicConstraints(left_foot_constraints, right_foot_constraints)
+    relativeConstraints = genFootRelativeConstraints(right_foot_in_lf_frame_constraints, left_foot_in_rf_frame_constraints)
     nphases = len(surfaces)
     p0 = None
     p0 = [array([0.,0., 0.]), array([0.,0., 0.])];
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
     
-    #TODO in non planar cases, K must be rotated
     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i) % 2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
     res ["phaseData"] = phaseData
     return res 
@@ -82,11 +77,14 @@ def draw_scene(surfaces, ax = None, color = "p"):
 
 if __name__ == '__main__':
     
-    from sl1m.fix_sparsity import solveL1
+    
+    from sl1m.fix_sparsity import solveL1, solveMIP
     
     pb = gen_stair_pb()
+    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
+    pb = gen_stair_pb()
+    solveL1(pb, surfaces, draw_scene, plot = True)
     
-    pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, draw_scene, plot = True)
     
     
     

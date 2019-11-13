@@ -3,7 +3,8 @@ print "Plan guide trajectory ..."
 import lp_complex1_path as tp
 #import lp_ramp_path as tp
 print "Guide planned."
-from sl1m.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
+from tools.surfaces_from_path import getSurfacesFromGuideContinuous
+
 from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
@@ -14,7 +15,8 @@ from numpy.linalg import norm
 from sl1m.planner import *
 
 
-from sl1m.plot_plytopes import *
+from sl1m.tools.plot_plytopes import *
+from sl1m.planner_scenarios.talos.constraints import *
 
 Z_AXIS = np.array([0,0,1]).T
 
@@ -91,10 +93,6 @@ surfaces = [[arub2,arub3],[arub3,arub2],[arub4,arub3,arub5],[arub5,arub4,arub3,a
 
 
 def gen_pb(root_init,R, surfaces):
-    #~ for i in range(nphases)
-    #~ kinematicConstraints = genKinematicConstraints(min_height = 0.6)
-    kinematicConstraints = genKinematicConstraintsTalos(min_height = None)
-    relativeConstraints = genFootRelativeConstraintsTalos()
     
     nphases = len(surfaces)
     #nphases = 20
@@ -111,7 +109,7 @@ def gen_pb(root_init,R, surfaces):
     print "surfaces = ",surfaces
     #TODO in non planar cases, K must be rotated
     #phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
-    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(index = i, transform = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(index = i, transform = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
+    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(left_foot_constraints,right_foot_constraints,index = i, rotation = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints,index = i, rotation = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
     res ["phaseData"] = phaseData
     return res 
     
@@ -157,7 +155,7 @@ def draw_scene(surfaces,ax = None):
 ############# main ###################    
 def solve():
     from sl1m.fix_sparsity import solveL1
-    R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.,True)
+    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.2,True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
 
@@ -166,7 +164,7 @@ def solve():
 if __name__ == '__main__':
     from sl1m.fix_sparsity import solveL1
 
-    R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.,True)
+    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.2,True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
 

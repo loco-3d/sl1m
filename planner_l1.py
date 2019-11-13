@@ -1,29 +1,9 @@
-import numpy as np
 
-
-from sl1m.constants_and_tools import *
-
-from numpy import array, asmatrix, matrix, zeros, ones
-from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
-from numpy.linalg import norm
-
-from scipy.spatial import ConvexHull
-from hpp_bezier_com_traj import *
-
-from random import random as rd
-from random import randint as rdi
-from numpy import squeeze, asarray
-import qp
-
-#LP contact planner using inequality formulation
-np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 
 ############### Problem definition #############
 
 from sl1m.problem_definition import *
-    
-
-        
+           
         
 #### constraint specification ####  
 
@@ -299,7 +279,6 @@ def slackSelectionMatrix(pb):
         startIdx = cIdx + DEFAULT_NUM_VARS
         for i in range (0,nslacks,NUM_SLACK_PER_SURFACE):
             c[startIdx + i] = 1
-            #~ c[startIdx + i+2 ] = 1
         cIdx += phaseVars
     assert cIdx == nvars
     return c
@@ -346,7 +325,6 @@ def genCombinatorialRec(pb, indices, wrongsurfaces, res):
         pb1 = copy.deepcopy(pb)
         for i, idx in enumerate(indices):
             pb1["phaseData"][idx]["S"] = wrongsurfaces[i][comb[i]]
-            #~ print "added surface ", wrongsurfaces[comb[i]]
         res += [[pb1, comb, indices]]
         
     
@@ -367,7 +345,6 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
     
     
 def bestSelectedSurfaces(pb, res):
-    #~ print "wrongsurfaces ",  wrongsurfaces
     surfaces = []
     indices  = []
     cIdx = 0
@@ -383,10 +360,7 @@ def bestSelectedSurfaces(pb, res):
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
             assert betas >= -0.00000001
             bestIdx = betas.index(array(betas).min())
-            bestIdx = betas.index(array(betas).min())
             surfaces = surfaces + [phase["S"][bestIdx]]
-            
-            #~ print "adding surfaces", phase["S"][bestIdx].shape
             
             indices = indices + [bestIdx]
         cIdx += phaseVars
@@ -404,7 +378,6 @@ def retrieve_points_from_res(pb, res):
         coms = [pb["c0"]]
         
     if pb["p0"] is not None:
-    #~ if False:
         footPos = [[pb["p0"][LF]],[pb["p0"][RF]]]
         allFeetPos = [footPos[0][0], footPos[1][0]]
     else:
@@ -439,11 +412,10 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)  
    
-from plot_plytopes import plot_polytope_H_rep
+from tools.plot_plytopes import plot_polytope_H_rep
    
 def plotConstraints(ax, pb, allfeetpos, coms):
     for i, phase in enumerate(pb["phaseData"][:]):
-        #~ if i == 0:
         if i <1 :
             continue
         fixed =   phase["fixed"]  
@@ -474,7 +446,6 @@ def plotConstraints(ax, pb, allfeetpos, coms):
                 #~ plot_polytope_H_rep(K,k.reshape((-1,1)), ax = ax)
             except: 
                 print "qhullfailed"
-        #~ oldpos = pos
     
         
 def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True):
@@ -500,9 +471,6 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     pz = [c[2] for c in allfeetpos]
     ax.plot(px, py, pz)
         
-    if plot_constraints:
-        plotConstraints(ax, pb, allfeetpos, coms)
-        
     if show:
         plt.ion()
         plt.show()
@@ -510,38 +478,18 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     
 ####################### MAIN ###################"
 
-def min_dist(size):
-    C = zeros((size,size))
-    for i in range(size%4):
-        C[i:i+3, :3]  =  identity(3)
-        C[i:i+3,4:7] = -identity(3)
-    c = zeros(size)
-    c =-dot(C.T, c).reshape(c.shape[0])
-    C = dot(C.T, C)
-    C += identity(size) * 0.00001
-    return C, c
-
 if __name__ == '__main__':
-    #~ from sl1m.planner_scenarios.flat_ground import genFlatGroundProblem,  draw_scene
-    #~ pb = genFlatGroundProblem([0.,0.05,0.],[0.,-0.05,0.], 10)
-    from sl1m.planner_scenarios.complex import gen_stair_pb,  draw_scene
-    pb = gen_stair_pb()
-    #~ from sl1m.planner_scenarios.escaliers import gen_stair_pb,  draw_scene
-    #~ pb = gen_stair_pb()
-    
+    from sl1m.stand_alone_scenarios.complex import gen_stair_pb,  draw_scene
+    pb = gen_stair_pb()    
     
     t1 = clock()
     A, b, E, e = convertProblemToLp(pb)
     
     A,b = normalize([A,b])
     C = identity(A.shape[1]) * 0.00001
-    #~ c = slackSelectionMatrix(pb)
-    #~ C, c = min_dist(A.shape[1])
     c =  slackSelectionMatrix(pb) * 100.
     t2 = clock()
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
-    #~ resx = qp.solve_lp( c,A,b,E,e)
-    #~ res = resx["x"]
     t3 = clock()
     
     print "time to set up problem" , timMs(t1,t2)
@@ -549,14 +497,11 @@ if __name__ == '__main__':
     print "total time"             , timMs(t1,t3)
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
-    ax = draw_scene()
+    ax = draw_scene(None)
     plotQPRes(pb, res, ax=ax, plot_constraints = False)
-    #~ plotQPRes(pb, res, plot_constraints = True)
-    #~ plotQPRes(pb, res, plot_constraints = False)
     
     surfaces, indices = bestSelectedSurfaces(pb, res)
     for i, phase in enumerate(pb["phaseData"]):  
-        #~ print 
         phase["S"] = [surfaces[i]]
         
     t1 = clock()
@@ -565,13 +510,8 @@ if __name__ == '__main__':
     
     C = identity(A.shape[1])
     c = zeros(A.shape[1])
-    #~ c = slackSelectionMatrix(pb)
-    #~ C, c = min_dist(A.shape[1])
-    #~ c +=  slackSelectionMatrix(pb) * 1000.
     t2 = clock()
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
-    #~ resx = qp.solve_lp( c,A,b,E,e)
-    #~ res = resx["x"]
     t3 = clock()
     
     print "time to set up problem" , timMs(t1,t2)
@@ -579,7 +519,7 @@ if __name__ == '__main__':
     print "total time"             , timMs(t1,t3)
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
-    ax = draw_scene()
+    ax = draw_scene(None)
     plotQPRes(pb, res, ax=ax, plot_constraints = False)
         
     
