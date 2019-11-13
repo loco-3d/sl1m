@@ -2,7 +2,7 @@ import numpy as np
 print "Plan guide trajectory ..."
 import lp_slalom_debris_path as tp
 print "Guide planned."
-from sl1m.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
+from tools.surfaces_from_path import getSurfacesFromGuideContinuous
 
 from sl1m.constants_and_tools import *
 
@@ -16,6 +16,7 @@ import random
 
 from sl1m.planner import *
 Z_AXIS = np.array([0,0,1]).T
+from sl1m.planner_scenarios.talos.constraints import *
 """
 from sl1m.plot_plytopes import *
 rubB1 =   [[-0.5079353885643417, 1.282387089736744, 0.0021999916093061456],  [-0.5079353885643416, 1.2444260597154655, 0.0021999916093061456],  [-0.4555532842024058, 1.244426054175804, 0.016235816474940087],  [-0.4555533048779398, 1.2823870841970821, 0.016235812378438574]]
@@ -82,13 +83,8 @@ final = [[2 ,0.15 ,0.],[2.1 ,0.15 ,0.],[2.1 ,-0.15 ,0.],[2 ,-0.15 ,0.]]
 afinal = array(final).T
 
 def gen_pb(root_init,R, surfaces):
-    #~ for i in range(nphases)
-    #~ kinematicConstraints = genKinematicConstraints(min_height = 0.6)
-    kinematicConstraints = genKinematicConstraintsTalos(min_height = None)
-    relativeConstraints = genFootRelativeConstraintsTalos()
     
     nphases = len(surfaces)
-    #nphases = 20
     lf_0 = array(root_init[0:3]) + array([0, 0.085,-0.98]) # values for talos ! 
     rf_0 = array(root_init[0:3]) + array([0,-0.085,-0.98]) # values for talos ! 
     #p0 = [array([-3.0805096486250154, 0.335, 0.]), array([-3.0805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
@@ -102,7 +98,7 @@ def gen_pb(root_init,R, surfaces):
     #print "surfaces = ",surfaces
     #TODO in non planar cases, K must be rotated
     #phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
-    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(index = i, transform = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(index = i, transform = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
+    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(left_foot_constraints,right_foot_constraints,index = i, rotation = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints,index = i, rotation = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
     res ["phaseData"] = phaseData
     return res 
     

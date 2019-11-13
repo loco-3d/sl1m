@@ -8,9 +8,9 @@ from numpy.linalg import norm
 
 
 from sl1m.planner import *
+from sl1m.planner_scenarios.talos.constraints import *
 
-
-from sl1m.plot_plytopes import *
+from sl1m.tools.plot_plytopes import *
 
 Z_AXIS = np.array([0,0,1]).T
 
@@ -40,13 +40,10 @@ surfaces += [[end]]+[[end]]
 
 
 def gen_pb(surfaces):
-    #~ for i in range(nphases)
-    #~ kinematicConstraints = genKinematicConstraints(min_height = 0.6)
-    kinematicConstraints = genKinematicConstraintsTalos(min_height = None)
-    relativeConstraints = genFootRelativeConstraintsTalos()
+    kinematicConstraints = genKinematicConstraints(left_foot_constraints,right_foot_constraints,min_height = 0.3)
+    relativeConstraints = genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints)
     
     nphases = len(surfaces)
-    #nphases = 20
     p0 = [array([ 1.7  ,  0.285,  0.6  ]), array([ 1.7  ,  0.115,  0.6  ])]
     print "p0 used : ",p0
     
@@ -56,7 +53,6 @@ def gen_pb(surfaces):
     print "surfaces = ",surfaces
     #TODO in non planar cases, K must be rotated
     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
-    #phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(index = i, transform = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(index = i, transform = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
     res ["phaseData"] = phaseData
     return res 
     
@@ -109,18 +105,15 @@ def solve():
     return solveL1(pb, surfaces, draw_scene)
 
 if __name__ == '__main__':
-    from sl1m.fix_sparsity import solveL1
-
-    #R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.,True)
-    
+    from sl1m.fix_sparsity import solveL1    
 
     pb = gen_pb(surfaces)
-
+    """
     import pickle
     f = open("pb_platform_bridge_noGuide","w")
     pickle.dump(pb,f)
     f.close()
-
+    """
     pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, draw_scene)
 
     

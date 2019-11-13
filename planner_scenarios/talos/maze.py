@@ -5,7 +5,7 @@ v = tp.v
 ps = tp.ps
 root_init = tp.q_init
 print "Guide planned."
-from sl1m.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
+from tools.surfaces_from_path import getSurfacesFromGuideContinuous
 
 from sl1m.constants_and_tools import *
 
@@ -18,17 +18,14 @@ import random
 #~ from qp import solve_lp
 
 from sl1m.planner import *
+from sl1m.planner_scenarios.talos.constraints import *
+
 Z_AXIS = np.array([0,0,1]).T
 
 
 def gen_pb(root_init,R, surfaces):
-    #~ for i in range(nphases)
-    #~ kinematicConstraints = genKinematicConstraints(min_height = 0.6)
-    kinematicConstraints = genKinematicConstraintsTalos(min_height = None)
-    relativeConstraints = genFootRelativeConstraintsTalos()
-    
+
     nphases = len(surfaces)
-    #nphases = 20
     lf_0 = array(root_init[0:3]) + array([0, 0.085,-0.98]) # values for talos ! 
     rf_0 = array(root_init[0:3]) + array([0,-0.085,-0.98]) # values for talos ! 
     p0 = [lf_0,rf_0];
@@ -39,7 +36,7 @@ def gen_pb(root_init,R, surfaces):
     
     #print "surfaces = ",surfaces
     #TODO in non planar cases, K must be rotated
-    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(index = i, transform = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(index = i, transform = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
+    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(left_foot_constraints,right_foot_constraints,index = i, rotation = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints,index = i, rotation = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
     res ["phaseData"] = phaseData
     return res 
     
@@ -94,7 +91,7 @@ def solve():
     while not success and it < maxIt:
       if it > 0 :
         step = defaultStep + random.uniform(-variation,variation)
-      R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,step,True,False)
+      R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,step,True,False)
       pb = gen_pb(tp.q_init,R,surfaces)
       try:
         pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, None)

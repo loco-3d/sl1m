@@ -1,6 +1,5 @@
 import numpy as np
 
-from sl1m.surfaces_from_planning import getSurfacesFromGuideContinuous,getSurfacesFromGuide
 from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
@@ -11,10 +10,10 @@ from numpy.linalg import norm
 from sl1m.planner import *
 
 
-from sl1m.plot_plytopes import *
+from sl1m.tools.plot_plytopes import *
 
 Z_AXIS = np.array([0,0,1]).T
-
+from sl1m.planner_scenarios.talos.constraints import *
 
 
 ### HARDCODED SURFACES, REPLACE IT WITH PATH PLANNING ####
@@ -88,10 +87,8 @@ surfaces = [[arub2,arub3],[arub3,arub2],[arub4,arub3,arub5],[arub5,arub4,arub3,a
 
 
 def gen_pb(surfaces):
-    #~ for i in range(nphases)
-    #~ kinematicConstraints = genKinematicConstraints(min_height = 0.6)
-    kinematicConstraints = genKinematicConstraintsTalos(min_height = None)
-    relativeConstraints = genFootRelativeConstraintsTalos()
+    kinematicConstraints = genKinematicConstraints(left_foot_constraints,right_foot_constraints,min_height = None)
+    relativeConstraints = genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints)
     
     nphases = len(surfaces)
 
@@ -104,7 +101,7 @@ def gen_pb(surfaces):
     print "surfaces = ",surfaces
     #TODO in non planar cases, K must be rotated
     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
-    #phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(index = i, transform = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(index = i, transform = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
+
     res ["phaseData"] = phaseData
     return res 
     
@@ -146,7 +143,6 @@ def draw_scene(surfaces,ax = None):
     return ax
     
     
-    
 ############# main ###################    
 def solve():
     from sl1m.fix_sparsity import solveL1
@@ -156,12 +152,11 @@ def solve():
     return solveL1(pb, surfaces, draw_scene)
 
 if __name__ == '__main__':
-    from sl1m.fix_sparsity import solveL1
-
+    from sl1m.fix_sparsity import solveL1 ,solveMIP 
 
     pb = gen_pb(surfaces)
-
-    pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, draw_scene)
+    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
+    #pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, draw_scene)
 
     
 """    
