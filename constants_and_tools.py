@@ -57,6 +57,12 @@ def vectorProjection (v, n):
     proj = v - np.dot(v,n)*n
     return proj/norm(proj)
     
+def addHeightConstraint(K,k, val):
+    K1 = vstack([K, -z])
+    k1 = concatenate([k, -ones(1) * val]).reshape((-1,))    
+    return K1, k1
+
+
 def default_transform_from_pos_normal_(transform, pos, normal):
     #return vstack( [hstack([transform,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] ) # FIXME : temp stuff, only work on flat floor
     # FIXME : there is something wrong the the code above
