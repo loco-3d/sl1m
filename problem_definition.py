@@ -65,7 +65,7 @@ def genFootRelativeConstraints(rf_in_lf_frame_constraints_fun,  lf_in_rf_frame_c
         trRF = default_transform_from_pos_normal_(rotation[index-1], zero3, normals[RF])
     elif index % 2 == RF : # right foot is moving
         trLF = default_transform_from_pos_normal_(rotation[index-1], zero3, normals[LF])
-        trRF = default_transform_from_pos_normal_(transform[index], zero3, normals[RF])
+        trRF = default_transform_from_pos_normal_(rotation[index], zero3, normals[RF])
     #~ KRF = right_foot_in_lf_frame_talos_constraints  (trLF)
     #~ KLF = left_foot_in_rf_frame_talos_constraints (trRF)   
     
