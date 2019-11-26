@@ -30,7 +30,8 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 def solve(pb,surfaces, draw_scene = None, plot = True ):  
         
     t1 = clock()
-    A, b, E, e = pl.convertProblemToLp(pb)    
+    A, b, E, e = pl.convertProblemToLp(pb)  
+    b += ones(b.shape)  
     C = identity(A.shape[1])
     c = zeros(A.shape[1])
     t2 = clock()
@@ -53,8 +54,8 @@ def solve(pb,surfaces, draw_scene = None, plot = True ):
 
 ### Calls the sl1m solver. Brute-forcedly tries to solve non fixed sparsity by handling the combinatorial.
 ### Ultimately calls solve which provides the approriate cost function
-def solveL1(pb, surfaces, draw_scene = None, plot = True):     
-    A, b, E, e = pl1.convertProblemToLp(pb)    
+def solveL1(pb, surfaces, draw_scene = None, plot = True, convert = True):     
+    A, b, E, e = pl1.convertProblemToLp(pb, convert)    
     C = identity(A.shape[1]) * 0.00001
     c = pl1.slackSelectionMatrix(pb)
         
@@ -64,6 +65,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     solutionIndices = None
     solutionComb = None
     if not ok:
+        print "not ok"
         pbs = pl1.generateAllFixedScenariosWithFixedSparsity(pb, res)
         
         t3 = clock()
@@ -93,6 +95,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
         print "time to solve combinatorial ", timMs(t3,t4)
     
     if ok:
+        print "ok ?", ok
         surfacesret, indices = pl1.bestSelectedSurfaces(pb, res)        
         for i, phase in enumerate(pb["phaseData"]): 
             phase["S"] = [surfaces[i][indices[i]]]
@@ -108,7 +111,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
 def tovals(variables):
     return array([el.value for el in variables])
 
-def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
+def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, convert = True):  
     if not MIP_OK:
         print "Mixed integer formulation requires gurobi packaged in cvxpy"
         raise ImportError
@@ -116,7 +119,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     gurobipy.setParam('LogFile', '')
     gurobipy.setParam('OutputFlag', 0)
        
-    A, b, E, e = pl1.convertProblemToLp(pb)   
+    A, b, E, e = pl1.convertProblemToLp(pb, convert)   
     slackMatrix = pl1.slackSelectionMatrix(pb)
     
     rdim = A.shape[1]
