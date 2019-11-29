@@ -160,7 +160,7 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     y = array(wps)[:,1]
     if(D3):                
             z = array(wps)[:,2]
-            ax.scatter(x, y, z, c=color, marker='o', linewidth = 5) 
+            ax.scatter(x, y, z, color=color, marker='o', linewidth = 5) 
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)       
         
@@ -179,11 +179,11 @@ def plotQPRes(pb, res, linewidth=2, ax = None, show = True):
     cx = [c[0] for c in coms]
     cy = [c[1] for c in coms]
     cz = [c[2] for c in coms]
-    ax.plot(cx, cy, cz)
+    ax.plot(cx, cy, cz, color="black")
     px = [c[0] for c in allfeetpos]
     py = [c[1] for c in allfeetpos]
     pz = [c[2] for c in allfeetpos]
-    ax.plot(px, py, pz)
+    ax.plot(px, py, pz, color="black")
             
     if show:
         plt.draw()
