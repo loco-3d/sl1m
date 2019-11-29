@@ -35,12 +35,17 @@ def solve(pb,surfaces, draw_scene = None, plot = True ):
     C = identity(A.shape[1])
     c = zeros(A.shape[1])
     t2 = clock()
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    # res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    res = qp.solve_lp(c,A,b,E,e)
     t3 = clock()
     
     print "time to set up problem" , timMs(t1,t2)
     print "time to solve problem"  , timMs(t2,t3)
     print "total time"             , timMs(t1,t3)
+    
+    if type(res) is int:
+        print "LP fails"
+        return False
     
     coms, footpos, allfeetpos = pl.retrieve_points_from_res(pb, res)
     
@@ -163,5 +168,5 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, convert =
         ax = draw_scene(surfaces)
         pl1.plotQPRes(pb, res, ax=ax)
     
-    return timMs(t1,t2)
+    return pb, res#timMs(t1,t2)
         
