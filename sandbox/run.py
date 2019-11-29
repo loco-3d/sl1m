@@ -54,8 +54,8 @@ if __name__ == '__main__':
     surfaces = readFromFile(fileName+'_surf')    
     all_surfaces = readFromFile(fileName+'_scene')  
     pb['p0'] = None
-    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True, convert = False)
+    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True, convert = True)
     
-    pb = readFromFile(fileName+'_problem') 
+    pb = readFromFile(fileName+'_problem')   
     pb['p0'] = None
-    solveL1(pb, surfaces, draw_scene, plot = True, convert = False)
+    solveL1(pb, surfaces, draw_scene, plot = True, convert = True)

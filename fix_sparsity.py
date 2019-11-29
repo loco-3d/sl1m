@@ -31,7 +31,7 @@ def solve(pb,surfaces, draw_scene = None, plot = True ):
         
     t1 = clock()
     A, b, E, e = pl.convertProblemToLp(pb)  
-    b += ones(b.shape)  
+    # b += ones(b.shape)  
     C = identity(A.shape[1])
     c = zeros(A.shape[1])
     t2 = clock()
