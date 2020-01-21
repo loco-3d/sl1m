@@ -5,7 +5,7 @@ from sl1m.constants_and_tools import *
 from sl1m import planner_l1 as pl1
 from sl1m import planner    as pl
 
-import qp
+from . import qp
 
 
 # try to import mixed integer solver
@@ -37,9 +37,9 @@ def solve(pb,surfaces, draw_scene = None, plot = True ):
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
     t3 = clock()
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = pl.retrieve_points_from_res(pb, res)
     
@@ -85,12 +85,12 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
                         pl1.plotQPRes(pb, res, ax=ax)
                     break
             except:
-                print "unfeasible problem"
+                print("unfeasible problem")
                 pass
             
         t4 = clock()      
         
-        print "time to solve combinatorial ", timMs(t3,t4)
+        print("time to solve combinatorial ", timMs(t3,t4))
     
     if ok:
         surfacesret, indices = pl1.bestSelectedSurfaces(pb, res)        
@@ -110,7 +110,7 @@ def tovals(variables):
 
 def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
     if not MIP_OK:
-        print "Mixed integer formulation requires gurobi packaged in cvxpy"
+        print("Mixed integer formulation requires gurobi packaged in cvxpy")
         raise ImportError
         
     gurobipy.setParam('LogFile', '')
@@ -152,7 +152,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     res = prob.solve(solver=cp.GUROBI, verbose=False )
     t2 = clock()
     res = tovals(varReal)
-    print "time to solve MIP ", timMs(t1,t2)
+    print("time to solve MIP ", timMs(t1,t2))
 
     
     plot = plot and draw_scene is not None 

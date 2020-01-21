@@ -93,12 +93,12 @@ def gen_pb(surfaces):
     nphases = len(surfaces)
 
     p0 = [array([-2.7805096486250154, 0.335, 0.]), array([-2.7805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
-    print "p0 used : ",p0
+    print("p0 used : ",p0)
     
     #res = { "p0" : p0, "c0" : None, "nphases": nphases}
     res = { "p0" : None, "c0" : None, "nphases": nphases}
     
-    print "surfaces = ",surfaces
+    print("surfaces = ",surfaces)
     #TODO in non planar cases, K must be rotated
     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
 

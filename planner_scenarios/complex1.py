@@ -181,7 +181,7 @@ def solveL1():
             try:
                 res = qp.quadprog_solve_qp(C, c,A,b,E,e)
                 if isSparsityFixed(pbComb, res):
-                    print "solved sparsity"
+                    print("solved sparsity")
                     
                     coms, footpos, allfeetpos = retrieve_points_from_res(pbComb, res)
                     ax = draw_scene()
@@ -192,9 +192,9 @@ def solveL1():
                     solutionComb = comb
                     break
                 else:
-                    print "not olved yet"
+                    print("not olved yet")
             except:
-                print "unfeasible problem"
+                print("unfeasible problem")
             
     
     if ok:
@@ -221,9 +221,9 @@ def solveL1():
         #~ res = resx["x"]
         t3 = clock()
         
-        print "time to set up problem" , timMs(t1,t2)
-        print "time to solve problem"  , timMs(t2,t3)
-        print "total time"             , timMs(t1,t3)
+        print("time to set up problem" , timMs(t1,t2))
+        print("time to solve problem"  , timMs(t2,t3))
+        print("total time"             , timMs(t1,t3))
         
         coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
         ax = draw_scene()
@@ -245,9 +245,9 @@ def solve():
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
     t3 = clock()
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     ax = draw_scene()

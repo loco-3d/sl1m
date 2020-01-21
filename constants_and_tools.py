@@ -7,7 +7,7 @@ from numpy.linalg import norm
 import numpy as np
 
 from scipy.spatial import ConvexHull
-from qp import solve_lp
+from .qp import solve_lp
 
 #~ import eigenpy
 #from curves import bezier3

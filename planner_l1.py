@@ -337,7 +337,7 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
         comb *= el  
     res = []
     if comb >1000:
-        print "problem probably too big ", comb
+        print("problem probably too big ", comb)
     else:
         genCombinatorialRec(pb, indices, wrongsurfaces, res)
     return res
@@ -412,7 +412,7 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)  
    
-from tools.plot_plytopes import plot_polytope_H_rep
+from .tools.plot_plytopes import plot_polytope_H_rep
    
 def plotConstraints(ax, pb, allfeetpos, coms):
     for i, phase in enumerate(pb["phaseData"][:]):
@@ -445,7 +445,7 @@ def plotConstraints(ax, pb, allfeetpos, coms):
                 plot_polytope_H_rep(relK,relk.reshape((-1,1)), ax = ax)
                 #~ plot_polytope_H_rep(K,k.reshape((-1,1)), ax = ax)
             except: 
-                print "qhullfailed"
+                print("qhullfailed")
     
         
 def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True):
@@ -492,9 +492,9 @@ if __name__ == '__main__':
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
     t3 = clock()
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     ax = draw_scene(None)
@@ -514,9 +514,9 @@ if __name__ == '__main__':
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
     t3 = clock()
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     ax = draw_scene(None)

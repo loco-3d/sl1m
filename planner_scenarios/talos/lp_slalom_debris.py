@@ -14,7 +14,7 @@ tp = lp.tp
 pb, coms, footpos, allfeetpos, res = lp.solve() 
 
 
-print "Done."
+print("Done.")
 import time
 Robot.urdfSuffix+="_safeFeet"
 
@@ -40,7 +40,7 @@ fullBody.setReferenceConfig(q_ref)
 fullBody.setPostureWeights(fullBody.postureWeights[::] + [0]*6)
 #fullBody.usePosturalTaskContactCreation(True)
 
-print "Generate limb DB ..."
+print("Generate limb DB ...")
 tStart = time.time()
 # generate databases : 
 
@@ -52,8 +52,8 @@ fullBody.runLimbSampleAnalysis(fullBody.lLegId, "ReferenceConfiguration", True)
 
 
 tGenerate =  time.time() - tStart
-print "Done."
-print "Databases generated in : "+str(tGenerate)+" s"
+print("Done.")
+print("Databases generated in : "+str(tGenerate)+" s")
 
 configSize = fullBody.getConfigSize() -fullBody.client.robot.getDimensionExtraConfigSpace()
 q_init = q_ref[::] 
@@ -85,14 +85,14 @@ def projectCoMInSupportPolygon(s):
     #print "try to project state to com position : ",desiredCOM
     success = False
     maxIt = 20
-    print "project state to com : ",desiredCOM
+    print("project state to com : ",desiredCOM)
     q_save = s.q()[::]
     while not success and maxIt > 0:
       success = s.fullBody.projectStateToCOM(s.sId ,desiredCOM, maxNumSample = 0)
       maxIt -= 1 
       desiredCOM[2] -= 0.005
-    print "success = ",success
-    print "result = ",s.q()
+    print("success = ",success)
+    print("result = ",s.q())
     if success and isnan(s.q()[0]): # FIXME why does it happen ?
       success = False
       s.setQ(q_save)
@@ -103,10 +103,10 @@ def tryCreateContactAround(s, eff_id, pos, normal, num_max_sample= 0,rotation = 
     i_try = 0
     x_bounds = [-0.1,0.1]
     y_bounds = [-0.05,0.05]
-    print "try create contact around, first try success : ",succ
-    print "result = ",sres.q()
+    print("try create contact around, first try success : ",succ)
+    print("result = ",sres.q())
     while not succ and i_try < num_try:
-      print "try create contact around, try : ",i_try
+      print("try create contact around, try : ",i_try)
       x = random.uniform(x_bounds[0],x_bounds[1])
       y = random.uniform(y_bounds[0],y_bounds[1])
       offset = np.matrix([x,y,0]).T
@@ -126,7 +126,7 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
     movingID = fullBody.lLegId
     if moving == lp.RF:
         movingID = fullBody.rLegId
-    print "# gen state for phase Id = ",pId
+    print("# gen state for phase Id = ",pId)
     if False and pId < len(pb["phaseData"])-1:
       quat0 = Quaternion(pb["phaseData"][pId]["rootOrientation"])
       quat1 = Quaternion(pb["phaseData"][pId+1]["rootOrientation"])
@@ -143,7 +143,7 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
     pos = allfeetpos[pId];
     pos[2] += 0.002
     pose = pos.tolist()+quatToConfig(qrot)
-    print "Try to add contact for "+movingID+" pos = "+str(pose)
+    print("Try to add contact for "+movingID+" pos = "+str(pose))
     disp.moveSphere('c',v,pose)
     if newContact:
         sres, succ = tryCreateContactAround(s, movingID, pos.tolist(), normal.tolist(), num_max_sample= num_max_sample,rotation = qrot)
@@ -154,8 +154,8 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
     else:
         sres, succ = StateHelper.cloneState(s)
     if not succ:
-      print "Cannot project config q = ",sres.q()
-      print "To new contact position for "+movingID+" = "+str(pose)+" ; n = "+str(normal.tolist())
+      print("Cannot project config q = ",sres.q())
+      print("To new contact position for "+movingID+" = "+str(pose)+" ; n = "+str(normal.tolist()))
       raise RuntimeError("Cannot project feet to new contact position") # try something else ?? 
     if projectCOM :
         #sfeet, _ = StateHelper.cloneState(sres)
@@ -163,7 +163,7 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
         successCOM = projectCoMInSupportPolygon(sres)
         if not successCOM:
             # is it really an issue ? 
-            print "Unable to project CoM in the center of the support polygone"
+            print("Unable to project CoM in the center of the support polygone")
         
     v(sres.q())
     return sres
@@ -211,7 +211,7 @@ configs = [ st.q() for st in all_states[:]]; i = 0
 #displayContactSequence(v,configs)
 
 
-print "SID ", [s.sId for s in all_states]
+print("SID ", [s.sId for s in all_states])
 
 beginId = 0
 

@@ -9,7 +9,7 @@ from numpy.linalg import norm
 
 from sl1m.planner import *
 
-from constraints import *
+from .constraints import *
 
 from plot_plytopes import *
 

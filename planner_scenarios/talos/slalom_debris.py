@@ -1,7 +1,7 @@
 import numpy as np
-print "Plan guide trajectory ..."
-import lp_slalom_debris_path as tp
-print "Guide planned."
+print("Plan guide trajectory ...")
+from . import lp_slalom_debris_path as tp
+print("Guide planned.")
 from tools.surfaces_from_path import getSurfacesFromGuideContinuous
 
 from sl1m.constants_and_tools import *
@@ -90,7 +90,7 @@ def gen_pb(root_init,R, surfaces):
     #p0 = [array([-3.0805096486250154, 0.335, 0.]), array([-3.0805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
     #p0 = [array([-0.1805096486250154, 0.335, 0.]), array([-0.1805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
     p0 = [lf_0,rf_0];
-    print "p0 used : ",p0
+    print("p0 used : ",p0)
     
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
     #res = { "p0" : None, "c0" : None, "nphases": nphases}
@@ -159,7 +159,7 @@ def solve():
         pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, None)
         success = True
       except :  
-        print "## Planner failed at iter : "+str(it)+" with step length = "+str(step)
+        print("## Planner failed at iter : "+str(it)+" with step length = "+str(step))
       it += 1
     if not success :
       raise RuntimeError("planner always fail.") 
