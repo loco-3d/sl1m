@@ -11,8 +11,10 @@ import qp
 # try to import mixed integer solver
 MIP_OK = False  
 try:
-    import gurobipy
+    #~ from gurobipy import *
+    import gurobipy as grb
     import cvxpy as cp
+    from scipy.sparse import csr_matrix
     MIP_OK = True
 
 except ImportError:
@@ -57,6 +59,11 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     A, b, E, e = pl1.convertProblemToLp(pb)    
     C = identity(A.shape[1]) * 0.00001
     c = pl1.slackSelectionMatrix(pb)
+    
+    print "DDDDDDDDDDDDDDDDDDDDDDDDDDDd"
+    
+    print "E[i,:]", [ el for i in range(E.shape[0])for el in E[i] if el > 0]
+    print "E[i,:]", [ el for i in range(E.shape[0])for el in E[i] if el > 0]
         
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
         
@@ -108,13 +115,15 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
 def tovals(variables):
     return array([el.value for el in variables])
 
-def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
+
+
+def solveMIPcvx(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
     if not MIP_OK:
         print "Mixed integer formulation requires gurobi packaged in cvxpy"
         raise ImportError
         
-    gurobipy.setParam('LogFile', '')
-    gurobipy.setParam('OutputFlag', 0)
+    grb.setParam('LogFile', '')
+    grb.setParam('OutputFlag', 0)
        
     A, b, E, e = pl1.convertProblemToLp(pb)   
     slackMatrix = pl1.slackSelectionMatrix(pb)
@@ -146,12 +155,111 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
             elif el !=0:
                 currentSum = currentSum + [boolvars[i]]
             previousL  = el
-            obj = cp.Minimize(ones(numSlackVariables) * boolvars)
+    obj = cp.Minimize(ones(numSlackVariables) * boolvars)
     prob = cp.Problem(obj, constraints)
     t1 = clock()
     res = prob.solve(solver=cp.GUROBI, verbose=False )
     t2 = clock()
     res = tovals(varReal)
+    print "time to solve MIP ", timMs(t1,t2)
+
+    
+    plot = plot and draw_scene is not None 
+    if plot:
+        ax = draw_scene(surfaces)
+        pl1.plotQPRes(pb, res, ax=ax)
+    
+    return timMs(t1,t2)
+        
+
+def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
+    if not MIP_OK:
+        print "Mixed integer formulation requires gurobi packaged in cvxpy"
+        raise ImportError
+        
+    grb.setParam('LogFile', '')
+    grb.setParam('OutputFlag', 0)
+       
+    A, b, E, e = pl1.convertProblemToLp(pb)   
+    slackMatrix = pl1.slackSelectionMatrix(pb)
+    
+    
+    model = grb.Model("mip")
+    #~ model.setParam(grb.GRB.Param.IntFeasTol,.1)
+    #~ model.setParam(grb.GRB.Param.FeasibilityTol,.01)
+    #~ model.feasRelaxS(0, False, False, True)
+    
+    rdim = A.shape[1]
+    
+    #add continuous variables
+    cVars = []
+    for i in range(rdim):
+        print "slackMatrix[i]" , slackMatrix[i]
+        cVars.append(model.addVar(obj = slackMatrix[i]))
+    
+    # Update model to integrate new variables
+    model.update()
+    
+    x = np.array(model.getVars(), copy=False)
+    
+    # equality constraints
+    if E.shape[0] > 0:        
+        for i in range(E.shape[0]):
+            if np.linalg.norm(E[i] > 0.000001):
+                expr = grb.LinExpr(E[i,:], x)
+                #~ model.addConstr(expr, grb.GRB.EQUAL, e[i])
+                model.addConstr(expr, grb.GRB.LESS_EQUAL, e[i] + 0.04)
+                model.addConstr(expr, grb.GRB.GREATER_EQUAL, e[i] - 0.1)
+
+    # inequality constraints
+    if A.shape[0] > 0:
+        for i in range(A.shape[0]):
+            expr = grb.LinExpr(A[i,:], x)
+            model.addConstr(expr, grb.GRB.LESS_EQUAL, b[i])
+        
+    model.update()
+    
+    slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
+    numSlackVariables = len([el for el in slackMatrix if el > 0])
+    #~ obj = cp.Minimize(slackMatrix * varReal)
+    
+    if MIP:    
+                
+        #create boolean variables  
+        boolvars = []
+        for i in range(numSlackVariables):
+            boolvars.append(model.addVar(vtype=grb.GRB.BINARY,
+                                 #~ obj=fixedCosts[p],
+                                 name="boolVar%d" % i))
+        model.update()
+        #Big M value
+        M = 100.
+        #~ constraints = constraints + [varReal[el] <= M * boolvars[i] for i, el in enumerate(slackIndices)] 
+        [model.addConstr(cVars[el] <= M * boolvars[i], "boolAlpha%d" % i ) for i, el in enumerate(slackIndices)]  
+    
+        model.update()
+    
+        currentSum = []
+        previousL = 0
+        for i, el in enumerate(slackIndices):
+            if i!= 0 and el - previousL > 2.:
+                assert len(currentSum) > 0
+                #~ constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
+                model.addConstr( grb.quicksum(currentSum) == len(currentSum) -1, "card%d" % i)
+                currentSum = []
+            elif el !=0:
+                currentSum = currentSum + [boolvars[i]]
+            previousL  = el
+    else:
+        model.presolve()
+    #~ obj = cp.Minimize(ones(numSlackVariables) * boolvars)
+    #~ prob = cp.Problem(obj, constraints)
+    model.update()
+    t1 = clock()
+    model.optimize()
+    #~ res = prob.solve(solver=cp.GUROBI, verbose=False )
+    t2 = clock()
+    res = [el.x for el in cVars]
     print "time to solve MIP ", timMs(t1,t2)
 
     
