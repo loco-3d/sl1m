@@ -36,8 +36,8 @@ def load_obj(filename) :
     # OBJ indexies are 1 based not 0 based hence the -1
     # convert indexies to integer
     for j in range(0, len(face[i])): 
-		if j!=1:
-			face[i][j] = int(face[i][j]) - 1
+      if j!=1:
+        face[i][j] = int(face[i][j]) - 1
    F.append(face)
  fh.close()
  return ObjectData(V, T, N, F)
@@ -60,15 +60,15 @@ def find_point_on_plane(a,b,c,d):
  
 #Create an Inequalities object given the inequalities matrices A,b, s.t. Ax <=b
 def inequalities_to_Inequalities_object(A,b):
-        nrows = A.shape[0]
-	V = np.ones([nrows, 4])
-	N = np.empty([nrows, 3])
-        i = 0
-        for ai, bi in zip(A,b):
-                N[i,:]  = ai
-                V[i,:3] = find_point_on_plane(ai[0],ai[1],ai[2],bi)
-                i+=1
-	return Inequalities(A,b, N, V)
+  nrows = A.shape[0]
+  V = np.ones([nrows, 4])
+  N = np.empty([nrows, 3])
+  i = 0
+  for ai, bi in zip(A,b):
+    N[i,:]  = ai
+    V[i,:3] = find_point_on_plane(ai[0],ai[1],ai[2],bi)
+    i+=1
+  return Inequalities(A,b, N, V)
         
  
 def inequality(v, n): 
