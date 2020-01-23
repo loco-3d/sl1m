@@ -412,9 +412,9 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)  
    
-from tools.plot_plytopes import plot_polytope_H_rep
    
 def plotConstraints(ax, pb, allfeetpos, coms):
+    from tools.plot_plytopes import plot_polytope_H_rep
     for i, phase in enumerate(pb["phaseData"][:]):
         if i <1 :
             continue
