@@ -9,7 +9,7 @@ from sl1m.constants_and_tools import *
 from sl1m.planner import *
 
 
-from plot_plytopes import *
+#~ from plot_plytopes import *
 
 from constraints import *
 
@@ -37,7 +37,10 @@ astep2 = array(step2).T
 astep3 = array(step3).T
 astep4 = array(step4).T
 
-surfaces = [[afloor], [afloor], [astep1,astep2,astep3],[astep2,astep3,astep1], [astep3,astep2,astep1,astep4], [astep3,astep4], [astep4],[astep4]]
+aall_surfaces = [afloor, astep1, astep2, astep3, astep4]
+
+#~ surfaces = [[afloor], [afloor], [astep1,astep2,astep3],[astep2,astep3,astep1], [astep3,astep2,astep1,astep4], [astep3,astep4], [astep4],[astep4]]
+surfaces = [[afloor], [afloor], aall_surfaces,aall_surfaces, aall_surfaces, aall_surfaces,[astep4]]
 
 def gen_stair_pb():
     kinematicConstraints = genKinematicConstraints(left_foot_constraints, right_foot_constraints)
@@ -78,10 +81,14 @@ def draw_scene(surfaces, ax = None, color = "p"):
 if __name__ == '__main__':
     
     
-    from sl1m.fix_sparsity import solveL1, solveMIP
+    from sl1m.fix_sparsity import solveL1, solveMIP, solveMIPcvx
     
     pb = gen_stair_pb()
+    solveMIPcvx(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
+    pb = gen_stair_pb()
     solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
+    pb = gen_stair_pb()
+    solveMIP(pb, surfaces, MIP = False, draw_scene = draw_scene, plot = True)
     pb = gen_stair_pb()
     solveL1(pb, surfaces, draw_scene, plot = True)
     

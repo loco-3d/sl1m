@@ -304,6 +304,25 @@ def num_non_zeros(pb, res):
         cIdx += phaseVars
     return indices, wrongsurfaces
     
+def fixedIndices(pb, res):
+    nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
+    indices = []
+    cIdx = 0
+    for i, phase in enumerate(pb["phaseData"]):  
+        numSurfaces = len(phase["S"])
+        phaseVars = numVariablesForPhase(phase)
+        fixed = True
+        if numSurfaces > 1:
+            startIdx = cIdx + DEFAULT_NUM_VARS
+            betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
+            if array(betas).min() > 0.01:
+                fixed = False
+        if fixed:
+            indices+= [i for i in range(cIdx, cIdx+phaseVars)]
+        cIdx += phaseVars
+    return indices
+    
+    
 def isSparsityFixed(pb, res):
     indices, wrongsurfaces = num_non_zeros(pb, res)
     return len(indices) == 0
@@ -412,7 +431,7 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)  
    
-from tools.plot_plytopes import plot_polytope_H_rep
+#~ from tools.plot_plytopes import plot_polytope_H_rep
    
 def plotConstraints(ax, pb, allfeetpos, coms):
     for i, phase in enumerate(pb["phaseData"][:]):

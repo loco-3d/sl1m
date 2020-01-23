@@ -60,12 +60,12 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     C = identity(A.shape[1]) * 0.00001
     c = pl1.slackSelectionMatrix(pb)
     
-    print "DDDDDDDDDDDDDDDDDDDDDDDDDDDd"
     
-    print "E[i,:]", [ el for i in range(E.shape[0])for el in E[i] if el > 0]
-    print "E[i,:]", [ el for i in range(E.shape[0])for el in E[i] if el > 0]
-        
+    t1 = clock()
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    t2 = clock()
+    
+    print "time to solve initial qp ", timMs(t1,t2)
         
     ok = pl1.isSparsityFixed(pb, res)
     solutionIndices = None
@@ -172,16 +172,19 @@ def solveMIPcvx(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     return timMs(t1,t2)
         
 
-def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
+def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None):  
     if not MIP_OK:
         print "Mixed integer formulation requires gurobi packaged in cvxpy"
         raise ImportError
         
     grb.setParam('LogFile', '')
     grb.setParam('OutputFlag', 0)
+    #~ grb.setParam('OutputFlag', 1)
        
     A, b, E, e = pl1.convertProblemToLp(pb)   
-    slackMatrix = pl1.slackSelectionMatrix(pb)
+    slackMatrix = pl1.slackSelectionMatrix(pb)    
+    slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
+    numSlackVariables = len([el for el in slackMatrix if el > 0])
     
     
     model = grb.Model("mip")
@@ -194,8 +197,15 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     #add continuous variables
     cVars = []
     for i in range(rdim):
-        print "slackMatrix[i]" , slackMatrix[i]
-        cVars.append(model.addVar(obj = slackMatrix[i]))
+        if slackMatrix[i] > 0:
+            if MIP:
+                cVars.append(model.addVar(name="slack%d" % i, obj = 0, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+            else:
+                cVars.append(model.addVar(name="slack%d" % i, obj = 1, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+        else:
+            cVars.append(model.addVar(name="c%d" % i, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+            
+    
     
     # Update model to integrate new variables
     model.update()
@@ -205,23 +215,24 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     # equality constraints
     if E.shape[0] > 0:        
         for i in range(E.shape[0]):
-            if np.linalg.norm(E[i] > 0.000001):
-                expr = grb.LinExpr(E[i,:], x)
-                #~ model.addConstr(expr, grb.GRB.EQUAL, e[i])
-                model.addConstr(expr, grb.GRB.LESS_EQUAL, e[i] + 0.04)
-                model.addConstr(expr, grb.GRB.GREATER_EQUAL, e[i] - 0.1)
+            idx = [j for j, el in enumerate(E[i].tolist()) if el != 0.]
+            variables = x[idx]
+            coeff = E[i,idx]
+            expr = grb.LinExpr(coeff, variables)
+            model.addConstr(expr, grb.GRB.EQUAL, e[i])
+    model.update()
 
     # inequality constraints
     if A.shape[0] > 0:
         for i in range(A.shape[0]):
-            expr = grb.LinExpr(A[i,:], x)
+            idx = [j for j, el in enumerate(A[i].tolist()) if el != 0.]
+            variables = x[idx]
+            coeff = A[i,idx]
+            expr = grb.LinExpr(coeff, variables)
             model.addConstr(expr, grb.GRB.LESS_EQUAL, b[i])
         
     model.update()
     
-    slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
-    numSlackVariables = len([el for el in slackMatrix if el > 0])
-    #~ obj = cp.Minimize(slackMatrix * varReal)
     
     if MIP:    
                 
@@ -229,13 +240,12 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
         boolvars = []
         for i in range(numSlackVariables):
             boolvars.append(model.addVar(vtype=grb.GRB.BINARY,
-                                 #~ obj=fixedCosts[p],
+                                 obj=1,
                                  name="boolVar%d" % i))
         model.update()
         #Big M value
         M = 100.
-        #~ constraints = constraints + [varReal[el] <= M * boolvars[i] for i, el in enumerate(slackIndices)] 
-        [model.addConstr(cVars[el] <= M * boolvars[i], "boolAlpha%d" % i ) for i, el in enumerate(slackIndices)]  
+        [model.addConstr(cVars[el] == M * boolvars[i], "boolAlpha%d" % i ) for i, el in enumerate(slackIndices)]  
     
         model.update()
     
@@ -244,29 +254,41 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
         for i, el in enumerate(slackIndices):
             if i!= 0 and el - previousL > 2.:
                 assert len(currentSum) > 0
-                #~ constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
                 model.addConstr( grb.quicksum(currentSum) == len(currentSum) -1, "card%d" % i)
                 currentSum = []
             elif el !=0:
                 currentSum = currentSum + [boolvars[i]]
             previousL  = el
-    else:
-        model.presolve()
-    #~ obj = cp.Minimize(ones(numSlackVariables) * boolvars)
-    #~ prob = cp.Problem(obj, constraints)
+    #~ else:
+        #~ model.presolve()
+    model.modelSense = grb.GRB.MINIMIZE
+    
+    if initGuess is not None:
+        for (i,el) in initGuess:
+        #~ for i, var in enumerate(cVars):
+            #~ print "initGuess", i
+            x[i].start = el
+    
+    if MIP and initGuessMip is not None:
+        for (i,el) in initGuessMip:
+            boolvars[i].start = el
+        
+    
     model.update()
     t1 = clock()
     model.optimize()
-    #~ res = prob.solve(solver=cp.GUROBI, verbose=False )
     t2 = clock()
     res = [el.x for el in cVars]
     print "time to solve MIP ", timMs(t1,t2)
-
     
     plot = plot and draw_scene is not None 
     if plot:
         ax = draw_scene(surfaces)
         pl1.plotQPRes(pb, res, ax=ax)
     
-    return timMs(t1,t2)
+    #~ return timMs(t1,t2)
+    if MIP:
+        return res, [el.x for el in boolvars]
+    else:
+        return res
         

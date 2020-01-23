@@ -11,7 +11,7 @@ from sl1m.planner import *
 
 from constraints import *
 
-from plot_plytopes import *
+#~ from plot_plytopes import *
 
 start  = [[-3., 0.4  , 0.  ], [-2.7 ,  0.4, 0. ], [-2.7 , 0.1, 0.  ], [-03., 0.1, 0.  ], ]
 floor = [[-0.30, 0.54  , 0.  ], [0.01 ,  0.54, 0. ], [0.01 , -0.46, 0.  ], [-0.30, -0.46, 0.  ], ]
@@ -68,10 +68,12 @@ allstepsandfloor = allsteps + [arub9,afloor]
 allrubfloorsteps = allrub + allsteps + [afloor]
 end = [astep6, astep7, abridge, aplatfo ]
 
-
+allsurfs = allrubfloorsteps + end
 
 
 surfaces = [[arub2],[arub3,arub2],[arub4,arub5],[arub5],[arub6,arub7],[arub6,arub7],[arub75,arub9],[arub9],[arub9,afloor],[afloor,astep1],[astep1,astep2],[astep2,astep3],[astep3,astep4],[astep4,astep5],[astep5,astep6],[astep6,astep7],[astep6,astep7],[astep7,abridge],[astep7,abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge,aplatfo],[abridge,aplatfo], [aplatfo] ]
+
+surfaces = [[arub2],[arub3,arub2],[arub4,arub5],[arub5],[arub6,arub7],[arub6,arub7],[arub75,arub9],[arub9],[arub9,afloor],[afloor,astep1],allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,allsurfs,[abridge],[abridge],[abridge],[abridge],[abridge,aplatfo],[abridge,aplatfo], [aplatfo] ]
 
 #~ surfaces = [[arub2],[arub3,arub2],[arub4],[arub5],[arub6],[arub7],[arub75],allrub,[afloor],[afloor, astep1],[afloor, astep1],[astep1,astep2,astep3],[astep4,astep2,astep3],[astep4,astep2,astep3],[astep4,astep2,astep5],[astep6,astep2,astep5],[astep6],[astep7],end,end,[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[aplatfo] ]
 
@@ -112,11 +114,28 @@ def draw_scene(surfaces, ax = None, color = "p"):
 ############# main ###################    
 
 if __name__ == '__main__':
-    from sl1m.fix_sparsity import solveL1, solveMIP
+    from sl1m.fix_sparsity import solveL1, solveMIP, solveMIPcvx
+    from sl1m.planner_l1 import fixedIndices, isSparsityFixed
     
+    print "MIP gurobi cvxpy"
     pb = gen_stair_pb()
-    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
+    solveMIPcvx(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = False)
+    print "MIP gurobi cold start"
     pb = gen_stair_pb()
-    solveL1(pb, surfaces, draw_scene, plot = True)
+    res, resMIP = solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = False )
+    initGuessMIP = [(i,el) for i, el in enumerate(resMIP)]
+    print "sparse ? " , isSparsityFixed(pb, res)
+    print "SL1M gurobi"
+    pb = gen_stair_pb()
+    res = solveMIP(pb, surfaces, MIP = False, draw_scene = draw_scene, plot = False)
+    fixedIdx = fixedIndices(pb,res)
+    initGuess = [(idx,res[idx]) for idx in fixedIdx]
+    print "idx ", idx
+    print "MIP warm started with sl1m"
+    pb = gen_stair_pb()
+    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = False, initGuess = initGuess, initGuessMip = initGuessMIP )
+    print "SL1M gurobi warm start"
+    pb = gen_stair_pb()
+    solveMIP(pb, surfaces, MIP = False, draw_scene = draw_scene, plot = False, initGuess = initGuess )
     
     
