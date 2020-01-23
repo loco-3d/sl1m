@@ -9,7 +9,6 @@ from sl1m.constants_and_tools import *
 from sl1m.planner import *
 
 
-from plot_plytopes import *
 
 from .constraints import *
 
