@@ -151,10 +151,13 @@ def solveMIPcvx(pb, surfaces, MIP = True, draw_scene = None, plot = True):
             if i!= 0 and el - previousL > 2.:
                 assert len(currentSum) > 0
                 constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
-                currentSum = []
+                currentSum = [boolvars[i]]
             elif el !=0:
                 currentSum = currentSum + [boolvars[i]]
             previousL  = el
+        if len(currentSum) > 1:
+            constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
+            
     obj = cp.Minimize(ones(numSlackVariables) * boolvars)
     prob = cp.Problem(obj, constraints)
     t1 = clock()
@@ -188,9 +191,6 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess
     
     
     model = grb.Model("mip")
-    #~ model.setParam(grb.GRB.Param.IntFeasTol,.1)
-    #~ model.setParam(grb.GRB.Param.FeasibilityTol,.01)
-    #~ model.feasRelaxS(0, False, False, True)
     
     rdim = A.shape[1]
     
@@ -240,33 +240,34 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess
         boolvars = []
         for i in range(numSlackVariables):
             boolvars.append(model.addVar(vtype=grb.GRB.BINARY,
-                                 obj=1,
+                                 obj=0,
                                  name="boolVar%d" % i))
         model.update()
         #Big M value
-        M = 100.
+        M = 1000.
         [model.addConstr(cVars[el] == M * boolvars[i], "boolAlpha%d" % i ) for i, el in enumerate(slackIndices)]  
     
         model.update()
     
         currentSum = []
+        currentSum2 = []
         previousL = 0
         for i, el in enumerate(slackIndices):
             if i!= 0 and el - previousL > 2.:
-                assert len(currentSum) > 0
-                model.addConstr( grb.quicksum(currentSum) == len(currentSum) -1, "card%d" % i)
-                currentSum = []
+                model.addConstr(grb.quicksum(currentSum) == len(currentSum) -1, "card%d" % i)
+                assert len(currentSum) > 0      
+                currentSum = [boolvars[i]]
+                currentSum2 = [el]          
             elif el !=0:
                 currentSum = currentSum + [boolvars[i]]
-            previousL  = el
-    #~ else:
-        #~ model.presolve()
+                currentSum2 = currentSum2 + [el]
+            previousL  = el        
+        if len(currentSum) > 1:
+            model.addConstr(grb.quicksum(currentSum) == len(currentSum) -1, "card%d" % i)
     model.modelSense = grb.GRB.MINIMIZE
     
     if initGuess is not None:
         for (i,el) in initGuess:
-        #~ for i, var in enumerate(cVars):
-            #~ print "initGuess", i
             x[i].start = el
     
     if MIP and initGuessMip is not None:
@@ -287,6 +288,8 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess
         pl1.plotQPRes(pb, res, ax=ax)
     
     #~ return timMs(t1,t2)
+    
+    
     if MIP:
         return res, [el.x for el in boolvars]
     else:
