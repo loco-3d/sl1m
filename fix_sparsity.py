@@ -142,11 +142,13 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
             if i!= 0 and el - previousL > 2.:
                 assert len(currentSum) > 0
                 constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
-                currentSum = []
+                currentSum = [boolvars[i]]
             elif el !=0:
                 currentSum = currentSum + [boolvars[i]]
             previousL  = el
-            obj = cp.Minimize(ones(numSlackVariables) * boolvars)
+        if len(currentSum) > 1:
+            constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
+    obj = cp.Minimize(ones(numSlackVariables) * boolvars)
     prob = cp.Problem(obj, constraints)
     t1 = clock()
     res = prob.solve(solver=cp.GUROBI, verbose=False )
