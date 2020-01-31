@@ -303,9 +303,34 @@ def num_non_zeros(pb, res):
                 #~ print "lens ", len([[phase["S"][idx]] for idx in sorted_surfaces]  )
         cIdx += phaseVars
     return indices, wrongsurfaces
+
+def num_non_zeros_strong(pb, res):
+    # nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
+    indices = []
+    cIdx = 0
+    wrongsurfaces = []
+    for i, phase in enumerate(pb["phaseData"]):  
+        numSurfaces = len(phase["S"])
+        phaseVars = numVariablesForPhase(phase)
+        if numSurfaces > 1:
+            startIdx = cIdx + DEFAULT_NUM_VARS
+            betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
+            if array(betas).min() > 0.01: ####
+                # print "wrong ", i, array(betas).min()
+                indices += [i]
+                sorted_surfaces = np.argsort(betas)
+                #~ print "sorted_surfaces ",sorted_surfaces
+                wrongsurfaces += [[[phase["S"][idx]] for idx in sorted_surfaces]  ]
+                #~ print "lens ", len([[phase["S"][idx]] for idx in sorted_surfaces]  )
+        cIdx += phaseVars
+    return indices, wrongsurfaces
     
 def isSparsityFixed(pb, res):
     indices, wrongsurfaces = num_non_zeros(pb, res)
+    return len(indices) == 0
+
+def isSparsityFixed_strong(pb, res):
+    indices, wrongsurfaces = num_non_zeros_strong(pb, res)
     return len(indices) == 0
    
 def genOneComb(pb,indices, surfaces, res):
@@ -338,6 +363,7 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
     res = []
     if comb >1000:
         print "problem probably too big ", comb
+        return 1
     else:
         genCombinatorialRec(pb, indices, wrongsurfaces, res)
     return res
@@ -408,7 +434,7 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     y = array(wps)[:,1]
     if(D3):                
             z = array(wps)[:,2]
-            ax.scatter(x, y, z, c=color, marker='o', linewidth = 5) 
+            ax.scatter(x, y, z, color=color, marker='o', linewidth = 5) 
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)  
    
@@ -458,14 +484,14 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     ax.set_autoscale_on(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
     
-    #~ plotPoints(ax, coms, color = "b")
+    plotPoints(ax, coms, color = "b")
     plotPoints(ax, footpos[RF], color = "r")
     plotPoints(ax, footpos[LF], color = "g")
     
     cx = [c[0] for c in coms]
     cy = [c[1] for c in coms]
     cz = [c[2] for c in coms]
-    #~ ax.plot(cx, cy, cz)
+    ax.plot(cx, cy, cz)
     px = [c[0] for c in allfeetpos]
     py = [c[1] for c in allfeetpos]
     pz = [c[2] for c in allfeetpos]
