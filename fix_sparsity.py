@@ -27,14 +27,19 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 
 ### This solver is called when the sparsity is fixed. It assumes the first contact surface for each phase
 ### is the one used for contact creation.
-def solve(pb,surfaces, draw_scene = None, plot = True ):  
+def solve(pb,surfaces, draw_scene = None, plot = True):  
         
     t1 = clock()
     A, b, E, e = pl.convertProblemToLp(pb)    
     C = identity(A.shape[1])
     c = zeros(A.shape[1])
     t2 = clock()
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    try: 
+        res = qp.quadprog_solve_qp(C, c,A,b,E,e)    ######
+        # res = qp.solve_lp(c,A,b,E,e)
+    except:
+        print "CASE3: turned out to be infeasible"
+        return 3, 3, 3
     t3 = clock()
     
     print "time to set up problem" , timMs(t1,t2)
@@ -48,7 +53,8 @@ def solve(pb,surfaces, draw_scene = None, plot = True ):
         ax = draw_scene(surfaces)
         pl.plotQPRes(pb, res, ax=ax)
     
-    return pb, coms, footpos, allfeetpos, res
+    return pb, res, timMs(t1,t3)
+    # return pb, coms, footpos, allfeetpos, res
 
 
 ### Calls the sl1m solver. Brute-forcedly tries to solve non fixed sparsity by handling the combinatorial.
@@ -58,15 +64,24 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     C = identity(A.shape[1]) * 0.00001
     c = pl1.slackSelectionMatrix(pb)
         
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    try:    
+        res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    except:
+        return 4, 4, 4
         
     ok = pl1.isSparsityFixed(pb, res)
     solutionIndices = None
     solutionComb = None
+    pbs = None
+    
     if not ok:
         pbs = pl1.generateAllFixedScenariosWithFixedSparsity(pb, res)
         
         t3 = clock()
+        
+        if pbs == 1:
+            print "CASE1: too big combinatorial"
+            return 1, 1, 1
         
         for (pbComb, comb, indices) in pbs:
             A, b, E, e = pl1.convertProblemToLp(pbComb, convertSurfaces = False)
@@ -74,7 +89,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
             c = pl1.slackSelectionMatrix(pbComb)
             try:
                 res = qp.quadprog_solve_qp(C, c,A,b,E,e)
-                if pl1.isSparsityFixed(pbComb, res):       
+                if pl1.isSparsityFixed_strong(pbComb, res):       
                     coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pbComb, res)
                     pb = pbComb
                     ok = True
@@ -100,7 +115,12 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
             for i, idx in enumerate(solutionIndices):
                 pb["phaseData"][idx]["S"] = [surfaces[idx][solutionComb[i]]]
         
-        return solve(pb,surfaces, draw_scene = draw_scene, plot = True )  
+        return solve (pb, surfaces, draw_scene, plot)  
+    
+    print "CASE2: combinatorials all sparsity not fixed"
+    return 2, 2, 2   
+        
+        # return solve(pb,surfaces, draw_scene = draw_scene, plot = True )  
 
 
 ############### MIXED-INTEGER SOLVER ###############
@@ -162,5 +182,6 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
         ax = draw_scene(surfaces)
         pl1.plotQPRes(pb, res, ax=ax)
     
-    return timMs(t1,t2)
+    # return timMs(t1,t2)
+    return pb, res, timMs(t1,t2)
         
