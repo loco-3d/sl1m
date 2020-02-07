@@ -282,33 +282,13 @@ def slackSelectionMatrix(pb):
         cIdx += phaseVars
     assert cIdx == nvars
     return c
-    
-def num_non_zeros(pb, res):
-    nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
-    indices = []
-    cIdx = 0
-    wrongsurfaces = []
-    for i, phase in enumerate(pb["phaseData"]):  
-        numSurfaces = len(phase["S"])
-        phaseVars = numVariablesForPhase(phase)
-        if numSurfaces > 1:
-            startIdx = cIdx + DEFAULT_NUM_VARS
-            betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
-            if array(betas).min() > 0.01:
-                #~ print "wrong ", i, array(betas).min()
-                indices += [i]
-                sorted_surfaces = np.argsort(betas)
-                #~ print "sorted_surfaces ",sorted_surfaces
-                wrongsurfaces += [[[phase["S"][idx]] for idx in sorted_surfaces]  ]
-                #~ print "lens ", len([[phase["S"][idx]] for idx in sorted_surfaces]  )
-        cIdx += phaseVars
-    return indices, wrongsurfaces
 
-def num_non_zeros_strong(pb, res):
+def num_non_zeros(pb, res):
     # nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
     indices = []
     cIdx = 0
     wrongsurfaces = []
+    wrongsurfaces_indices = []
     for i, phase in enumerate(pb["phaseData"]):  
         numSurfaces = len(phase["S"])
         phaseVars = numVariablesForPhase(phase)
@@ -319,18 +299,15 @@ def num_non_zeros_strong(pb, res):
                 # print "wrong ", i, array(betas).min()
                 indices += [i]
                 sorted_surfaces = np.argsort(betas)
+                wrongsurfaces_indices += [sorted_surfaces]
                 #~ print "sorted_surfaces ",sorted_surfaces
                 wrongsurfaces += [[[phase["S"][idx]] for idx in sorted_surfaces]  ]
                 #~ print "lens ", len([[phase["S"][idx]] for idx in sorted_surfaces]  )
         cIdx += phaseVars
-    return indices, wrongsurfaces
+    return indices, wrongsurfaces, wrongsurfaces_indices
     
 def isSparsityFixed(pb, res):
-    indices, wrongsurfaces = num_non_zeros(pb, res)
-    return len(indices) == 0
-
-def isSparsityFixed_strong(pb, res):
-    indices, wrongsurfaces = num_non_zeros_strong(pb, res)
+    indices, wrongsurfaces, wrongsurfaces_indices = num_non_zeros(pb, res)
     return len(indices) == 0
    
 def genOneComb(pb,indices, surfaces, res):
@@ -342,20 +319,21 @@ def genOneComb(pb,indices, surfaces, res):
 import itertools
 import copy
    
-def genCombinatorialRec(pb, indices, wrongsurfaces, res):
+def genCombinatorialRec(pb, indices, wrongsurfaces, wrongsurfaces_indices, res):
     lenss  = [len(surfs) for surfs in wrongsurfaces]
     all_indexes = [[el for el in range(lens)]  for lens in [len(surfs) for surfs in wrongsurfaces]]
+    wrong_combs = [el for el in itertools.product(*wrongsurfaces_indices)]
     combs = [el for el in itertools.product(*all_indexes)]
-    for comb in combs:
+    for j, comb in enumerate(combs):
         pb1 = copy.deepcopy(pb)
         for i, idx in enumerate(indices):
             pb1["phaseData"][idx]["S"] = wrongsurfaces[i][comb[i]]
-        res += [[pb1, comb, indices]]
+        res += [[pb1, wrong_combs[j], indices]]
         
     
     
 def generateAllFixedScenariosWithFixedSparsity(pb, res):
-    indices, wrongsurfaces = num_non_zeros(pb, res)
+    indices, wrongsurfaces, wrongsurfaces_indices = num_non_zeros(pb, res)
     all_len = [len(surfs) for surfs in wrongsurfaces]
     comb = 1
     for el in all_len:
@@ -365,7 +343,7 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
         print "problem probably too big ", comb
         return 1
     else:
-        genCombinatorialRec(pb, indices, wrongsurfaces, res)
+        genCombinatorialRec(pb, indices, wrongsurfaces, wrongsurfaces_indices, res)
     return res
     
     
