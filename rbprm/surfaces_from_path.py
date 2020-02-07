@@ -52,8 +52,8 @@ def getRotationMatrixFromConfigs(configs) :
   R = []
   for config in configs:
     q_rot = config[3:7]
-    R.append(XYZQUATToSe3([0,0,0] + q_rot).rotation)
-  return R   
+    R.append(array(XYZQUATToSe3([0,0,0] + q_rot).rotation))
+  return R
     
 # get contacted surface names at configuration
 def getContactsNames(rbprmBuilder,i,q):
