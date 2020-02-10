@@ -8,6 +8,7 @@ from sl1m.problem_definition import *
 #### constraint specification ####  
 
 DEFAULT_NUM_VARS = 4
+SLACK_SCALE = 10.
 
 #extra variables when multiple surface: a0, variable for inequality, a1 slack for equality constraint, then a2 = |a1|
 #so vars are x, y, z, zcom, a0, a1
@@ -196,7 +197,7 @@ def SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow):
         A[sRow:idRow, startCol:startCol+footExpressionMatrix.shape[1]] = S[:-1,:].dot(footExpressionMatrix)
         b[sRow:idRow                 ] = s[:-1]
         if nSurfaces >1:
-            A[sRow:idRow, startCol+idS] = -ones(idRow-sRow) 
+            A[sRow:idRow, startCol+idS] = -ones(idRow-sRow) * SLACK_SCALE
         sRow = idRow
         idS += NUM_SLACK_PER_SURFACE
     return idRow
@@ -226,7 +227,7 @@ def EqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq):
         for (S,s) in phaseDataT["S"]:   
             E[sRow, startCol:startCol+footExpressionMatrix.shape[1]] = S[-1,:].dot(footExpressionMatrix)
             #~ E[sRow, startCol+idS+1] = -1 # E x  + a1 = e
-            E[sRow, startCol+idS+1] = -1 # E x  + a1 = e
+            E[sRow, startCol+idS+1] = -1 * SLACK_SCALE # E x  + a1 = e
             e[sRow] = s[-1]
             idS += NUM_SLACK_PER_SURFACE
             sRow += 1
