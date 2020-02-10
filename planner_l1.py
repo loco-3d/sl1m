@@ -208,7 +208,7 @@ def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):
         varOffset = DEFAULT_NUM_VARS #foot and com positions
         for row in range(startRow, startRow + numSurfaces * NUM_INEQ_SLACK_PER_SURFACE, NUM_INEQ_SLACK_PER_SURFACE):
             i = row - startRow
-            col = startCol+varOffset + i / NUM_INEQ_SLACK_PER_SURFACE * NUM_SLACK_PER_SURFACE
+            col = (int) (startCol+varOffset + i / NUM_INEQ_SLACK_PER_SURFACE * NUM_SLACK_PER_SURFACE)
             A[row  , col:col+2] = [-1,  1];  #  - a0 + a1  <= 0
             A[row+1, col:col+2] = [-1, -1];  # -a0 - a1 <= 0
             idRow = row + NUM_INEQ_SLACK_PER_SURFACE       
@@ -358,7 +358,7 @@ def bestSelectedSurfaces(pb, res):
         else:
             startIdx = cIdx + DEFAULT_NUM_VARS
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
-            assert betas >= -0.00000001
+            assert min(betas) >= -0.00000001
             bestIdx = betas.index(array(betas).min())
             surfaces = surfaces + [phase["S"][bestIdx]]
             

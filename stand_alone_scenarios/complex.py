@@ -9,7 +9,7 @@ from numpy.linalg import norm
 
 from sl1m.planner import *
 
-from .constraints import *
+from constraints import *
 
 
 start  = [[-3., 0.4  , 0.  ], [-2.7 ,  0.4, 0. ], [-2.7 , 0.1, 0.  ], [-03., 0.1, 0.  ], ]
