@@ -89,7 +89,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
             c = pl1.slackSelectionMatrix(pbComb)
             try:
                 res = qp.quadprog_solve_qp(C, c,A,b,E,e)
-                if pl1.isSparsityFixed_strong(pbComb, res):       
+                if pl1.isSparsityFixed(pbComb, res):       
                     coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pbComb, res)
                     pb = pbComb
                     ok = True
