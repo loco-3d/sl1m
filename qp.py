@@ -3,6 +3,9 @@ from numpy import array, dot, vstack, hstack, asmatrix, identity, abs
 
 from scipy.optimize import linprog
 
+
+__eps = 0.00001
+
 GLPK_OK = False  
 try:
     import glpk
@@ -10,6 +13,32 @@ try:
 
 except ImportError:
     pass
+
+GUROBI_OK = False
+try:
+    import gurobipy
+    GUROBI_OK = True
+    import gurobipy as grb
+    grb.setParam('LogFile', '')
+    grb.setParam('OutputFlag', 0)
+
+except ImportError:
+    pass
+
+   
+class ResultData:
+    def __init__(self, x, status, success, cost):
+        self.x = x
+        self.status = status
+        self.success = success
+        self.cost = cost
+        
+    def __str__(self):
+        return "ResultData: \n \t solver status: " + str(self.status) + "\n \t success: " + str(self.success) + "\n \t x: " + str(self.x) + "\n \t cost: " + str(self.cost)
+   
+    def __repr__(self):
+        return self.__str__()
+            
 
 #min (1/2)x' P x + q' x  
 #subject to  G x <= h
@@ -30,11 +59,12 @@ def quadprog_solve_qp(P, q, G=None, h=None, C=None, d=None, verbose = False):
         qp_C = -G.T
         qp_b = -h
         meq = 0 
-    res = quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)
-    if verbose:
-            return res
-    #~ print 'qp status ', res
-    return res[0]
+    try:
+        res = quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)
+        return ResultData(res[0],  'opt', True, res[1])
+    except:
+        return ResultData(res[0],  'unfeasible', False, 0.)
+        
 
 
 #min ||Ax-b||**2 
@@ -44,50 +74,25 @@ def solve_least_square(A,b,G=None, h=None, C=None, d=None):
         P = dot(A.T, A)
         #~ q = 2*dot(b, A).reshape(b.shape[0])
         q = -dot(A.T, b).reshape(b.shape[0])
-        #~ q = 2*dot(b, A) 
         return quadprog_solve_qp(P, q, G, h, C, d)
-
 
 #min q' x  
 #subject to  G x <= h
 #subject to  C x  = d
 def solve_lp(q, G=None, h=None, C=None, d=None): 
     res = linprog(q, A_ub=G, b_ub=h, A_eq=C, b_eq=d, bounds=[(-100000.,10000.) for _ in range(q.shape[0])], method='interior-point', callback=None, options={'presolve': True})
-    # print "success", res['success']
-    # print "status", res['status']
-    if res['success']:
-        return res['x']
-    else:
-        return res['status']
+    return ResultData(res['x'],  res['status'], res['success'], res['fun'])
         
 if GLPK_OK:    
-    __eps = 0.00001
-    
-    class ResultDataGLPK:
-        def __init__(self, x, status):
-            self.x = x
-            self.status = status
-            self.success = status == "opt"
-            
-        def __str__(self):
-            return "ResultDataGLPK: \n \t solver status: " + self.status + "\n \t success: " + str(self.success) + "\n \t x: " + str(self.x)
-       
-        def __repr__(self):
-            return self.__str__()
     
     #solve linear programm using the simplex method with glpk
     # min q' x  
-    #subject to  G x <= h
-    #subject to  C x  = d
-    def solve_lp_glpk(q, G=None, h=None, C=None, d=None):
+    #subject to  CI x <= ci0
+    #subject to  CE x  = ce0
+    def solve_lp_glpk(q, CI=None, ci0=None, CE=None, ce0=None):
         lp = glpk.LPX() 
         # ~ lp.name = 'sample'
         lp.obj.maximize = False
-
-        CE  = C
-        ce0 = d
-        CI = G
-        ci0 = h
         
         numEqConstraints = 0
         numIneqConstraints = 0
@@ -130,11 +135,58 @@ if GLPK_OK:
         
             lp.matrix = mat
         lp.obj[:] = q.tolist()
-        
+        from time import clock
+        t1 = clock()
         lp.simplex()
-        
-        return ResultDataGLPK(array([c.primal for c in lp.cols]), lp.status)
+        t2 = clock()
+        return ResultData(array([c.primal for c in lp.cols]), lp.status, lp.status == "opt", lp.obj.value)
 
+
+if GUROBI_OK:  
+    #solve linear programm using gurobi
+    # min q' x  
+    #subject to  A x <= b
+    #subject to  E x  = e
+    def solve_lp_gurobi(c, A=None, b=None, E=None, e=None):
+        
+        model = grb.Model("lp")
+        
+        rdim = A.shape[1]
+        
+        #add continuous variables
+        cVars = []
+        for el in (c):
+            cVars.append(model.addVar(obj = el, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+        
+        # Update model to integrate new variables
+        model.update()
+        
+        x = array(model.getVars(), copy=False)
+        
+        # equality constraints
+        if E.shape[0] > 0:        
+            for i in range(E.shape[0]):
+                idx = [j for j, el in enumerate(E[i].tolist()) if el != 0.]
+                variables = x[idx]
+                coeff = E[i,idx]
+                expr = grb.LinExpr(coeff, variables)
+                model.addConstr(expr, grb.GRB.EQUAL, e[i])
+        model.update()
+
+        # inequality constraints
+        if A.shape[0] > 0:
+            for i in range(A.shape[0]):
+                idx = [j for j, el in enumerate(A[i].tolist()) if el != 0.]
+                variables = x[idx]
+                coeff = A[i,idx]
+                expr = grb.LinExpr(coeff, variables)
+                model.addConstr(expr, grb.GRB.LESS_EQUAL, b[i])
+            
+        model.modelSense = grb.GRB.MINIMIZE
+        model.optimize()
+        res = [el.x for el in cVars]
+        return ResultData(res, model.Status, model.Status == grb.GRB.OPTIMAL, model.ObjVal)
+        
         
         
 
@@ -158,8 +210,10 @@ if __name__ == '__main__':
         b = array([-1., 2., 3.])
         C = array([1.,1.,1.]).reshape([1,-1])
         d = array([1.])
-        reslp = solve_lp(b, G, h,C,d)
-        resglpk = solve_lp_glpk(b, G, h,C,d)
+        reslp = solve_lp(b, A, b,C,d)
+        resglpk = solve_lp_glpk(b, A, b,C,d)
+        resgurobi = solve_lp_gurobi(b, A, b,C,d)
 
         print("lp", reslp.x, b.dot(reslp.x))
         print("lpk", resglpk.x,  b.dot(resglpk.x))
+        print("gurobi", resgurobi.x,  b.dot(resgurobi.x))

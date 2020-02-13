@@ -34,10 +34,10 @@ def solve(pb,surfaces, draw_scene = None, plot = True):
     C = identity(A.shape[1])
     c = zeros(A.shape[1])
     t2 = clock()
-    try: 
-        res = qp.quadprog_solve_qp(C, c,A,b,E,e)    ######
-        # res = qp.solve_lp(c,A,b,E,e)
-    except:
+    res = qp.quadprog_solve_qp(C, c,A,b,E,e)    ######
+    if res.success:
+        res = res.x
+    else:
         print ("CASE3: turned out to be infeasible")
         return 3, 3, 3
     t3 = clock()
@@ -53,8 +53,7 @@ def solve(pb,surfaces, draw_scene = None, plot = True):
         ax = draw_scene(surfaces)
         pl.plotQPRes(pb, res, ax=ax)
     
-    return pb, res, timMs(t1,t3)
-    # return pb, coms, footpos, allfeetpos, res
+    return pb, coms, footpos, allfeetpos, res
 
 
 ### Calls the sl1m solver. Brute-forcedly tries to solve non fixed sparsity by handling the combinatorial.
@@ -64,10 +63,23 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     C = identity(A.shape[1]) * 0.00001
     c = pl1.slackSelectionMatrix(pb)
         
-    try:    
-        res = qp.quadprog_solve_qp(C, c,A,b,E,e)
-    except:
-        return 4, 4, 4
+    t1 = clock()
+    res = qp.quadprog_solve_qp(C, c,A,b,E,e).x
+    # ~ res = qp.solve_lp_gurobi(c,A,b,E,e).x
+    # ~ res = qp.solve_lp_glpk(c,A,b,E,e).x
+    t2 = clock()
+    print("time to solve lp ", timMs(t1,t2))
+    # ~ print ("res ", res)
+    # ~ res = res.x
+    
+    ok = pl1.isSparsityFixed(pb, res)
+    
+    plot = plot and draw_scene is not None 
+    # ~ if ok and plot:
+    if plot:
+        ax = draw_scene(surfaces)
+        pl1.plotQPRes(pb, res, ax=ax)
+        # ~ return
         
     ok = pl1.isSparsityFixed(pb, res)
     solutionIndices = None
@@ -87,8 +99,11 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
             A, b, E, e = pl1.convertProblemToLp(pbComb, convertSurfaces = False)
             C = identity(A.shape[1]) * 0.00001
             c = pl1.slackSelectionMatrix(pbComb)
-            try:
-                res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+            
+            # ~ res = qp.quadprog_solve_qp(C, c,A,b,E,e)    ######
+            res = qp.solve_lp_gurobi(c,A,b,E,e).x
+            if res.success:
+                res = res.x
                 if pl1.isSparsityFixed(pbComb, res):       
                     coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pbComb, res)
                     pb = pbComb
@@ -99,7 +114,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
                         ax = draw_scene(surfaces)
                         pl1.plotQPRes(pb, res, ax=ax)
                     break
-            except:
+            else:
                 print("unfeasible problem")
                 pass
             

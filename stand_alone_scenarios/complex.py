@@ -72,7 +72,7 @@ end = [astep6, astep7, abridge, aplatfo ]
 
 #~ surfaces = [[arub2],[arub3,arub2],[arub4,arub5],[arub5],[arub6,arub7],[arub6,arub7],[arub75,arub9],[arub9],[arub9,afloor],[afloor,astep1],[astep1,astep2],[astep2,astep3],[astep3,astep4],[astep4,astep5],[astep5,astep6],[astep6,astep7],[astep6,astep7],[astep7,abridge],[astep7,abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge,aplatfo],[abridge,aplatfo], [aplatfo] ]
 
-surfaces = [[arub2],[arub3,arub2],[arub4],[arub5],[arub6],[arub7],[arub75],allrub,[afloor],[afloor, astep1],[afloor, astep1],[astep1,astep2,astep3],[astep4,astep2,astep3],[astep4,astep2,astep3],[astep4,astep2,astep5],[astep6,astep2,astep5],[astep6],[astep7],end,end,[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[aplatfo] ]
+surfaces = [[arub2],allrub,allrub,allrub,allrub,allrub,allrub,allrub,allrubfloorsteps,allrubfloorsteps,allrubfloorsteps,allrubfloorsteps,allsteps,allsteps,allsteps,allsteps,end,end,end,end,[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge],[abridge,aplatfo],[aplatfo] ]
 
 def gen_stair_pb():
     kinematicConstraints = genKinematicConstraints(left_foot_constraints, right_foot_constraints)
