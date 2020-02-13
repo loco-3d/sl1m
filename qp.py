@@ -53,7 +53,12 @@ def solve_least_square(A,b,G=None, h=None, C=None, d=None):
 #subject to  C x  = d
 def solve_lp(q, G=None, h=None, C=None, d=None): 
     res = linprog(q, A_ub=G, b_ub=h, A_eq=C, b_eq=d, bounds=[(-100000.,10000.) for _ in range(q.shape[0])], method='interior-point', callback=None, options={'presolve': True})
-    return res    
+    # print "success", res['success']
+    # print "status", res['status']
+    if res['success']:
+        return res['x']
+    else:
+        return res['status']
         
 if GLPK_OK:    
     __eps = 0.00001

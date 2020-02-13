@@ -160,7 +160,7 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     y = array(wps)[:,1]
     if(D3):                
             z = array(wps)[:,2]
-            ax.scatter(x, y, z, c=color, marker='o', linewidth = 5) 
+            ax.scatter(x, y, z, color=color, marker='o', linewidth = 5) 
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)       
         
