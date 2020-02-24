@@ -143,6 +143,7 @@ if GLPK_OK:
 
 
 if GUROBI_OK:  
+    grb.setParam('OutputFlag', 1)
     #solve linear programm using gurobi
     # min q' x  
     #subject to  A x <= b

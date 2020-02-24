@@ -9,8 +9,7 @@ from sl1m.constants_and_tools import *
 from sl1m.planner import *
 
 
-
-from constraints import *
+from sl1m.stand_alone_scenarios.constraints import *
 
 floor = [ [0.16, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.16, -1., 0.]  ]
 

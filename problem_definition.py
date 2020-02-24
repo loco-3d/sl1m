@@ -2,7 +2,7 @@ from sl1m.constants_and_tools import *
 
 from . import qp
 
-np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
+np.set_printoptions(formatter={'float': lambda x: "{0:0.001f}".format(x)})
 
 #LP contact planner using inequality formulation
 

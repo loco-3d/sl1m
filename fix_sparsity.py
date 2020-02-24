@@ -190,6 +190,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     t2 = clock()
     res = tovals(varReal)
     print("time to solve MIP ", timMs(t1,t2))
+	sm = slackSelectionMatrix(pb)
 
     
     plot = plot and draw_scene is not None 
