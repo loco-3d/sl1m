@@ -46,7 +46,7 @@ def gen_stair_pb():
     p0 = [array([0.,0., 0.]), array([0.,0., 0.])];
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
     
-    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i) % 2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
+    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i) % 2] for _ in range(len(surfaces[i]))], "S" : surfaces[i], "allRelativeK" : [ [[1, relativeConstraints[0]], [0, relativeConstraints[1]]]  for _ in range(len(surfaces[i]))] } for i in range(nphases)]
     res ["phaseData"] = phaseData
     return res 
     
