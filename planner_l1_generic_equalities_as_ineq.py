@@ -7,41 +7,42 @@ from sl1m.problem_definition import *
         
 #### problem related global variables #### 
 
-NUM_SLACK_PER_SURFACE = 2
-NUM_INEQ_SLACK_PER_SURFACE = 2 # 
+NUM_SLACK_PER_SURFACE = 1
+NUM_INEQ_SLACK_PER_SURFACE = 1 # 
 M = 100
+M2= M*M
         
         
 #### global variables, depending on number of effectors ####  
 # You need to call initGlobals with the number of effectors before using sl1m generic
 
-DEFAULT_NUM_VARS = None
-DEFAULT_NUM_EQUALITY_CONSTRAINTS = None
-N_EFFECTORS = None
-
+N_EFFECTORS                        = None
+DEFAULT_NUM_VARS                   = None
+COM_WEIGHTS_PER_EFFECTOR           = None
+DEFAULT_NUM_EQUALITY_CONSTRAINTS   = None
+DEFAULT_NUM_INEQUALITY_CONSTRAINTS = None
 
 #### Selection matrices ####  
-COM_XY_ExpressionMatrix = None
-COM_Z1_ExpressionMatrix = None
-COM_Z2_ExpressionMatrix = None
-COME1xpressionMatrix    = None
-COME2xpressionMatrix    = None
-COM_XY_ExpressionMatrix = None
-COM_XY_ExpressionMatrix = None
-COM_XY_ExpressionMatrix = None
-COM_XY_ExpressionMatrix = None
+COM_XY_ExpressionMatrix  = None
+COM_Z1_ExpressionMatrix  = None
+COM_Z2_ExpressionMatrix  = None
+COM1_ExpressionMatrix    = None
+COM2_ExpressionMatrix    = None
+foot_ExpressionMatrix    = None
+foot_XY_ExpressionMatrix = None
 
 #Slack variables startIndex
-BETA_START = None
+BETA_START  = None
 GAMMA_START = None
+W_START     = None
 ALPHA_START = None
 
 
 
 # breakdown of variables for each phase
 
-# [ c_x't, c_y't, c_z_1't, c_z_2't, p_i't, b_i't, g_i't, a_i_l't , d_i_l't ]   
-# [ 1    , 1    ,   1    ,    1   , 2*n_e, 2*n_e, 3*n_e, [0, n_s], [n_s * n_e]]   
+# [ c_x't, c_y't, c_z_1't, c_z_2't, p_i't, b_i't, g_i't, w_i_t ,  a_i_l't]   
+# [ 1    , 1    ,   1    ,    1   , 3*n_e, 2*n_e, 3*n_e,    n_e, [0, n_s]]   
 
 # COM position
 def _COM_XY_ExpressionMatrix():
@@ -80,33 +81,52 @@ def _foot_XY_ExpressionMatrix(footId):
     ret[:, 4 + footId * 3, 4 + footId * 3 +2] = identity(2)
     return ret
 
-def initGlobals(nEffectors):
+def initGlobals(nEffectors, comWeightsPerEffector=None):
     global DEFAULT_NUM_VARS
     global N_EFFECTORS
     global DEFAULT_NUM_EQUALITY_CONSTRAINTS
+    global DEFAULT_NUM_INEQUALITY_CONSTRAINTS
+    global W_START
+    global COM_WEIGHTS_PER_EFFECTOR
+    
     N_EFFECTORS = nEffectors
+    if comWeightsPerEffector is None:
+        COM_WEIGHTS_PER_EFFECTOR = [1./(N_EFFECTORS -1) for _ in range(N_EFFECTORS) ]
+    else:
+        COM_WEIGHTS_PER_EFFECTOR = comWeightsPerEffector
     # for one phase, for all i:
-    # [ c_x't, c_y't, c_z_1't, c_z_2't, p_i't, b_i't, g_i't, a_i_l't , d_i_l't ]  
-    # [ 1    , 1    ,   1    ,    1   , 2*n_e, 2*n_e, 3*n_e, [0, n_s], [n_s * n_e]]    
-    DEFAULT_NUM_VARS = N_EFFECTORS * 8 + 4     
+    # [ c_x't, c_y't, c_z_1't, c_z_2't, p_i't, b_i't, g_i't, w_i_t ,  a_i_l't]   
+    # [ 1    , 1    ,   1    ,    1   , 3*n_e, 2*n_e, 3*n_e,    n_e, [0, n_s]]   
+    DEFAULT_NUM_VARS = N_EFFECTORS * 9 + 4     
     BETA_START = 4 + 3* N_EFFECTORS
     GAMMA_START = BETA_START +  2 * N_EFFECTORS
-    ALPHA_START = GAMMA_START +  2 * N_EFFECTORS
+    W_START = GAMMA_START +  3 * N_EFFECTORS
+    ALPHA_START = W_START +  N_EFFECTORS
     assert ALPHA_START == DEFAULT_NUM_VARS
     
     # c_x't, c_y't are given by a convex combination of fixed weight of the non moving effectors. There are N_EFFECTORS possible combinations
     # by default each position is equal to the previous one, so that 3 * N_EFFECTORS equalities 
     DEFAULT_NUM_EQUALITY_CONSTRAINTS = (2 + 3) * N_EFFECTORS
-
-    COM_XY_ExpressionMatrix = _COM_XY_ExpressionMatrix()
-    COM_Z1_ExpressionMatrix = _COM_Z1_ExpressionMatrix()
-    COM_Z2_ExpressionMatrix = _COM_Z2_ExpressionMatrix()
-    COME1xpressionMatrix    = _COME1xpressionMatrix()
-    COME2xpressionMatrix    = _COME2xpressionMatrix()
-    COM_XY_ExpressionMatrix = [_footExpressionMatrix(footId) for footId in range(N_EFFECTORS)]
-    COM_XY_ExpressionMatrix = _COM_XY_ExpressionMatrix()
-    COM_XY_ExpressionMatrix = _COM_XY_ExpressionMatrix()
-    COM_XY_ExpressionMatrix = _COM_XY_ExpressionMatrix()
+    # wi <= 1 ;  - M_wi <= b_ix + y <= M w_i; - M_wi <= g_ix + y + z <= M w_i      wi> 0 implicit
+    DEFAULT_NUM_INEQUALITY_CONSTRAINTS = (1 + 1 + 1) * N_EFFECTORS
+    
+    
+    global COM_XY_ExpressionMatrix 
+    global COM_Z1_ExpressionMatrix 
+    global COM_Z2_ExpressionMatrix 
+    global COM1_ExpressionMatrix    
+    global COM2_ExpressionMatrix    
+    global COM_XY_ExpressionMatrix 
+    global foot_ExpressionMatrix   
+    global foot_XY_ExpressionMatrix
+    
+    COM_XY_ExpressionMatrix  = _COM_XY_ExpressionMatrix()
+    COM_Z1_ExpressionMatrix  = _COM_Z1_ExpressionMatrix()
+    COM_Z2_ExpressionMatrix  = _COM_Z2_ExpressionMatrix()
+    COM1_ExpressionMatrix     = _COME1xpressionMatrix()
+    COM2_ExpressionMatrix     = _COME2xpressionMatrix()
+    foot_ExpressionMatrix    = [_footExpressionMatrix    (footId) for footId in range(N_EFFECTORS)]
+    foot_XY_ExpressionMatrix = [_foot_XY_ExpressionMatrix(footId) for footId in range(N_EFFECTORS)]
     
 
 ### helper functions to count number of variables, equalities and inequalities constraints in the problem ###
@@ -127,18 +147,18 @@ def numIneqForPhase(phase, phaseId):
     if phaseId != 0:
         ret *= 2
     # relative kinematic constraints between each effectors
-    # ~ ret += sum([k.shape[0]  for (_, k) in phase["relativeK"][0] ])    
     for footIdFrame, constraintsInFootIdFrame in enumerate(phase["allRelativeK"][0]):
         for (footId, Kk ) in  constraintsInFootIdFrame:
             ret += Kk[0].shape[0]    
     # all inequalities relative to each contact surface 
-    ret += sum([S[1].shape[0]-1 for S in  phase["S"]])
+    # S + 1 because equality becomes 2 inequalities
+    # the inequalities must always be written for each effector
+    ret += sum([(S[1].shape[0]) * N_EFFECTORS for S in  phase["S"]])
     numSurfaces =len(phase["S"])
-    # ~ if numSurfaces > 1:
-        #adding all slack inequality comparison variables
-        # TODO: replace by two inequalities ???        
-    #TODO : one surface: all inequalities apply, but without alpha
-    ret += numSurfaces * N_EFFECTORS * NUM_INEQ_SLACK_PER_SURFACE
+    if numSurfaces >1:
+        # alpha > 0 
+        ret += numSurfaces * NUM_INEQ_SLACK_PER_SURFACE 
+    ret += DEFAULT_NUM_INEQUALITY_CONSTRAINTS
     return ret
     
 def getTotalNumVariablesAndIneqConstraints(pb):
@@ -147,8 +167,11 @@ def getTotalNumVariablesAndIneqConstraints(pb):
     rows = sum([numIneqForPhase(phase, i) for  i, phase in enumerate(pb["phaseData"]) ])
     return rows, cols
     
-def numEqForPhase(phase):
-    return len(phase["S"]) + DEFAULT_NUM_EQUALITY_CONSTRAINTS
+def numEqForPhase(phase, phaseId):
+    #no equality constraints at first phase
+    if phaseId == 0:
+        return 0.
+    return DEFAULT_NUM_EQUALITY_CONSTRAINTS
     
 def getTotalNumEqualityConstraints(pb):
     raise ValueError # initphase ?
@@ -162,7 +185,7 @@ def FootCOM2KinConstraint(pb, phaseDataT, A, b, startCol, endCol, startrow):
     idRow = startRow
     for footId, (K, k) in enumerate(phaseDataT["K"][0]):
         consLen = K.shape[0]
-        A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] =  K.dot(COM_Z2_ExpressionMatrix - footExpressionMatrix[footId])
+        A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] =  K.dot(COM_Z2_ExpressionMatrix - foot_ExpressionMatrix[footId])
         b[idRow:idRow+consLen] = k 
         idRow += consLen    
     return idRow
@@ -174,7 +197,7 @@ def FootCOM1KinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endC
     for footId, (K, k) in enumerate(phaseDataT["K"][0]):
         consLen = K.shape[0]
         A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS]                  =  K.dot(COM_Z1_ExpressionMatrix)
-        A[idRow:idRow+consLen, previousStartCol:previousStartCol+DEFAULT_NUM_VARS]  = -K.dot(footExpressionMatrix[footId])
+        A[idRow:idRow+consLen, previousStartCol:previousStartCol+DEFAULT_NUM_VARS]  = -K.dot(foot_ExpressionMatrix[footId])
         b[idRow:idRow+consLen] = k 
         idRow +=   consLen    
     return idRow
@@ -199,7 +222,7 @@ def RelativeDistanceConstrain(pb, phaseDataT, A, b, previousStartCol, startCol, 
         for (footId, Kk ) in  constraintsInFootIdFrame:
             K = Kk[0]; k = Kk[1]
             consLen = K.shape[0]
-            A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] = K.dot(footExpressionMatrix[footId] - footExpressionMatrix[footIdFrame])
+            A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] = K.dot(foot_ExpressionMatrix[footId] - foot_ExpressionMatrix[footIdFrame])
             b[idRow:idRow+consLen] = k 
             idRow += consLen    
     return idRow       
@@ -207,79 +230,81 @@ def RelativeDistanceConstrain(pb, phaseDataT, A, b, previousStartCol, startCol, 
 def SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow):    
     sRow = startRow
     nSurfaces = len(phaseDataT["S"])
-    idS = DEFAULT_NUM_VARS
+    idS = ALPHA_START
     for (S,s) in phaseDataT["S"]:   
         for footId in range(N_EFFECTORS):
-            idRow = sRow + S.shape[0]-1 #last line is equality constraint
-            A[sRow:idRow, startCol:startCol+DEFAULT_NUM_VARS] = S[:-1,:].dot(footExpressionMatrix[footId])
-            b[sRow:idRow                 ] = s[:-1]
+            idRow = sRow + S.shape[0]
+            # Sl pi - M alphal <= sl + M2 (1 - w_t)
+            # Sl pi - M alphal + M2 w_t <= sl + M2
+            onesM2 = ones(idRow-sRow) * M2
+            A[sRow:idRow, startCol:startCol+DEFAULT_NUM_VARS] = S.dot(foot_ExpressionMatrix[footId])
+            A[sRow:idRow, startCol+W_START + footId] = onesM2
+            b[sRow:idRow                 ] = s + onesM2
             if nSurfaces >1:
-                A[sRow:idRow, startCol+idS] = -ones(idRow-sRow)
+                A[sRow:idRow, startCol+idS] = -ones(idRow-sRow) * M
             sRow = idRow
-            idS += 1
+        idS += 1
     return idRow
     
-def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):    
-    numSurfaces =len(phaseDataT["S"])
+def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):     
     idRow = startRow
-    # ~ if numSurfaces > 1:    
-    #TODO : one surface: all inequalities apply, but without alpha
-    colOmegaOffset = startCol + DEFAULT_NUM_VARS
-    if numSurfaces > 1:    
-        colDeltaOffset = colOmegaOffset + numSurfaces        
-        for i in range(numSurfaces):
-            # TODO: beta entre 0 et 1
-            # M2 (-beta_x't) + M2 (-beta_y't)  - M a0 <= a1_i <= M a0 + M2 (1 - beta_x't) + M2 (beta_y't) 
-            for footId in range(N_EFFECTORS):
-                A[idRow   , colOmegaOffset + i                  ] = [-1]; #  - a0 + a1_i  <= 0
-                A[idRow   , colDeltaOffset + i * footId + footId] = [ 1]; #  - a0 + a1_i  <= 0
-                A[idRow+1 , colOmegaOffset + i                  ] = [-1]; #  - a0 - a1_i  <= 0
-                A[idRow+1 , colDeltaOffset + i * footId + footId] = [-1]; #  - a0 - a1_i  <= 0
-                idRow += NUM_INEQ_SLACK_PER_SURFACE     
-    else:
-        colDeltaOffset = colOmegaOffset
-        for footId in range(N_EFFECTORS):
-            A[idRow   , colOmegaOffset + i                  ] = [-1]; #  - a0 + a1_i  <= 0
-            A[idRow   , colDeltaOffset + i * footId + footId] = [ 1]; #  - a0 + a1_i  <= 0
-            A[idRow+1 , colOmegaOffset + i                  ] = [-1]; #  - a0 - a1_i  <= 0
-            A[idRow+1 , colDeltaOffset + i * footId + footId] = [-1]; #  - a0 - a1_i  <= 0
-            idRow += NUM_INEQ_SLACK_PER_SURFACE    
+    for footId in range(N_EFFECTORS):
+        # -Mwi <= b_i x + b_i y <= M wi  
+        # -Mwi  - b_i x - b_i y} <= 0 ; b_ix + b_iy- M wi <= 0
+        A[idRow, startCol + W_START + footId                                               ] = [-M]; 
+        A[idRow, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = [-1, -1];
+        idRow += 1 
+        A[idRow, startCol + W_START + footId                                               ] = [-M]; 
+        A[idRow, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = [1, 1]; 
+        idRow += 1 
+        # -Mwi <= g_i x + g_i y + g_i_z <= M wi  
+        # -Mwi  - g_i x - g_i y - g_i_z  <= 0 ; g_ix + g_iy + g_iz - M wi <= 0
+        A[idRow, startCol + W_START + footId                                               ] = [-M]; 
+        A[idRow, (startCol + GAMMA_START + footId*3):(startCol + GAMMA_START + footId*3) + 3 ] = [-1, -1, -1];         
+        idRow += 1 
+        A[idRow, startCol + W_START + footId                                               ] = [-M]; 
+        A[idRow, (startCol + GAMMA_START + footId*3):(startCol + GAMMA_START + footId*3) + 3 ] = [1, 1, 1];        
+        idRow += 1 
+        # wi <= 1
+        A[idRow, startCol + W_START + footId ] = 1; 
+        b[idRow] = 1.; 
+    # -al < 0
+    nSurfaces = len(phaseDataT["S"])
+    if nSurfaces > 1:
+        for i in range(nSurfaces):
+             A[idRow+i, startCol + ALPHA_START + i ] = -1;
+         idRow += nSurfaces   
     return idRow    
     
+def CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRow):
+    idRow = startRow
+    for flyingFootId in range(N_EFFECTORS):
+        # 0 =  sum(j != i) o_j'i p_j't + [b_ix't, b_iy't]^T - c_x_y
+        EqMat = -COM_XY_ExpressionMatrix[:]
+        for otherFootId in range(N_EFFECTORS):
+            if flyingFootId != otherFootId:
+                EqMat += COM_WEIGHTS_PER_EFFECTOR[otherFootId] * footExpressionMatrixXY[otherFootId]
+        EqMat[idRow:idRow+2, startCol + BETA_START + flyingFootId*2:(startCol + BETA_START + flyingFootId*2)+2] = identity(2)
+        E[idRow:idRow+2, startCol:startCol+DEFAULT_NUM_VARS] = EqMat; #e = 0 
+        idRow+=2
+    return idRow    
     
-def EqualityConstraintSurface(phaseDataT, E, e, startCol, endCol, startRowEq):    
-    sRow = startRowEq
-    nSurfaces = len(phaseDataT["S"])
-    if nSurfaces == 1:
-        for footId in range(N_EFFECTORS):
-            E[sRow, startCol:startCol+DEFAULT_NUM_VARS] = phaseDataT["S"][0][0][-1].dot(footExpressionMatrix[footId])
-            e[sRow] = phaseDataT["S"][0][1][-1]
-            sRow+=1
-        return sRow
-    else:        
-        colOmegaOffset = startCol + DEFAULT_NUM_VARS
-        colDeltaOffset = colOmegaOffset + numSurfaces
-        # ~ for i in range(numSurfaces):
-        for i,(S,s) in enumerate(phaseDataT["S"]):  
-            for footId in range(N_EFFECTORS):
-                E[sRow, startCol:startCol+DEFAULT_NUM_VARS] = S[-1,:].dot(footExpressionMatrix[footId])
-                E[sRow, colDeltaOffset + i * footId + footId] = -1
-                e[sRow] = s[-1]   
-                sRow += 1          
-        # ~ idS = DEFAULT_NUM_VARS + nSurfaces
-        # ~ for i,(S,s) in enumerate(phaseDataT["S"]):  
-            # ~ for footId in range(N_EFFECTORS):
-                # ~ E[sRow, startCol:startCol+DEFAULT_NUM_VARS] = S[-1,:].dot(footExpressionMatrix[footId])
-                # ~ E[sRow, startCol+idS+1] = -1 # E x  + a1 = e
-                # ~ e[sRow] = s[-1]
-                # ~ idS += 1
-                # ~ sRow += 1             
-        return sRow 
+#only applies after first step
+def FootContinuityEqualityConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow):
+    idRow = startRow
+    for footId in range(N_EFFECTORS):
+        # 0 =  p_(i-1)'t - p_(i-1)'t + [g_ix't, b_iy't, g_iz't]^T
+        E[idRow:idRow+3, startCol:startCol + DEFAULT_NUM_VARS ]         =  footExpressionMatrix[footId]
+        E[idRow:idRow+3, previousStartCol:previousStartCol + DEFAULT_NUM_VARS] = -footExpressionMatrix[footId]
+        E[idRow:idRow+3, startCol + GAMMA_START + footId*3:(startCol + BETA_START + flyingFootId*3)+3] = identity(3); #e = 0 
+        idRow+=3
+    return idRow    
+        
     
 def convertProblemToLp(pb, convertSurfaces = True):        
     assert DEFAULT_NUM_VARS is not None, "call initGlobals first"
     if convertSurfaces:
-        replace_surfaces_with_ineq_in_problem(pb)
+        replace_surfaces_with_ineq_in_problem(pb, eqAsIneq = True)
     #define first problem
     #A u <= b
     nIneq, nvars  = getTotalNumVariablesAndIneqConstraints(pb)

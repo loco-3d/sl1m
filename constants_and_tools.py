@@ -30,7 +30,7 @@ zero3 = zeros(3)
 eps =0.000001
 
 #### surface to inequalities ####    
-def convert_surface_to_inequality(s):
+def convert_surface_to_inequality(s, eqAsIneq):
     #TODO does normal orientation matter ?
     #it will for collisions
     n = cross(s[:,1] - s[:,0], s[:,2] - s[:,0])
@@ -38,13 +38,13 @@ def convert_surface_to_inequality(s):
         for i in range(3):
             n[i] = -n[i]
     n /= norm(n)
-    return surfacePointsToIneq(s, n)
+    return surfacePointsToIneq(s, n, eqAsIneq)
     
-def replace_surfaces_with_ineq_in_phaseData(phase):
-    phase["S"] = [convert_surface_to_inequality(S) for S in phase["S"]]
+def replace_surfaces_with_ineq_in_phaseData(phase, eqAsIneq):
+    phase["S"] = [convert_surface_to_inequality(S, eqAsIneq) for S in phase["S"]]
     
-def replace_surfaces_with_ineq_in_problem(pb):
-    [ replace_surfaces_with_ineq_in_phaseData(phase) for phase in pb ["phaseData"]]
+def replace_surfaces_with_ineq_in_problem(pb, eqAsIneq = False):
+    [ replace_surfaces_with_ineq_in_phaseData(phase, eqAsIneq) for phase in pb ["phaseData"]]
 
 def ineqQHull(hull):
     A = hull.equations[:,:-1]
@@ -125,8 +125,9 @@ def default_transform_from_pos_normal(pos, normal):
     return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
 
     
+EPSILON_EQ = 0.005
 #last is equality
-def surfacePointsToIneq(S, normal):
+def surfacePointsToIneq(S, normal, eqAsIneq):
     n = array(normal)
     tr = default_transform_from_pos_normal(array([0.,0.,0.]),n)
     trinv = tr.copy(); trinv[:3,:3] = tr[:3,:3].T;
@@ -140,10 +141,13 @@ def surfacePointsToIneq(S, normal):
     #adding plane constraint
     #plane equation given by first point and normal for instance
     d = array([n.dot(S[:,0])])
-    A = vstack([ine.A, n , -n ])
-    b = concatenate([ine.b, d, -d]).reshape((-1,))
-    A = vstack([ine.A, n])
-    b = concatenate([ine.b, d]).reshape((-1,))
+    if eqAsIneq:
+        A = vstack([ine.A, n , -n ])
+        b = concatenate([ine.b, d + EPSILON_EQ, -d + EPSILON_EQ]).reshape((-1,))
+    else:
+        A = vstack([ine.A, n])
+        b = concatenate([ine.b, d]).reshape((-1,))
+        
     return A, b
     
 ############ BENCHMARKING ###############
