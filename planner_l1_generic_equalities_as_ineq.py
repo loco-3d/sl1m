@@ -108,7 +108,7 @@ def initGlobals(nEffectors, comWeightsPerEffector=None):
     # by default each position is equal to the previous one, so that 3 * N_EFFECTORS equalities 
     DEFAULT_NUM_EQUALITY_CONSTRAINTS = (2 + 3) * N_EFFECTORS
     # wi <= 1 ;  - M_wi <= b_ix + y <= M w_i; - M_wi <= g_ix + y + z <= M w_i      wi> 0 implicit
-    DEFAULT_NUM_INEQUALITY_CONSTRAINTS = (1 + 1 + 1) * N_EFFECTORS
+    DEFAULT_NUM_INEQUALITY_CONSTRAINTS = (1 + 2 + 2) * N_EFFECTORS
     
     
     global COM_XY_ExpressionMatrix 
@@ -151,7 +151,6 @@ def numIneqForPhase(phase, phaseId):
         for (footId, Kk ) in  constraintsInFootIdFrame:
             ret += Kk[0].shape[0]    
     # all inequalities relative to each contact surface 
-    # S + 1 because equality becomes 2 inequalities
     # the inequalities must always be written for each effector
     ret += sum([(S[1].shape[0]) * N_EFFECTORS for S in  phase["S"]])
     numSurfaces =len(phase["S"])
@@ -185,7 +184,7 @@ def FootCOM2KinConstraint(pb, phaseDataT, A, b, startCol, endCol, startrow):
     idRow = startRow
     for footId, (K, k) in enumerate(phaseDataT["K"][0]):
         consLen = K.shape[0]
-        A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] =  K.dot(COM_Z2_ExpressionMatrix - foot_ExpressionMatrix[footId])
+        A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] =  K.dot(COM2_ExpressionMatrix - foot_ExpressionMatrix[footId])
         b[idRow:idRow+consLen] = k 
         idRow += consLen    
     return idRow
@@ -196,7 +195,7 @@ def FootCOM1KinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endC
     idRow = startRow
     for footId, (K, k) in enumerate(phaseDataT["K"][0]):
         consLen = K.shape[0]
-        A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS]                  =  K.dot(COM_Z1_ExpressionMatrix)
+        A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS]                  =  K.dot(COM1_ExpressionMatrix)
         A[idRow:idRow+consLen, previousStartCol:previousStartCol+DEFAULT_NUM_VARS]  = -K.dot(foot_ExpressionMatrix[footId])
         b[idRow:idRow+consLen] = k 
         idRow +=   consLen    
@@ -216,7 +215,7 @@ def FootCOMKinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCo
         
 # for all effectors i , for all j !=i Ki (pj - pi) <= ki   
 # TODO REMOVE FOR FIRST PHASE
-def RelativeDistanceConstrain(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow):    
+def RelativeDistanceConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow):    
     idRow = startRow
     for footIdFrame, constraintsInFootIdFrame in enumerate(phaseDataT["allRelativeK"][0]):
         for (footId, Kk ) in  constraintsInFootIdFrame:
