@@ -1,5 +1,5 @@
 import quadprog
-from numpy import array, dot, vstack, hstack, asmatrix, identity, abs
+from numpy import array, dot, vstack, hstack, asmatrix, identity, abs, ones
 
 from scipy.optimize import linprog
 
@@ -63,7 +63,7 @@ def quadprog_solve_qp(P, q, G=None, h=None, C=None, d=None, verbose = False):
         res = quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)
         return ResultData(res[0],  'opt', True, res[1])
     except:
-        return ResultData(res[0],  'unfeasible', False, 0.)
+        return ResultData(-ones(P.shape[1]),  'unfeasible', False, 0.)
         
 
 
