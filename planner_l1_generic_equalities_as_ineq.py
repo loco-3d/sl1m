@@ -9,7 +9,7 @@ from sl1m.problem_definition import *
 
 NUM_SLACK_PER_SURFACE = 1
 NUM_INEQ_SLACK_PER_SURFACE = 1 # 
-M = 1000.
+M = 10.
 M2= M*10
         
         
@@ -179,8 +179,8 @@ def numIneqForPhase(phase, phaseId):
     numSurfaces =len(phase["S"])
     if numSurfaces >1:
         # alpha > 0 
-        # ~ ret += numSurfaces * NUM_INEQ_SLACK_PER_SURFACE 
-        ret += numSurfaces * 2 * N_EFFECTORS 
+        ret += numSurfaces * NUM_INEQ_SLACK_PER_SURFACE 
+        # ~ ret += numSurfaces * 2 * N_EFFECTORS 
     ret += DEFAULT_NUM_INEQUALITY_CONSTRAINTS
     return ret
     
@@ -232,7 +232,7 @@ def FootCOMKinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCo
         
 # for all effectors i , for all j !=i Ki (pj - pi) <= ki   
 # TODO REMOVE FOR FIRST PHASE
-def RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow):    
+def RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow, phaseId):    
     idRow = startRow
     for footIdFrame, constraintsInFootIdFrame in enumerate(phaseDataT["allRelativeK"][0]):
         for (footId, Kk ) in  constraintsInFootIdFrame:
@@ -302,7 +302,7 @@ def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):
     if nSurfaces > 1:
         for i in range(nSurfaces):
              A[idRow+i, startCol + ALPHA_START + i ] = -1;
-        # ~ idRow += nSurfaces   
+        idRow += nSurfaces   
     return idRow    
     
 def CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRow):
@@ -354,7 +354,7 @@ def convertProblemToLp(pb, convertSurfaces = True):
         #inequality
         endCol = startCol + numVariablesForPhase(phaseDataT)
         startRow = FootCOMKinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow, phaseId)
-        # ~ startRow = RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow)
+        startRow = RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow, phaseId)
         startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         
@@ -367,9 +367,9 @@ def convertProblemToLp(pb, convertSurfaces = True):
     print ('startRow ', startRow)
     print ('A.shape[0] ', A.shape[0])
         
-    # ~ assert endCol   == A.shape[1]
-    # ~ assert startRowEq == E.shape[0]
-    # ~ assert startRow == A.shape[0]
+    assert endCol   == A.shape[1]
+    assert startRowEq == E.shape[0]
+    assert startRow == A.shape[0]
     
     A,b = normalize([A,b])
     E,e = normalize([E,e])
@@ -537,7 +537,6 @@ def addInitEndConstraint(pb, E, e, posInit= array([0.0, 0.0, 0.]), posEnd = arra
     nE[idRow:idRow+3,:DEFAULT_NUM_VARS] = footExpressionMatrix[1][:]  
     ne[idRow:idRow+3] = posInit
     nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
-    print ("nVarEnd", nVarEnd)
     # ~ nE[-3:,E.shape[1]-nVarEnd:E.shape[1]-nVarEnd+DEFAULT_NUM_VARS] = COM2_ExpressionMatrix[:]  
     # ~ ne[-3:] = posEnd
     return nE, ne
@@ -548,8 +547,13 @@ def addInitEndConstraint(pb, E, e, posInit= array([0.0, 0.0, 0.]), posEnd = arra
 MIP_OK = False  
 try:
     import gurobipy
+    import gurobipy as grb
     import cvxpy as cp
+    from scipy.sparse import csr_matrix
     MIP_OK = True
+
+except ImportError:
+    pass
 
 except ImportError:
     pass
@@ -566,7 +570,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     gurobipy.setParam('OutputFlag',0)
        
     A, b, E, e = convertProblemToLp(pb, True)   
-    E,e = addInitEndConstraint(pb, E, e)
+    # ~ E,e = addInitEndConstraint(pb, E, e)
     slackMatrix = wSelectionMatrix(pb)
     surfaceSlackMatrix = alphaSelectionMatrix(pb)
     
@@ -581,7 +585,6 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
     slackIndicesSurf = [i for i,el in enumerate (surfaceSlackMatrix) if el > 0]
-    print ("slackIndicesSurf", slackIndicesSurf)
     numSlackVariables = len([el for el in slackMatrix if el > 0])
     numSlackVariablesSurf = len([el for el in surfaceSlackMatrix if el > 0])
     boolvars = cp.Variable(numSlackVariables, boolean=True)      
@@ -621,38 +624,172 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
             if len(currentSum) > 1:
                 constraints = constraints + [sum(currentSum) <= len(currentSum) -1 ]
         
-        # ~ prev = 0
-        # ~ currentSum = []
-        # ~ for i, el in enumerate(slackIndices):
-            # ~ print ("el", el)
-            # ~ idx = el
-            # ~ if i ==0:
-                # ~ currentSum = [boolvars[i]]
-                # ~ prev = idx
-                # ~ print ("dat ", currentSum)
-            # ~ elif prev < idx-1:
-                # ~ print ("conAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAst ", len(currentSum) )
-                # ~ constraints = constraints + [sum(currentSum) == len(currentSum) -1]
-                # ~ currentSum = []
-            # ~ else:
-                # ~ currentSum += [boolvars[i]]
-                # ~ print ("dat ", currentSum)
-                # ~ prev = idx
-        # ~ obj = cp.Minimize(surfaceSlackMatrix * varReal)
-        obj = cp.Minimize(ones(numSlackVariables) * boolvars)
-        # ~ obj = cp.Minimize(0.)
+        obj = cp.Minimize(surfaceSlackMatrix * varReal)
+        # ~ obj = cp.Minimize(ones(numSlackVariables) * boolvars)
     prob = cp.Problem(obj, constraints)
     t1 = clock()
     res = prob.solve(solver=cp.GUROBI, verbose=True )
     t2 = clock()
     res = tovals(varReal)
-    print("bools",  tovals(boolvars))
     print("time to solve MIP ", timMs(t1,t2))
 
     
     # return timMs(t1,t2)
     return pb, res, timMs(t1,t2)
 
+
+def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None):  
+    if not MIP_OK:
+        print ("Mixed integer formulation requires gurobi packaged in cvxpy")
+        raise ImportError
+        
+    grb.setParam('LogFile', '')
+    grb.setParam('OutputFlag', 0)
+    #~ grb.setParam('OutputFlag', 1)
+       
+    A, b, E, e = convertProblemToLp(pb)   
+    E,e = addInitEndConstraint(pb, E, e)
+    slackMatrix = wSelectionMatrix(pb)    
+    slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
+    numSlackVariables = len([el for el in slackMatrix if el > 0])
+    
+    surfaceSlackMatrix = alphaSelectionMatrix(pb)
+    slackIndicesSurf = [i for i,el in enumerate (surfaceSlackMatrix) if el > 0]
+    numSlackVariablesSurf = len([el for el in surfaceSlackMatrix if el > 0])
+    
+    model = grb.Model("mip")
+    
+    rdim = A.shape[1]
+    
+    #add continuous variables
+    cVars = []
+    for i in range(rdim):
+        if slackMatrix[i]>0:
+            if MIP:
+                cVars.append(model.addVar(name="slack%d" % i, obj = 0, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+            else:
+                cVars.append(model.addVar(name="slack%d" % i, obj = 1, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+        elif surfaceSlackMatrix[i]>0:            
+            if MIP:
+                cVars.append(model.addVar(name="slack%d" % i, obj = 0, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+            else:
+                cVars.append(model.addVar(name="slack%d" % i, obj = 1, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+        else:
+            cVars.append(model.addVar(name="c%d" % i, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+            
+    
+    
+    # Update model to integrate new variables
+    model.update()
+    
+    x = np.array(model.getVars(), copy=False)
+    
+    # equality constraints
+    if E.shape[0] > 0:        
+        for i in range(E.shape[0]):
+            idx = [j for j, el in enumerate(E[i].tolist()) if el != 0.]
+            variables = x[idx]
+            coeff = E[i,idx]
+            expr = grb.LinExpr(coeff, variables)
+            model.addConstr(expr, grb.GRB.EQUAL, e[i])
+    model.update()
+
+    # inequality constraints
+    if A.shape[0] > 0:
+        for i in range(A.shape[0]):
+            idx = [j for j, el in enumerate(A[i].tolist()) if el != 0.]
+            variables = x[idx]
+            coeff = A[i,idx]
+            expr = grb.LinExpr(coeff, variables)
+            model.addConstr(expr, grb.GRB.LESS_EQUAL, b[i])
+        
+    model.update()
+    
+    
+    if MIP:    
+                
+        #create boolean variables  
+        boolvars = []
+        for i in range(numSlackVariables):
+            boolvars.append(model.addVar(vtype=grb.GRB.BINARY,
+                                 obj=0,
+                                 name="boolVar%d" % i))
+        model.update()
+        
+        boolvarsSurf = []
+        for i in range(numSlackVariablesSurf):
+            boolvarsSurf.append(model.addVar(vtype=grb.GRB.BINARY,
+                                 obj=0,
+                                 name="boolvarSurf%d" % i))
+                
+        #Big M value
+        M = 1000.
+        [model.addConstr(cVars[el] == boolvars[i], "boolW%d" % i ) for i, el in enumerate(slackIndices)]  
+        [model.addConstr(cVars[el] <= boolvarsSurf[i], "boolAlpha%d" % i ) for i, el in enumerate(slackIndicesSurf)]  
+    
+        model.update()
+    
+        currentSum = []
+        currentSum2 = []
+        previousL = 0
+        for i, el in enumerate(slackIndices):
+            if i!= 0 and el - previousL > 1.:
+                model.addConstr(grb.quicksum(currentSum) <= len(currentSum) -1, "card%d" % i)
+                assert len(currentSum) > 0      
+                currentSum = [boolvars[i]]
+                currentSum2 = [el]          
+            elif el !=0:
+                currentSum = currentSum + [boolvars[i]]
+                currentSum2 = currentSum2 + [el]
+            previousL  = el        
+        if len(currentSum) > 1:
+            model.addConstr(grb.quicksum(currentSum) <= len(currentSum) -1, "card%d" % i)
+            
+            
+        
+        currentSum = []
+        currentSum2 = []
+        previousL = 0
+        for i, el in enumerate(slackIndicesSurf):
+            if i!= 0 and el - previousL > 1.:
+                model.addConstr(grb.quicksum(currentSum) == len(currentSum) -1, "card%d" % i)
+                assert len(currentSum) > 0      
+                currentSum = [boolvarsSurf[i]]
+                currentSum2 = [el]          
+            elif el !=0:
+                currentSum = currentSum + [boolvarsSurf[i]]
+                currentSum2 = currentSum2 + [el]
+            previousL  = el        
+        if len(currentSum) > 1:
+            model.addConstr(grb.quicksum(currentSum) == len(currentSum) -1, "card%d" % i)
+            
+            
+    model.modelSense = grb.GRB.MINIMIZE
+    
+    if initGuess is not None:
+        for (i,el) in initGuess:
+            x[i].start = el
+    
+    if MIP and initGuessMip is not None:
+        for (i,el) in initGuessMip:
+            boolvars[i].start = el
+        
+    
+    model.update()
+    t1 = clock()
+    model.optimize()
+    t2 = clock()
+    res = [el.x for el in cVars]
+    print ("time to solve MIP ", timMs(t1,t2))
+    
+    
+    #~ return timMs(t1,t2)
+    
+    return pb, res, timMs(t1,t2)
+    # ~ if MIP:
+        # ~ return res
+    # ~ else:
+        # ~ return res
 
 
 if __name__ == '__main__':
@@ -665,7 +802,8 @@ if __name__ == '__main__':
     # ~ A, b, E, e = convertProblemToLp(pb)
     # ~ E,e = addInitEndConstraint(pb, E, e)
     
-    pb, res, time = solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True)
+    # ~ pb, res, time = solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True)
+    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True)
     ax = draw_scene(None)
     plotQPRes(pb, res, ax=ax, plot_constraints = False)
     

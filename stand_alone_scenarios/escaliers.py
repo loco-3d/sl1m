@@ -40,8 +40,8 @@ a_all_surfaces = [array(el).T for el in all_surfaces]
 
 surfaces = [[afloor], [afloor], [astep1,astep2,astep3],[astep2,astep3,astep1], [astep3,astep2,astep1,astep4], [astep3,astep4], [astep4],[astep4]]
 # ~ surfaces = [[afloor], [afloor], [astep1],[astep2], [astep3, astep1], [astep3], [astep4],[astep4]]
-# ~ surfaces = [[afloor], [afloor], [astep1],[astep2], [astep3], [astep3], [astep4],[astep4]]
-# ~ surfaces = [a_all_surfaces, a_all_surfaces, a_all_surfaces,a_all_surfaces, a_all_surfaces, a_all_surfaces, a_all_surfaces,[astep4]]
+surfaces = [[afloor], [afloor], [astep1],[astep2], [astep3], [astep3], [astep4],[astep4]]
+surfaces = [a_all_surfaces, a_all_surfaces, a_all_surfaces,a_all_surfaces, a_all_surfaces, a_all_surfaces, a_all_surfaces,[astep4]]
 # ~ surfaces = [a_all_surfaces, a_all_surfaces, a_all_surfaces,a_all_surfaces, a_all_surfaces, a_all_surfaces, a_all_surfaces]
 # ~ surfaces = [[afloor], [afloor], [astep1]]
 
@@ -53,7 +53,7 @@ def gen_stair_pb():
     p0 = [array([0.,0., 0.]), array([0.,0., 0.])];
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
     
-    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i) % 2] for _ in range(len(surfaces[i]))], "S" : surfaces[i], "allRelativeK" : [ [[ (1, relativeConstraints[0])], [(0, relativeConstraints[1])]]  for _ in range(len(surfaces[i]))] } for i in range(nphases)]
+    phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i) % 2] for _ in range(len(surfaces[i]))], "S" : surfaces[i], "allRelativeK" : [ [[ (1, relativeConstraints[1])], [(0, relativeConstraints[0])]]  for _ in range(len(surfaces[i]))] } for i in range(nphases)]
     res ["phaseData"] = phaseData
     return res 
     
