@@ -484,7 +484,7 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
 ####################### MAIN ###################"
 
 if __name__ == '__main__':
-    from sl1m.stand_alone_scenarios.complex import gen_stair_pb,  draw_scene
+    from sl1m.stand_alone_scenarios.escaliers import gen_stair_pb,  draw_scene
     pb = gen_stair_pb()    
     
     t1 = clock()
@@ -494,7 +494,7 @@ if __name__ == '__main__':
     C = identity(A.shape[1]) * 0.00001
     c =  slackSelectionMatrix(pb) * 100.
     t2 = clock()
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    res = qp.quadprog_solve_qp(C, c,A,b,E,e).x
     t3 = clock()
     
     print("time to set up problem" , timMs(t1,t2))

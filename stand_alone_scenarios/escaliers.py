@@ -36,7 +36,14 @@ astep2 = array(step2).T
 astep3 = array(step3).T
 astep4 = array(step4).T
 
+a_all_surfaces = [array(el).T for el in all_surfaces]
+
 surfaces = [[afloor], [afloor], [astep1,astep2,astep3],[astep2,astep3,astep1], [astep3,astep2,astep1,astep4], [astep3,astep4], [astep4],[astep4]]
+# ~ surfaces = [[afloor], [afloor], [astep1],[astep2], [astep3, astep1], [astep3], [astep4],[astep4]]
+# ~ surfaces = [[afloor], [afloor], [astep1],[astep2], [astep3], [astep3], [astep4],[astep4]]
+# ~ surfaces = [a_all_surfaces, a_all_surfaces, a_all_surfaces,a_all_surfaces, a_all_surfaces, a_all_surfaces, a_all_surfaces,[astep4]]
+# ~ surfaces = [a_all_surfaces, a_all_surfaces, a_all_surfaces,a_all_surfaces, a_all_surfaces, a_all_surfaces, a_all_surfaces]
+# ~ surfaces = [[afloor], [afloor], [astep1]]
 
 def gen_stair_pb():
     kinematicConstraints = genKinematicConstraints(left_foot_constraints, right_foot_constraints)

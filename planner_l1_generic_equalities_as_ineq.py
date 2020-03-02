@@ -9,8 +9,8 @@ from sl1m.problem_definition import *
 
 NUM_SLACK_PER_SURFACE = 1
 NUM_INEQ_SLACK_PER_SURFACE = 1 # 
-M = 100
-M2= M*M
+M = 1000.
+M2= M*10
         
         
 #### global variables, depending on number of effectors ####  
@@ -31,6 +31,8 @@ COM2_ExpressionMatrix    = None
 footExpressionMatrix    = None
 footExpressionMatrixXY  = None
 wExpressionMatrix       = None
+gExpressionMatrix       = None
+bExpressionMatrix       = None
 
 #Slack variables startIndex
 BETA_START  = None
@@ -79,7 +81,17 @@ def _footExpressionMatrix(footId, dim):
         
 def _contactDecisionExpressionMatrix():
     ret = zeros(DEFAULT_NUM_VARS)
-    ret[-N_EFFECTORS:] = ones(N_EFFECTORS)
+    ret[W_START:] = ones(N_EFFECTORS)
+    return ret
+    
+def _gExpressionMatrix():
+    ret = zeros(DEFAULT_NUM_VARS)
+    ret[GAMMA_START:W_START] = ones(3 * N_EFFECTORS)
+    return ret
+    
+def _bExpressionMatrix():
+    ret = zeros(DEFAULT_NUM_VARS)
+    ret[BETA_START:GAMMA_START] = ones(2 * N_EFFECTORS)
     return ret
     
 def initGlobals(nEffectors, comWeightsPerEffector=None):
@@ -113,8 +125,8 @@ def initGlobals(nEffectors, comWeightsPerEffector=None):
     # by default each position is equal to the previous one, so that 3 * N_EFFECTORS equalities 
     DEFAULT_NUM_EQUALITY_CONSTRAINTS = (2 + 3) * N_EFFECTORS
     DEFAULT_NUM_EQUALITY_CONSTRAINTS_START = (2) * N_EFFECTORS
-    # wi <= 1 ;  - M_wi <= b_ix + y <= M w_i; - M_wi <= g_ix + y + z <= M w_i      wi> 0 implicit
-    DEFAULT_NUM_INEQUALITY_CONSTRAINTS = (1 + 2 + 2) * N_EFFECTORS
+    # wi <= 1 ;  - M_wi <= b_ix _ y <= M w_i; - M_wi <= g_ix _ y _ z <= M w_i      wi> 0 implicit
+    DEFAULT_NUM_INEQUALITY_CONSTRAINTS = (1 + 2 * 2 + 2 * 3) * N_EFFECTORS
     
     
     global COM_XY_ExpressionMatrix 
@@ -126,6 +138,8 @@ def initGlobals(nEffectors, comWeightsPerEffector=None):
     global COM1_ExpressionMatrix  
     global COM2_ExpressionMatrix  
     global wExpressionMatrix   
+    global gExpressionMatrix   
+    global bExpressionMatrix   
     
     COM_XY_ExpressionMatrix  = _COM_XY_ExpressionMatrix()
     COM_Z1_ExpressionMatrix  = _COM_Z1_ExpressionMatrix()
@@ -133,6 +147,8 @@ def initGlobals(nEffectors, comWeightsPerEffector=None):
     COM1_ExpressionMatrix    = _COM1ExpressionMatrix()
     COM2_ExpressionMatrix    = _COM2ExpressionMatrix()
     wExpressionMatrix        = _contactDecisionExpressionMatrix()
+    gExpressionMatrix        = _gExpressionMatrix()
+    bExpressionMatrix        = _bExpressionMatrix()
     footExpressionMatrix     = [_footExpressionMatrix(footId, 3) for footId in range(N_EFFECTORS)]
     footExpressionMatrixXY   = [_footExpressionMatrix(footId, 2) for footId in range(N_EFFECTORS)]
     
@@ -143,7 +159,7 @@ def numVariablesForPhase(phase):
     ret = DEFAULT_NUM_VARS
     numSurfaces =len(phase["S"])
     if numSurfaces > 1:
-        ret += numSurfaces + numSurfaces * N_EFFECTORS
+        ret += numSurfaces
     return ret
     
 # ~ def numIneqForPhase(phase, phase = -1 ):
@@ -163,7 +179,8 @@ def numIneqForPhase(phase, phaseId):
     numSurfaces =len(phase["S"])
     if numSurfaces >1:
         # alpha > 0 
-        ret += numSurfaces * NUM_INEQ_SLACK_PER_SURFACE 
+        # ~ ret += numSurfaces * NUM_INEQ_SLACK_PER_SURFACE 
+        ret += numSurfaces * 2 * N_EFFECTORS 
     ret += DEFAULT_NUM_INEQUALITY_CONSTRAINTS
     return ret
     
@@ -248,33 +265,44 @@ def SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow):
     
 def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):     
     idRow = startRow
+    nSurfaces = len(phaseDataT["S"])
     for footId in range(N_EFFECTORS):
-        # -Mwi <= b_i x + b_i y <= M wi  
-        # -Mwi  - b_i x - b_i y} <= 0 ; b_ix + b_iy- M wi <= 0
-        A[idRow, startCol + W_START + footId                                               ] = -M; 
-        A[idRow, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = [-1, -1];
-        idRow += 1 
-        A[idRow, startCol + W_START + footId                                               ] = -M; 
-        A[idRow, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = [1, 1]; 
-        idRow += 1 
+        # -Mwi <= b_i x y <= M wi  
+        # -Mwi  - b_i xy} <= 0 ; b_ixy- M wi <= 0
+        A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*-M; 
+        A[idRow:idRow+2, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = -identity(2);
+        idRow += 2 
+        A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*-M; 
+        A[idRow:idRow+2, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = identity(2);
+        idRow += 2
         # -Mwi <= g_i x + g_i y + g_i_z <= M wi  
         # -Mwi  - g_i x - g_i y - g_i_z  <= 0 ; g_ix + g_iy + g_iz - M wi <= 0
-        A[idRow, startCol + W_START + footId                                               ] = -M; 
-        A[idRow, (startCol + GAMMA_START + footId*3):(startCol + GAMMA_START + footId*3) + 3 ] = [-1, -1, -1];         
-        idRow += 1 
-        A[idRow, startCol + W_START + footId                                               ] = -M; 
-        A[idRow, (startCol + GAMMA_START + footId*3):(startCol + GAMMA_START + footId*3) + 3 ] = [1, 1, 1];        
-        idRow += 1 
+        A[idRow:idRow+3, startCol + W_START + footId                                                 ] = ones(3)*-M; 
+        A[idRow:idRow+3, (startCol + GAMMA_START + footId*3):(startCol + GAMMA_START + footId*3) + 3 ] = -identity(3);       
+        idRow += 3 
+        A[idRow:idRow+3, startCol + W_START + footId                                                 ] = ones(3)*-M; 
+        A[idRow:idRow+3, (startCol + GAMMA_START + footId*3):(startCol + GAMMA_START + footId*3) + 3 ] = identity(3);        
+        idRow += 3 
         # wi <= 1
         A[idRow, startCol + W_START + footId ] = 1; 
-        b[idRow] = 1.;     
+        b[idRow] = 1.00;     
         idRow += 1 
+        # ~ if nSurfaces > 1:            
+            # -Mwi <= a_l <= M wi  
+            # -Mwi  - a_l  <= 0 ; a_l - M wi <= 0
+            # ~ for i in range(nSurfaces):
+                 # ~ A[idRow  , startCol + ALPHA_START + i ]  = -1;
+                 # ~ A[idRow  , startCol + W_START + footId ] = -M;
+                 # ~ A[idRow+1, startCol + ALPHA_START + i ]  =  1;
+                 # ~ A[idRow+1, startCol + W_START + footId ] = -M;
+                 # ~ idRow += 2
     # -al < 0
-    nSurfaces = len(phaseDataT["S"])
+    # -al < 0
+    # ~ nSurfaces = len(phaseDataT["S"])
     if nSurfaces > 1:
         for i in range(nSurfaces):
              A[idRow+i, startCol + ALPHA_START + i ] = -1;
-        idRow += nSurfaces   
+        # ~ idRow += nSurfaces   
     return idRow    
     
 def CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRow):
@@ -326,7 +354,7 @@ def convertProblemToLp(pb, convertSurfaces = True):
         #inequality
         endCol = startCol + numVariablesForPhase(phaseDataT)
         startRow = FootCOMKinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow, phaseId)
-        startRow = RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow)
+        # ~ startRow = RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow)
         startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         
@@ -339,22 +367,62 @@ def convertProblemToLp(pb, convertSurfaces = True):
     print ('startRow ', startRow)
     print ('A.shape[0] ', A.shape[0])
         
-    assert endCol   == A.shape[1]
-    assert startRowEq == E.shape[0]
-    assert startRow == A.shape[0]
+    # ~ assert endCol   == A.shape[1]
+    # ~ assert startRowEq == E.shape[0]
+    # ~ assert startRow == A.shape[0]
     
     A,b = normalize([A,b])
     E,e = normalize([E,e])
     return (A,b,E,e)
         
-def slackSelectionMatrix(pb):
+def pbSelectionMatrix(pb, selectionMatrix = wExpressionMatrix):
     nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
     c = zeros(nvars)
     cIdx = 0
     for i, phase in enumerate(pb["phaseData"]):
-        c[cIdx:cIdx+DEFAULT_NUM_VARS] = wExpressionMatrix[:]
+        c[cIdx:cIdx+DEFAULT_NUM_VARS] = selectionMatrix[:]
         cIdx += numVariablesForPhase(phase)
     assert cIdx == nvars
+    return c
+
+#contact activations
+def wSelectionMatrix(pb):
+    return pbSelectionMatrix(pb, selectionMatrix = wExpressionMatrix)
+    
+#position continuity violation
+def gSelectionMatrix(pb):
+    return pbSelectionMatrix(pb, selectionMatrix = gExpressionMatrix)
+    
+#com centering
+def bSelectionMatrix(pb):
+    return pbSelectionMatrix(pb, selectionMatrix = bExpressionMatrix)
+
+def alphaSelectionMatrix(pb):
+    nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
+    c = zeros(nvars)
+    cIdx = 0    
+    for i, phase in enumerate(pb["phaseData"]):
+        phaseVars = numVariablesForPhase(phase)
+        print ("phase vars", phaseVars)
+        print ("phase DEFAULT_NUM_VARS", DEFAULT_NUM_VARS)
+        nslacks = phaseVars - DEFAULT_NUM_VARS
+        startIdx = cIdx + DEFAULT_NUM_VARS
+        for i in range (0,nslacks,NUM_SLACK_PER_SURFACE):
+            c[startIdx + i] = 1
+        cIdx += phaseVars
+    assert cIdx == nvars
+    return c
+    
+def gammaSelectionMatrix(pb):
+    nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
+    c = zeros(nvars)
+    cIdx = 0
+    for i, phase in enumerate(pb["phaseData"]):
+        c[cIdx:cIdx+DEFAULT_NUM_VARS] = g[:]
+        print ("wExpressionMatrix", wExpressionMatrix)
+        cIdx += numVariablesForPhase(phase)
+    assert cIdx == nvars
+    return c
     return c
 
 ###########################" PLOTTING ################"
@@ -364,31 +432,23 @@ from mpl_toolkits.mplot3d import Axes3D
 
 def retrieve_points_from_res(pb, res):
     coms = []
-    if pb["c0"] is not None:
-        coms = [pb["c0"]]
+    # ~ if pb["c0"] is not None:
+        # ~ coms = [pb["c0"]]
         
-    if pb["p0"] is not None:
-        footPos = [[pb["p0"][LF]],[pb["p0"][RF]]]
-        allFeetPos = [footPos[0][0], footPos[1][0]]
-    else:
-        footPos = [[],[]]
-        allFeetPos = []
+    # ~ if pb["p0"] is not None:
+        # ~ footPos = [[pb["p0"][LF]],[pb["p0"][RF]]]
+        # ~ allFeetPos = [footPos[0][0], footPos[1][0]]
+    # ~ else:
+    footPos = [[],[]]
+    allFeetPos = []
         
     col = 0
-    for i, phaseDataT in enumerate(pb["phaseData"]):  
-        moving = phaseDataT["moving"]
-        fixed = phaseDataT["fixed"]
-        pos = footExpressionMatrix.dot(res[col:col + footExpressionMatrix.shape[1]])
-        footPos[moving] = footPos[moving] + [pos]
-        com = zeros(3);
-        com[2] = res[col + 3]
-        if len(footPos[moving]) <2:
-            footPos[moving] = footPos[moving] + [pos]
-        if len(footPos[fixed]) > 0:
-            footPos[fixed]  = footPos[fixed] + [footPos[fixed][-1]] #duplicate fixed foot
-            com[:2] = footPos[fixed][-1][:2]
-        coms += [com]
-        allFeetPos += [pos]
+    for i, phaseDataT in enumerate(pb["phaseData"]):          
+        coms += [COM1_ExpressionMatrix.dot(res[col:col + COM1_ExpressionMatrix.shape[1]]), COM2_ExpressionMatrix.dot(res[col:col + COM2_ExpressionMatrix.shape[1]])]
+        for footId in range(N_EFFECTORS):
+            pos = footExpressionMatrix[footId].dot(res[col:col + footExpressionMatrix[footId].shape[1]])
+            allFeetPos += [pos]
+            footPos[footId] += [pos]
         col += numVariablesForPhase(phaseDataT)
     return coms, footPos, allFeetPos
     
@@ -448,51 +508,198 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     ax.set_autoscale_on(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
     
-    plotPoints(ax, coms, color = "b")
+    # ~ plotPoints(ax, coms, color = "b")
     plotPoints(ax, footpos[RF], color = "r")
     plotPoints(ax, footpos[LF], color = "g")
     
     cx = [c[0] for c in coms]
     cy = [c[1] for c in coms]
     cz = [c[2] for c in coms]
-    ax.plot(cx, cy, cz)
+    # ~ ax.plot(cx, cy, cz)
     px = [c[0] for c in allfeetpos]
     py = [c[1] for c in allfeetpos]
     pz = [c[2] for c in allfeetpos]
-    ax.plot(px, py, pz)
+    # ~ ax.plot(px, py, pz)
         
     if show:
         plt.ion()
         plt.show()
        
     
+    
+def addInitEndConstraint(pb, E, e, posInit= array([0.0, 0.0, 0.]), posEnd = array([1.2, 0.1, 0.8])):
+# ~ def addInitEndConstraint(pb, E, e, posInit= array([0.0, 0.0, 0.4]), posEnd = array([-0.0, 0.0, 0.4])):
+    nE = zeros((E.shape[0] +6, E.shape[1] ))
+    ne = zeros(E.shape[0] +6)
+    idRow = E.shape[0]
+    nE[:idRow,:E.shape[1]] = E  
+    ne[:idRow] = e[:]
+    nE[idRow:idRow+3,:DEFAULT_NUM_VARS] = footExpressionMatrix[1][:]  
+    ne[idRow:idRow+3] = posInit
+    nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
+    print ("nVarEnd", nVarEnd)
+    # ~ nE[-3:,E.shape[1]-nVarEnd:E.shape[1]-nVarEnd+DEFAULT_NUM_VARS] = COM2_ExpressionMatrix[:]  
+    # ~ ne[-3:] = posEnd
+    return nE, ne
+    
 ####################### MAIN ###################"
 
+# try to import mixed integer solver
+MIP_OK = False  
+try:
+    import gurobipy
+    import cvxpy as cp
+    MIP_OK = True
+
+except ImportError:
+    pass
+
+def tovals(variables):
+    return array([el.value for el in variables])
+    
+def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
+    if not MIP_OK:
+        print("Mixed integer formulation requires gurobi packaged in cvxpy")
+        raise ImportError
+        
+    gurobipy.setParam('LogFile', '')
+    gurobipy.setParam('OutputFlag',0)
+       
+    A, b, E, e = convertProblemToLp(pb, True)   
+    E,e = addInitEndConstraint(pb, E, e)
+    slackMatrix = wSelectionMatrix(pb)
+    surfaceSlackMatrix = alphaSelectionMatrix(pb)
+    
+    rdim = A.shape[1]
+    varReal = cp.Variable(rdim)
+    constraints = []
+    constraintNormalIneq = A * varReal <= b
+    constraintNormalEq   = E * varReal == e
+    
+    constraints = [constraintNormalIneq, constraintNormalEq]
+    #creating boolean vars
+    
+    slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
+    slackIndicesSurf = [i for i,el in enumerate (surfaceSlackMatrix) if el > 0]
+    print ("slackIndicesSurf", slackIndicesSurf)
+    numSlackVariables = len([el for el in slackMatrix if el > 0])
+    numSlackVariablesSurf = len([el for el in surfaceSlackMatrix if el > 0])
+    boolvars = cp.Variable(numSlackVariables, boolean=True)      
+    obj = cp.Minimize(slackMatrix * varReal)
+    
+    if MIP:    
+        # ~ constraints = constraints + [varReal[el] <= boolvars[i] for i, el in enumerate(slackIndices)]   
+        constraints = constraints + [varReal[el] == boolvars[i] for i, el in enumerate(slackIndices)]   
+        
+        currentSum = []
+        previousL = 0
+        for i, el in enumerate(slackIndices):
+            if i!= 0 and el - previousL > 1.:
+                assert len(currentSum) > 0
+                constraints = constraints + [sum(currentSum) == 1 ]
+                currentSum = [boolvars[i]]
+            elif el !=0:
+                currentSum = currentSum + [boolvars[i]]
+            previousL  = el
+        if len(currentSum) > 1:
+            constraints = constraints + [sum(currentSum) == 1 ]
+        
+        
+        if numSlackVariablesSurf > 0:
+            boolvarsSurf = cp.Variable(numSlackVariablesSurf, boolean=True)    
+            constraints = constraints + [varReal[el] <= boolvarsSurf[i] for i, el in enumerate(slackIndicesSurf)] 
+            currentSum = []
+            previousL = 0
+            for i, el in enumerate(slackIndicesSurf):
+                if i!= 0 and el - previousL > 1.:
+                    assert len(currentSum) > 0
+                    constraints = constraints + [sum(currentSum) <= len(currentSum) -1 ]
+                    currentSum = [boolvarsSurf[i]]
+                elif el !=0:
+                    currentSum = currentSum + [boolvarsSurf[i]]
+                previousL  = el
+            if len(currentSum) > 1:
+                constraints = constraints + [sum(currentSum) <= len(currentSum) -1 ]
+        
+        # ~ prev = 0
+        # ~ currentSum = []
+        # ~ for i, el in enumerate(slackIndices):
+            # ~ print ("el", el)
+            # ~ idx = el
+            # ~ if i ==0:
+                # ~ currentSum = [boolvars[i]]
+                # ~ prev = idx
+                # ~ print ("dat ", currentSum)
+            # ~ elif prev < idx-1:
+                # ~ print ("conAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAst ", len(currentSum) )
+                # ~ constraints = constraints + [sum(currentSum) == len(currentSum) -1]
+                # ~ currentSum = []
+            # ~ else:
+                # ~ currentSum += [boolvars[i]]
+                # ~ print ("dat ", currentSum)
+                # ~ prev = idx
+        # ~ obj = cp.Minimize(surfaceSlackMatrix * varReal)
+        obj = cp.Minimize(ones(numSlackVariables) * boolvars)
+        # ~ obj = cp.Minimize(0.)
+    prob = cp.Problem(obj, constraints)
+    t1 = clock()
+    res = prob.solve(solver=cp.GUROBI, verbose=True )
+    t2 = clock()
+    res = tovals(varReal)
+    print("bools",  tovals(boolvars))
+    print("time to solve MIP ", timMs(t1,t2))
+
+    
+    # return timMs(t1,t2)
+    return pb, res, timMs(t1,t2)
+
+
+
 if __name__ == '__main__':
-    from sl1m.stand_alone_scenarios.escaliers import gen_stair_pb,  draw_scene
+    from sl1m.stand_alone_scenarios.escaliers import gen_stair_pb,  draw_scene, surfaces
+    # ~ from sl1m.stand_alone_scenarios.complex import gen_stair_pb,  draw_scene, surfaces
     pb = gen_stair_pb()    
     
     t1 = clock()
     initGlobals(nEffectors = 2)
-    A, b, E, e = convertProblemToLp(pb)
+    # ~ A, b, E, e = convertProblemToLp(pb)
+    # ~ E,e = addInitEndConstraint(pb, E, e)
     
-    A,b = normalize([A,b])
-    C = identity(A.shape[1]) * 0.00001
-    c =  slackSelectionMatrix(pb) * 100.
-    t2 = clock()
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e)
-    t3 = clock()
+    pb, res, time = solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True)
+    ax = draw_scene(None)
+    plotQPRes(pb, res, ax=ax, plot_constraints = False)
     
-    print("time to set up problem" , timMs(t1,t2))
-    print("time to solve problem"  , timMs(t2,t3))
-    print("total time"             , timMs(t1,t3))
+    # ~ C = identity(A.shape[1]) * 0.00001
+    # ~ c =  wSelectionMatrix(pb) * 100.
+    # ~ t2 = clock()
+    # ~ res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    # ~ t3 = clock()
     
-    if res.success:
-        print ("success")
-    else:
-        print ('problem infeasible')
+    # ~ print("time to set up problem" , timMs(t1,t2))
+    # ~ print("time to solve problem"  , timMs(t2,t3))
+    # ~ print("total time"             , timMs(t1,t3))
     
-    # ~ coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+    # ~ if res.success:
+        # ~ print ("success")
+    # ~ else:
+        # ~ print ('problem infeasible')
+        # ~ assert False
+    
+    w = wSelectionMatrix(pb)
+    b = bSelectionMatrix(pb)
+    g = gSelectionMatrix(pb)
+    al = alphaSelectionMatrix(pb)
+    
+    wR = [ el for el in w *res if abs(el) > 0.00001]
+    bR = [ el for el in b *res if abs(el) > 0.0001]
+    gR = [ el for el in g *res if abs(el) > 0.0001]
+    alR = [ el for el in al *res if abs(el) > 0.00000001]
+    
+    print ("w", wR)
+    print ("b", bR)
+    print ("g", gR)
+    print ("al", alR)
+    
     # ~ ax = draw_scene(None)
     # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False)
     

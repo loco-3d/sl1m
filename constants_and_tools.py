@@ -125,7 +125,8 @@ def default_transform_from_pos_normal(pos, normal):
     return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
 
     
-EPSILON_EQ = 0.005
+# ~ EPSILON_EQ = 0.005
+EPSILON_EQ = 0.
 #last is equality
 def surfacePointsToIneq(S, normal, eqAsIneq):
     n = array(normal)
