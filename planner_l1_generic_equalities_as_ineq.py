@@ -239,7 +239,7 @@ def RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow,
         for (footId, Kk ) in  constraintsInFootIdFrame:
             K = Kk[0]; k = Kk[1]
             consLen = K.shape[0]
-            A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] = K.dot(footExpressionMatrix[footId] - footExpressionMatrix[footIdFrame])
+            A[idRow:idRow+consLen, startCol:startCol+DEFAULT_NUM_VARS] = K.dot(-footExpressionMatrix[footId] + footExpressionMatrix[footIdFrame])
             b[idRow:idRow+consLen] = k 
             idRow += consLen    
     return idRow       
@@ -355,7 +355,7 @@ def convertProblemToLp(pb, convertSurfaces = True):
         #inequality
         endCol = startCol + numVariablesForPhase(phaseDataT)
         startRow = FootCOMKinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow, phaseId)
-        startRow = RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow, phaseId)
+        # ~ startRow = RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow, phaseId)
         startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         
@@ -368,9 +368,9 @@ def convertProblemToLp(pb, convertSurfaces = True):
     print ('startRow ', startRow)
     print ('A.shape[0] ', A.shape[0])
         
-    assert endCol   == A.shape[1]
-    assert startRowEq == E.shape[0]
-    assert startRow == A.shape[0]
+    # ~ assert endCol   == A.shape[1]
+    # ~ assert startRowEq == E.shape[0]
+    # ~ assert startRow == A.shape[0]
     
     A,b = normalize([A,b])
     E,e = normalize([E,e])
@@ -438,7 +438,7 @@ def retrieve_points_from_res(pb, res):
         # ~ footPos = [[pb["p0"][LF]],[pb["p0"][RF]]]
         # ~ allFeetPos = [footPos[0][0], footPos[1][0]]
     # ~ else:
-    footPos = [[],[]]
+    footPos = [[] for _ in range(N_EFFECTORS)]
     allFeetPos = []
         
     col = 0
@@ -502,20 +502,26 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
-    ax.grid(False)
+    ax.grid(False)    
+    ax.set_xlim3d(0, 2)
+    ax.set_ylim3d(0,2)
+    ax.set_zlim3d(0,2)
         
     ax.set_autoscale_on(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
     
     plotPoints(ax, coms, color = "b")
-    plotPoints(ax, footpos[RF], color = "r")
-    plotPoints(ax, footpos[LF], color = "g")
+    
+    footColors = ['r', 'g', 'y', 'b']
+    
+    # ~ plotPoints(ax, coms, )
+    [plotPoints(ax, footpos[idx], color = footColors[idx]) for idx in range(N_EFFECTORS)]
     
     cx = [c[0] for c in coms]
     cy = [c[1] for c in coms]
     cz = [c[2] for c in coms]
     ax.plot(cx, cy, cz)
-    # ~ px = [c[0] for c in allfeetpos]
+    px = [c[0] for c in allfeetpos]
     py = [c[1] for c in allfeetpos]
     pz = [c[2] for c in allfeetpos]
     # ~ ax.plot(px, py, pz)
@@ -526,7 +532,8 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
        
     
     
-def addInitEndConstraint(pb, E, e, posInit= array([0.16, 0.585, 0.0]), posEnd = array([1.2, 0.37, 0.40])):
+# ~ def addInitEndConstraint(pb, E, e, posInit= array([0.16, 0.585, 0.0]), posEnd = array([1.2, 0.37, 0.40])):
+def addInitEndConstraint(pb, E, e, posInit= array([0.16, 0.585, 0.0]), posEnd = array([1., 0.585, 0.])):
 # ~ def addInitEndConstraint(pb, E, e, posInit= array([0.0, 0.0, 0.4]), posEnd = array([-0.0, 0.0, 0.4])):
     nE = zeros((E.shape[0] +9, E.shape[1] ))
     ne = zeros(E.shape[0] +9)
@@ -536,12 +543,14 @@ def addInitEndConstraint(pb, E, e, posInit= array([0.16, 0.585, 0.0]), posEnd = 
     nE[idRow:idRow+3,:DEFAULT_NUM_VARS] = footExpressionMatrix[0][:]  
     ne[idRow:idRow+3] = posInit
     idRow += 3
-    nE[idRow:idRow+3,:DEFAULT_NUM_VARS] = footExpressionMatrix[1][:]  
-    ne[idRow:idRow+3] = posInit + array([0., -.20, 0.0])
+    # ~ nE[idRow:idRow+3,:DEFAULT_NUM_VARS] = footExpressionMatrix[1][:]  
+    # ~ nE[idRow:idRow+3,:DEFAULT_NUM_VARS] = footExpressionMatrix[0][:]  
+    # ~ ne[idRow:idRow+3] = posInit 
+    # ~ ne[idRow:idRow+3] = posInit + array([0., -.20, 0.0])
     nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
     # ~ print ("nVarEnd", nVarEnd, E.shape[1]-nVarEnd, E.shape[1]-nVarEnd,E.shape[1]-nVarEnd+DEFAULT_NUM_VARS )
-    # ~ nE[-3:,E.shape[1]-nVarEnd:E.shape[1]-nVarEnd+DEFAULT_NUM_VARS] = footExpressionMatrix[1][:]   
-    # ~ ne[-3:] = posEnd
+    nE[-3:,E.shape[1]-nVarEnd:E.shape[1]-nVarEnd+DEFAULT_NUM_VARS] = footExpressionMatrix[0][:]   
+    ne[-3:] = posEnd
     return nE, ne
     
 ####################### MAIN ###################"
@@ -653,7 +662,7 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
     grb.setParam('OutputFlag', 1)
        
     A, b, E, e = convertProblemToLp(pb)   
-    # ~ E,e = addInitEndConstraint(pb, E, e)
+    E,e = addInitEndConstraint(pb, E, e)
     slackMatrix = wSelectionMatrix(pb)    
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
     numSlackVariables = len([el for el in slackMatrix if el > 0])

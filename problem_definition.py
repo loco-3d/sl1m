@@ -10,8 +10,11 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 ############### Problem definition #############
 
 
+#same as in constraints
 LF = 0
 RF = 1
+LH = 2
+RH = 3
 
 def normalize(Ab):
     A = Ab[0]
