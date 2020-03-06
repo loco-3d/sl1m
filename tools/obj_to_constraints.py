@@ -133,3 +133,4 @@ def ineq_from_file(filename):
 	return Inequalities(res['A'], res['b'],res['N'],res['V'])
 	
 
+# ~ def plot(Inequalities)

@@ -19,6 +19,7 @@ afloor = array(floor).T
 all_surfaces = [floor]
 
 surfaces = [[afloor] for _ in range (10)]
+# ~ surfaces = [[afloor] for _ in range (1)]
 
 def gen_flat_pb():    
     kinematicConstraints = genCOMConstraints()
@@ -63,9 +64,39 @@ if __name__ == '__main__':
     
     initGlobals(nEffectors = 4)  
     pb = gen_flat_pb()  
-    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False)
+    # ~ initPos = [[0.2, 0.6, 0.0],[-0.7, 0.1, 0.0], [-0.3, 1.2, 0.0], [-0.8, 1.0, 0.0] ]
+    initPos = None
+    endPos = None
+    initCom = None
+    endCom  = None
+    # ~ initCom = [0.2, 0., 0.5]
+    # ~ endCom  = [2, 0.7, 0.5]
+    endCom  = [0.2, 1.2, 0.5]
+    # ~ initPos = [array([0.5, 0.0, 0.0]),  array([-0.1, 0.0, -0.0]),  array([0.3, 0.5, 0.0]),  array([-0.0, 0.4, 0.0])]
+    # ~ endPos = [array()]
+    # ~ initPos = [[0.2, 0.6, 0.0] ];     initPos = [array(el) for el in initPos]
+    # ~ endPos = [[0.7, 0.6, 0.0] ];  endPos = [array(el) for el in endPos]
+    # ~ initCom = [0.2, 2., 0.35]
+    # ~ endCom = [0.2, 2., 0.35]
+    print ("initPos", initPos)
+    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+    
     ax = draw_scene(None)
-    plotQPRes(pb, res, ax=ax, plot_constraints = False)
+    # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
+    plotQPRes(pb, res, ax=ax, plot_constraints = False, show = True)
+    
+    # ~ for i in range(5):
+        # ~ coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+        # ~ pb = gen_flat_pb()  
+        # ~ initPos = None
+        # ~ endPos = None
+        # ~ initCom = coms[-1]
+        # ~ endCom  = coms[-1] + array([0., 1.0, 0.0])
+        # ~ initPos = allfeetpos[-1]
+        # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+        # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
+    # ~ plt.show(block = False)
+    # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = None)
     
     
     

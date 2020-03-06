@@ -14,6 +14,8 @@ __ineq_com = [None for _ in range(len(limbNames))]
 __ineq_relative = [ [None for _ in range(len(limbNames)-1)] for __ in range(len(limbNames))]
 
 
+allFiles = []
+
 # add foot offset
 def com_in_limb_effector_frame_constraint(transform, limbId):
     global __ineq_com
@@ -40,6 +42,9 @@ def foot_in_limb_effector_frame_constraint(transform, limbId, footId):
     assert (limbId != footId)
     if __ineq_relative[limbId][realIdxFootId(limbId,footId)] is None:
         # ~ filekin = insdir +"RF_constraints_in_LF.obj"
+        # ~ print("limbId", limbId)
+        # ~ print("footId", footId)
+        # ~ print("name ", "anymal_"+effectorNames[footId]+"_constraints_in_"+limbNames[limbId]+"_reduced.obj")
         filekin = insdir +"anymal_"+effectorNames[footId]+"_constraints_in_"+limbNames[limbId]+"_reduced.obj"
         obj = load_obj(filekin)
         __ineq_relative[limbId][realIdxFootId(limbId,footId)] = as_inequalities(obj)
