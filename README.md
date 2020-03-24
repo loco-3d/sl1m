@@ -3,3 +3,4 @@ Python dependencies:
 	quadprog
 	collections
 	matplotlib
+	pycddlib
