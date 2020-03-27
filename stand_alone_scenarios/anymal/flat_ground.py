@@ -71,7 +71,7 @@ if __name__ == '__main__':
     endCom  = None
     # ~ initCom = [0.2, 0., 0.5]
     # ~ endCom  = [2, 0.7, 0.5]
-    endCom  = [0.2, 1.2, 0.5]
+    endCom  = [1.2, 0.2, 0.5]
     # ~ initPos = [array([0.5, 0.0, 0.0]),  array([-0.1, 0.0, -0.0]),  array([0.3, 0.5, 0.0]),  array([-0.0, 0.4, 0.0])]
     # ~ endPos = [array()]
     # ~ initPos = [[0.2, 0.6, 0.0] ];     initPos = [array(el) for el in initPos]
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         # ~ initPos = None
         # ~ endPos = None
         # ~ initCom = coms[-1]
-        # ~ endCom  = coms[-1] + array([0., 1.0, 0.0])
+        # ~ endCom  = coms[-1] + array([0.7, 0.0, 0.0])
         # ~ initPos = allfeetpos[-1]
         # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
         # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
