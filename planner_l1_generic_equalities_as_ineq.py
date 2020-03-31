@@ -534,7 +534,7 @@ def plotConstraints(ax, pb, allfeetpos, coms):
     
 from scipy.spatial import ConvexHull   
 from tools.plot_plytopes import plot_hull   
-def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True):
+def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True, plotSupport = False):
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     
     if ax is None:
@@ -601,13 +601,14 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     cz = [c[2] for c in coms[1:]]
     ax.plot(cx, cy, cz)
     idC = 0;
-    for el in allfeetpos[:]:
-        # ~ print("points ", [el[:2] for el in allfeetpos])
-        pts = [e[:2] for e in el]
-        apts = array(pts)
-        chul = ConvexHull(array([e[:2] for e in el]))
-        plot_hull(chul, pts = pts, apts = apts, ax = ax, color = footColors[idC])
-        idC = (idC + 1) % 4
+    if plotSupport:
+        for el in allfeetpos[:]:
+            # ~ print("points ", [el[:2] for el in allfeetpos])
+            pts = [e[:2] for e in el]
+            apts = array(pts)
+            chul = ConvexHull(array([e[:2] for e in el]))
+            plot_hull(chul, pts = pts, apts = apts, ax = ax, color = footColors[idC])
+            idC = (idC + 1) % 4
         # ~ px = [c[0] for c in el]
         # ~ py = [c[1] for c in el]
         # ~ pz = [c[2] for c in el]

@@ -99,7 +99,7 @@ if __name__ == '__main__':
         endCom  = coms[-1] + array([0.6, 0.0, 0.0])
         initPos = allfeetpos[-1]
         pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
-        plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
+        plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
     # ~ plt.show(block = False)
     # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = None)
     
