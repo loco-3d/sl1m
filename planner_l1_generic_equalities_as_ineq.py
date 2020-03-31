@@ -279,11 +279,23 @@ def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):
     for footId in range(N_EFFECTORS):
         # -Mwi <= b_i x y <= M wi  
         # -Mwi  - b_i xy} <= 0 ; b_ixy- M wi <= 0
-        A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*-M; 
+        # ~ A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*-M; 
+        # ~ A[idRow:idRow+2, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = -identity(2);
+        # ~ idRow += 2 
+        # ~ A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*-M; 
+        # ~ A[idRow:idRow+2, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = identity(2);
+        # ~ idRow += 2
+        
+        # -M (1 - wi) <= b_i x y <= M (1 - wi)
+        # -M  + Mwi <= b_i x y <= M - Mwi
+        #  Mwi - b <= M;  <= Mwi + b <= M
+        A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*M; 
         A[idRow:idRow+2, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = -identity(2);
+        b[idRow:idRow+2] = ones(2)*M; 
         idRow += 2 
-        A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*-M; 
+        A[idRow:idRow+2, startCol + W_START + footId                                               ] = ones(2)*M; 
         A[idRow:idRow+2, (startCol + BETA_START + footId*2):(startCol + BETA_START + footId*2) + 2 ] = identity(2);
+        b[idRow:idRow+2] = ones(2)*M; 
         idRow += 2
         # -Mwi <= g_i x + g_i y + g_i_z <= M wi  
         # -Mwi  - g_i x - g_i y - g_i_z  <= 0 ; g_ix + g_iy + g_iz - M wi <= 0
@@ -319,6 +331,7 @@ def CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRow):
     idRow = startRow
     for flyingFootId in range(N_EFFECTORS):
         # 0 =  sum(j != i) o_j'i p_j't + [b_ix't, b_iy't]^T - c_x_y
+        # one beta per equality dum dum TODO
         EqMat = -COM_XY_ExpressionMatrix[:]
         for otherFootId in range(N_EFFECTORS):
             if flyingFootId != otherFootId:
@@ -369,7 +382,7 @@ def convertProblemToLp(pb, convertSurfaces = True):
         startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         
         #equalities        
-        # ~ startRowEq = CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq)
+        startRowEq = CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq)
         startRowEq = FootContinuityEqualityConstraint(pb, phaseDataT, E, e, previousStartCol, startCol, endCol, startRowEq, phaseId)
         previousStartCol = startCol
         startCol   = endCol 
@@ -534,6 +547,47 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
         
     ax.set_autoscale_on(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
+    
+    from sl1m.tools.plot_plytopes import plot_polytope_H_rep
+    from collections import namedtuple
+    Ineq = namedtuple("Inequality", "A b")
+    
+    colors = ["r","b","g","y"]
+    Af = None
+    bf = None
+    
+    weighted = []
+    for footId, (K, k) in enumerate(pb["phaseData"][0]["K"][0]):
+        Afoot = K
+        bfoot = (k + K.dot(footpos[footId][0])).reshape([-1,1])
+        if Af is None:
+            Af = K; bf = bfoot
+        else:
+            Af = np.vstack([Af, Afoot])
+            bf = np.vstack([bf, bfoot])
+        # ~ print ("footposid", footpos[footId][0])
+        # ~ bfoot = k.reshape([-1,1])
+        # ~ print ("range", (K.dot([-1,0.,0.]) - k).max())
+        pond = zeros(3); 
+        for otherFootId, positions in enumerate(footpos):
+            if otherFootId != footId:
+                pond += 0.33 * positions[0]
+        pond[-1] = 0.4
+        weighted += [pond]
+    plot_polytope_H_rep(Af,bf, color = "r", just_pts = False, ax = ax)
+        # ~ plot(Ineq(Afoot,k), ax = ax, show = False, color = colors[footId])
+    # ~ [print("wtf", (Af[:,:2].dot(el[:2])-bf).max() ) for el in weighted]
+    
+    
+    Afreez = Af[:,2:3]
+    for el in weighted:
+        bFreez = bf.reshape((-1,)) - Af[:,:2].dot(el[:2])
+        # ~ print ('AAAAAAAAAAAAAAAAAAA',bf.shape)
+        from qp import solve_lp
+        z = solve_lp(zeros(1),Afreez, bFreez)
+        el[-1] = z.x
+        plotPoints(ax, [el], color = "b")
+        
     
     # ~ plotPoints(ax, coms[1:], color = "b")
     
@@ -911,8 +965,8 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
 
 
 if __name__ == '__main__':
-    # ~ from sl1m.stand_alone_scenarios.escaliers import gen_stair_pb,  draw_scene, surfaces
-    from sl1m.stand_alone_scenarios.complex import gen_stair_pb,  draw_scene, surfaces
+    from sl1m.stand_alone_scenarios.escaliers import gen_stair_pb,  draw_scene, surfaces
+    # ~ from sl1m.stand_alone_scenarios.complex import gen_stair_pb,  draw_scene, surfaces
     pb = gen_stair_pb()    
     
     t1 = clock()

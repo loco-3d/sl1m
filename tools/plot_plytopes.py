@@ -5,7 +5,7 @@ from numpy import array, dot, vstack, hstack, asmatrix, identity, cross
 from numpy.linalg import norm
 
 from scipy.spatial import ConvexHull
-from hpp_bezier_com_traj import *
+# ~ from hpp_bezier_com_traj import *
 #~ from qp import solve_lp
 
 import eigenpy

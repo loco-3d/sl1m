@@ -18,8 +18,8 @@ floor = [ [-10, -10., 0.], [10, -10., 0.], [10, 10., 0.], [-10, 10., 0.]  ]
 afloor = array(floor).T 
 all_surfaces = [floor]
 
+# ~ surfaces = [[afloor] for _ in range (10)]
 surfaces = [[afloor] for _ in range (10)]
-# ~ surfaces = [[afloor] for _ in range (1)]
 
 def gen_flat_pb():    
     kinematicConstraints = genCOMConstraints()
@@ -84,17 +84,22 @@ if __name__ == '__main__':
     ax = draw_scene(None)
     # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
     plotQPRes(pb, res, ax=ax, plot_constraints = False, show = True)
+    pb = gen_flat_pb()  
+    A, b, E, e = convertProblemToLp(pb)   
+    bcom = b - A[:,4:].dot(res[4:]) - A[:,2].dot(res[2]) 
+    Acom = np.hstack([A[:,:2], A[:,3:4]])
     
-    # ~ for i in range(5):
-        # ~ coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
-        # ~ pb = gen_flat_pb()  
-        # ~ initPos = None
-        # ~ endPos = None
-        # ~ initCom = coms[-1]
-        # ~ endCom  = coms[-1] + array([0.7, 0.0, 0.0])
-        # ~ initPos = allfeetpos[-1]
-        # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
-        # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
+    for i in range(5):
+        print ("WTTTTTTTTTTFFFFFFFFFFFFFFf!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", i)
+        coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+        pb = gen_flat_pb()  
+        initPos = None
+        endPos = None
+        initCom = coms[-1]
+        endCom  = coms[-1] + array([0.6, 0.0, 0.0])
+        initPos = allfeetpos[-1]
+        pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+        plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
     # ~ plt.show(block = False)
     # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = None)
     
