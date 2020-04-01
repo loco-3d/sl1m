@@ -381,8 +381,10 @@ def convertProblemToLp(pb, convertSurfaces = True):
         startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         
-        #equalities        
-        startRowEq = CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq)
+        #equalities     
+        #no weighted com on first phase   
+        if phaseId != 0:
+            startRowEq = CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq)
         startRowEq = FootContinuityEqualityConstraint(pb, phaseDataT, E, e, previousStartCol, startCol, endCol, startRowEq, phaseId)
         previousStartCol = startCol
         startCol   = endCol 
@@ -533,7 +535,7 @@ def plotConstraints(ax, pb, allfeetpos, coms):
                 print("qhullfailed")
     
 from scipy.spatial import ConvexHull   
-from tools.plot_plytopes import plot_hull   
+from sl1m.tools.plot_plytopes import plot_hull   
 def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True, plotSupport = False):
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     

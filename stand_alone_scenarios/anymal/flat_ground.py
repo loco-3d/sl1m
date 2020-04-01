@@ -7,7 +7,8 @@ from numpy.linalg import norm
 
 from sl1m.constants_and_tools import *
 from sl1m.planner_l1_generic_equalities_as_ineq import *
-
+from hpp.corbaserver.rbprm import  rbprmstate
+from hpp.corbaserver.rbprm import  state_alg
 
 
 from sl1m.stand_alone_scenarios.constraints_anymal import *
@@ -18,8 +19,8 @@ floor = [ [-10, -10., 0.], [10, -10., 0.], [10, 10., 0.], [-10, 10., 0.]  ]
 afloor = array(floor).T 
 all_surfaces = [floor]
 
-# ~ surfaces = [[afloor] for _ in range (10)]
 surfaces = [[afloor] for _ in range (10)]
+# ~ surfaces = [[afloor] for _ in range (5)]
 
 def gen_flat_pb():    
     kinematicConstraints = genCOMConstraints()
@@ -52,6 +53,17 @@ def draw_scene(surfaces, ax = None, color = "p"):
     return ax
     
     
+def solve(initCom = None, initPos = None, endCom = None):
+    if endCom is None and initCom is not None:
+        endCom  = initCom + array([0.6, 0.0, 0.0])
+    initGlobals(nEffectors = 4)  
+    pb = gen_flat_pb()  
+    endPos = None
+    # ~ print ("initPos", initPos)
+    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+    coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+    return pb, coms, footpos, allfeetpos, res
+    
     
 ############# main ###################    
 
@@ -69,9 +81,9 @@ if __name__ == '__main__':
     endPos = None
     initCom = None
     endCom  = None
-    # ~ initCom = [0.2, 0., 0.5]
+    initCom = [0.2, 0., 0.5]
     # ~ endCom  = [2, 0.7, 0.5]
-    endCom  = [1.2, 0.2, 0.5]
+    # ~ endCom  = [1.2, 0.2, 0.5]
     # ~ initPos = [array([0.5, 0.0, 0.0]),  array([-0.1, 0.0, -0.0]),  array([0.3, 0.5, 0.0]),  array([-0.0, 0.4, 0.0])]
     # ~ endPos = [array()]
     # ~ initPos = [[0.2, 0.6, 0.0] ];     initPos = [array(el) for el in initPos]
@@ -89,17 +101,17 @@ if __name__ == '__main__':
     bcom = b - A[:,4:].dot(res[4:]) - A[:,2].dot(res[2]) 
     Acom = np.hstack([A[:,:2], A[:,3:4]])
     
-    for i in range(5):
-        print ("WTTTTTTTTTTFFFFFFFFFFFFFFf!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", i)
-        coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
-        pb = gen_flat_pb()  
-        initPos = None
-        endPos = None
-        initCom = coms[-1]
-        endCom  = coms[-1] + array([0.6, 0.0, 0.0])
-        initPos = allfeetpos[-1]
-        pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
-        plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
+    # ~ for i in range(5):
+        # ~ print ("WTTTTTTTTTTFFFFFFFFFFFFFFf!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", i)
+        # ~ coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+        # ~ pb = gen_flat_pb()  
+        # ~ initPos = None
+        # ~ endPos = None
+        # ~ initCom = coms[-1]
+        # ~ endCom  = coms[-1] + array([0.6, 0.0, 0.0])
+        # ~ initPos = allfeetpos[-1]
+        # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+        # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
     # ~ plt.show(block = False)
     # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = None)
     
