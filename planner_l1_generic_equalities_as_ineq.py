@@ -708,9 +708,6 @@ try:
 except ImportError:
     pass
 
-except ImportError:
-    pass
-
 def tovals(variables):
     return array([el.value for el in variables])
     
@@ -792,6 +789,16 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     return pb, res, timMs(t1,t2)
 
 
+# gurobi cost functions
+def targetCom(pb, cVars, endCom):
+    nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
+    cx_end_diff = cVars[-nVarEnd]   - endCom[0]
+    cy_end_diff = cVars[-nVarEnd+1] - endCom[1]
+    cz_end_diff = cVars[-nVarEnd+2] - endCom[2]
+    #
+    return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff + cz_end_diff * cz_end_diff
+
+
 def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None):  
     if not MIP_OK:
         print ("Mixed integer formulation requires gurobi packaged in cvxpy")
@@ -804,7 +811,9 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
        
     A, b, E, e = convertProblemToLp(pb)   
     print ("initpos ", initPos)
-    E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
+    # ~ E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
+    #todo is end constraint desirable ?
+    E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, None)
     slackMatrix = wSelectionMatrix(pb)    
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
     numSlackVariables = len([el for el in slackMatrix if el > 0])
@@ -861,7 +870,6 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
             model.addConstr(expr, grb.GRB.LESS_EQUAL, b[i])
         
     model.update()
-    
     
     if MIP:    
                 
@@ -945,6 +953,10 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
         for (i,el) in initGuessMip:
             boolvars[i].start = el
         
+    
+    if endCom is not None:
+        obj = targetCom(pb, cVars,  endCom)
+        model.setObjective(obj)
     
     # ~ grb.setParam('SOLUTION_LIMIT', 1)
     # ~ grb.setParam('TIME_LIMIT', 10)

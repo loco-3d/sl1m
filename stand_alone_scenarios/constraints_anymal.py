@@ -52,11 +52,11 @@ def foot_in_limb_effector_frame_constraint(transform, limbId, footId):
     ine = rotate_inequalities(__ineq_relative[limbId][realIdxFootId(limbId,footId)], transform2)
     return (ine.A, ine.b)
 
-def genCOMConstraints(rotation = [Id for _ in range(len(limbNames))], normals = [z for _ in range(len(limbNames))]):
-    return [com_in_limb_effector_frame_constraint(default_transform_from_pos_normal_(rotation[idx], zero3, normals[idx]),idx) for idx in range(len(limbNames))]
+def genCOMConstraints(rotation = Id, normals = [z for _ in range(len(limbNames))]):
+    return [com_in_limb_effector_frame_constraint(default_transform_from_pos_normal_(rotation, zero3, normals[idx]),idx) for idx in range(len(limbNames))]
     
-def genRelativeConstraints(rotation = [Id for _ in range(len(limbNames))], normals = [z for _ in range(len(limbNames))]):
-    transforms = [default_transform_from_pos_normal_(rotation[idx], zero3, normals[idx]) for idx in range(len(limbNames))]
+def genRelativeConstraints(rotation = Id, normals = [z for _ in range(len(limbNames))]):
+    transforms = [default_transform_from_pos_normal_(rotation, zero3, normals[idx]) for idx in range(len(limbNames))]
     res = []
     for limbId, transform in enumerate(transforms):
         res += [[(footId, foot_in_limb_effector_frame_constraint(transform, limbId, footId)) for footId in range(len(limbNames)) if footId != limbId]]

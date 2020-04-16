@@ -132,17 +132,60 @@ s = rbprmstate.State(fullBody, q = q_init, limbsIncontact = limbNames[:])
 
 states = [s]
 
+
 def run():
     for i, _ in enumerate(allfeetpos[1:]):
         states.append(gen_state(states[-1],i+1, useCom = True))
         
-def play():
+def play(dt = 0.5):
     for s in states:
         v(s.q())
-        time.sleep(0.5)
+        time.sleep(dt)
         
 run()
 play()
     
 extraDof = [0 for _ in range(6)]
 configs = [ st.q() + extraDof for st in states[:]]; i = 0
+
+#now saving sequence to mlp
+from pinocchio.utils import *
+import importlib
+import multicontact_api
+from multicontact_api import ContactSequence
+from mlp.utils.cs_tools import addPhaseFromConfig, setFinalState
+from mlp.viewer.display_tools import initScene, displaySteppingStones
+from pinocchio.utils import matrixToRpy
+from pinocchio import Quaternion, SE3
+# ~ from hpp.corbaserver.rbprm.tools.surfaces_from_path import getSurfacesFromGuideContinuous
+import random
+from mlp.utils.requirements import Requirements
+multicontact_api.switchToNumpyArray()
+from numpy.linalg import  norm
+
+
+cs = ContactSequence(0)
+addPhaseFromConfig(fullBody, cs, q_init, limbNames[:])
+rot = Quaternion.Identity() #todo update
+for pId in range(1, len(pb["phaseData"])):
+    print ('phase ', pId)
+    # ~ rot = Quaternion.Identity()
+    prevFeetPos = allfeetpos[pId-1]
+    feetPos = allfeetpos[pId]
+    switch = False
+    for limbId, effId, pos, prevPos in zip(limbNames, effectorNames,  feetPos, prevFeetPos):
+        if norm(pos - prevPos) > 0.001:
+            if switch:
+                print ("already one change, error")
+            switch = True
+            placement = SE3()
+            placement.translation = np.array(pos).T
+            placement.rotation = rot.matrix()
+            cs.moveEffectorToPlacement(effId, placement)  
+    if not switch:
+        print ("no switch at phase")
+    q_end = configs[-1][:]
+    fullBody.setCurrentConfig(q_end[:-6])
+    com = fullBody.getCenterOfMass()
+    setFinalState(cs, com, q=q_end)
+displaySteppingStones(cs, v.client.gui, v.sceneName, fullBody)
