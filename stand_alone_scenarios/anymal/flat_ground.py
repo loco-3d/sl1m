@@ -56,6 +56,7 @@ def draw_scene(surfaces, ax = None, color = "p"):
 def solve(initCom = None, initPos = None, endCom = None):
     if endCom is None and initCom is not None:
         endCom  = initCom + array([0.6, 0.0, 0.0])
+        # ~ endCom  = initCom + array([6, 0.0, 0.0])
     initGlobals(nEffectors = 4)  
     pb = gen_flat_pb()  
     endPos = None
