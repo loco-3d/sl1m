@@ -44,7 +44,6 @@ def staticEq(positions, com):
 
 def gen_state(pb, coms, allfeetpos,fullBody, limbNames, s, pId,  num_max_sample = 1, first = False, normal = z, newContact = True , useCom = False ):
     #~ pId = 6
-    phase =  pb["phaseData"][pId]
     feetPos = allfeetpos[pId]
     sres, succ = StateHelper.cloneState(s)
     for limbId, pos in zip(limbNames, feetPos):
@@ -67,7 +66,7 @@ def gen_state(pb, coms, allfeetpos,fullBody, limbNames, s, pId,  num_max_sample 
     if useCom:
         while(not succCom and ite < 30):
             succCom =  fullBody.projectStateToCOM(sres.sId ,com, num_max_sample)
-            com[2] -= 0.05
+            com[2] += 0.05
             ite += 1    
             if succCom:
                 sres2, succ = StateHelper.cloneState(sres)
@@ -84,12 +83,17 @@ def gen_state(pb, coms, allfeetpos,fullBody, limbNames, s, pId,  num_max_sample 
     fullBody.setCurrentConfig(sres.q())
     return sres
 
+def applyOffset(allfeetpos, offset):
+    for i in range(len(allfeetpos)):
+        for j in range(len(allfeetpos[i])):
+            allfeetpos[i][j][2]+=offset
 
 #### show results #### 
 
-def run(fullBody, states, allfeetpos, limbNames, coms, pb):
+def run(fullBody, states, allfeetpos, limbNames, coms, pb, offset, useCom = False):
+    applyOffset(allfeetpos, offset)
     for i, _ in enumerate(allfeetpos[1:]):
-        states.append(gen_state(pb,coms,allfeetpos,fullBody, limbNames, states[-1],i+1, useCom = True))
+        states.append(gen_state(pb,coms,allfeetpos,fullBody, limbNames, states[-1],i+1, useCom = useCom))
         
 def play(states, v, dt = 0.5):
     for s in states:
@@ -122,7 +126,7 @@ def exportCS(fullBody, q_init, states, pb, allfeetpos, limbNames, effectorNames)
     cs = ContactSequence(0)
     addPhaseFromConfig(fullBody, cs, q_init, limbNames[:])
     rot = Quaternion.Identity() #todo update
-    for pId in range(1, len(pb["phaseData"])):
+    for pId in range(1, len(states)):
         print ('phase ', pId)
         # ~ rot = Quaternion.Identity()
         prevFeetPos = allfeetpos[pId-1]

@@ -13,13 +13,14 @@ initContacts, initPos, initCom = initConstraintsFrom_q_init(fullBody, q_init, li
 pb, coms, footpos, allfeetpos, res = solve(initCom = initCom, initPos = initPos)
 
 
+q_init[2] += footOffset
 v(q_init)
 #create init state
 s = rbprmstate.State(fullBody, q = q_init, limbsIncontact = limbNames[:])
 states = [s]
 
 #compute whole-body states from contact sequences
-run(fullBody, states, allfeetpos, limbNames, coms, pb)
+run(fullBody, states, allfeetpos, limbNames, coms, pb, footOffset)
 
 #play motion
 play(states,v)

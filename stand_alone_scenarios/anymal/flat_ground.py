@@ -59,6 +59,8 @@ def solve(initCom = None, initPos = None, endCom = None):
         # ~ endCom  = initCom + array([6, 0.0, 0.0])
     initGlobals(nEffectors = 4)  
     pb = gen_flat_pb()  
+    print ("init post ", initPos)
+    print ("initCom ", initCom)
     endPos = None
     # ~ print ("initPos", initPos)
     pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
@@ -103,7 +105,6 @@ if __name__ == '__main__':
     Acom = np.hstack([A[:,:2], A[:,3:4]])
     
     for i in range(5):
-        print ("WTTTTTTTTTTFFFFFFFFFFFFFFf!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", i)
         coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
         pb = gen_flat_pb()  
         initPos = None
@@ -114,7 +115,7 @@ if __name__ == '__main__':
         pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
         plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
     plt.show(block = False)
-    # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = None)
+    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = None)
     
     
     

@@ -41,3 +41,4 @@ q_init = q_ref[::]
 fullBody.setReferenceConfig(q_ref)
 fullBody.setCurrentConfig (q_init)
 fullBody.setPostureWeights(fullBody.postureWeights[::])
+footOffset = 0.03

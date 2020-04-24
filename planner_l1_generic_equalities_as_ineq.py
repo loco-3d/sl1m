@@ -585,7 +585,7 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     for el in weighted:
         bFreez = bf.reshape((-1,)) - Af[:,:2].dot(el[:2])
         # ~ print ('AAAAAAAAAAAAAAAAAAA',bf.shape)
-        from qp import solve_lp
+        from sl1m.qp import solve_lp
         z = solve_lp(zeros(1),Afreez, bFreez)
         el[-1] = z.x
         plotPoints(ax, [el], color = "b")
@@ -794,9 +794,36 @@ def targetCom(pb, cVars, endCom):
     nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
     cx_end_diff = cVars[-nVarEnd]   - endCom[0]
     cy_end_diff = cVars[-nVarEnd+1] - endCom[1]
-    cz_end_diff = cVars[-nVarEnd+2] - endCom[2]
+    # ~ cz_end_diff = cVars[-nVarEnd+2] - endCom[2]
     #
-    return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff + cz_end_diff * cz_end_diff
+    # ~ return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff + cz_end_diff * cz_end_diff
+    return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff
+    
+# gurobi cost functions
+def targetLegCenter(pb, cVars, endCom):
+    startCol = 0;
+    previousStartCol = 0;
+    endCol   = 0;
+    #~ fixedFootMatrix = None;
+    footOffset = 4
+    cost = 0
+    
+    fact = 1. / float(N_EFFECTORS)
+    
+    for phaseId, phaseDataT in enumerate(pb["phaseData"]):  
+        #inequality
+        endCol = startCol + numVariablesForPhase(phaseDataT)
+        footCol = startCol + footOffset
+        # expressing everything in terms of first foot
+        x= 0; y = 0;
+        for footId in range(1, N_EFFECTORS):
+            x += cVars[footCol+footId * 3    ] * fact
+            y += cVars[footCol+footId * 3 + 1] * fact
+        startCol = endCol         
+        if phaseId == len(pb["phaseData"]) - 1:
+            cost = (x - endCom[0]) * (x - endCom[0]) + (y - endCom[1]) * (y - endCom[1])
+    print ("cost ", cost)
+    return cost
 
 def posturalCost(pb, cVars, initPos, initCom):
     startCol = 0;
@@ -817,6 +844,44 @@ def posturalCost(pb, cVars, initPos, initCom):
             cost += sum([(cVars[footCol+footId * 3 + el] - cVars[footCol + el] - refCost[footId-1][el])* (cVars[footCol+footId * 3 + el] - cVars[footCol + el] - refCost[footId-1][el])  for el in range(3)])
         startCol = endCol
     return cost
+    
+def stepSizeCost(pb, cVars, initPos, initCom):
+    startCol = 0;
+    previousStartCol = 0;
+    endCol   = 0;
+    #~ fixedFootMatrix = None;
+    footOffset = 4
+    
+    cost = 0
+    
+    for phaseId, phaseDataT in enumerate(pb["phaseData"]):   
+        #inequality
+        endCol = startCol + numVariablesForPhase(phaseDataT)
+        footCol = startCol + footOffset
+        # expressing everything in terms of first foot
+        for footId in range(1, N_EFFECTORS):
+            cost += sum([(cVars[footCol+footId * 3 + el] - 0.15)* (cVars[footCol+footId * 3 + el] - 0.15)  for el in range(2)])
+        startCol = endCol
+    return cost
+    
+def maxStepSizeCost(pb, cVars, initPos, initCom):
+    startCol = 0;
+    previousStartCol = 0;
+    endCol   = 0;
+    #~ fixedFootMatrix = None;
+    footOffset = 4
+    
+    cost = 0
+    
+    for phaseId, phaseDataT in enumerate(pb["phaseData"]):   
+        #inequality
+        endCol = startCol + numVariablesForPhase(phaseDataT)
+        footCol = startCol + footOffset
+        # expressing everything in terms of first foot
+        for footId in range(1, N_EFFECTORS):
+            cost += sum([(cVars[footCol+footId * 3 + el] - 0.15)* (cVars[footCol+footId * 3 + el] - 0.15)  for el in range(2)])
+        startCol = endCol
+    return cost
 
 
 def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None):  
@@ -831,9 +896,9 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
        
     A, b, E, e = convertProblemToLp(pb)   
     print ("initpos ", initPos)
-    E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
+    # ~ E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
     #todo is end constraint desirable ?
-    # ~ E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, None)
+    E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, None)
     slackMatrix = wSelectionMatrix(pb)    
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
     numSlackVariables = len([el for el in slackMatrix if el > 0])
@@ -975,8 +1040,14 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
         
     
     if initPos is not None:
-        # ~ obj = targetCom(pb, cVars,  endCom)
-        obj = posturalCost(pb, cVars,  initPos, initCom)
+        obj = 0
+        print (" initPos is not None !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
+        # ~ obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
+        # ~ obj += stepSizeCost(pb, cVars,  initPos, initCom)
+        # ~ obj += 10. * targetCom(pb, cVars,  endCom)
+        obj += 10. * targetCom(pb, cVars,  endCom)
+        # ~ obj = targetLegCenter(pb, cVars,  endCom)
         model.setObjective(obj)
     
     # ~ grb.setParam('SOLUTION_LIMIT', 1)
