@@ -383,8 +383,8 @@ def convertProblemToLp(pb, convertSurfaces = True):
         
         #equalities     
         #no weighted com on first phase   
-        # ~ if phaseId != 0:
-            # ~ startRowEq = CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq)
+        if phaseId != 0:
+            startRowEq = CoMWeightedEqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq)
         startRowEq = FootContinuityEqualityConstraint(pb, phaseDataT, E, e, previousStartCol, startCol, endCol, startRowEq, phaseId)
         previousStartCol = startCol
         startCol   = endCol 
@@ -576,7 +576,7 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
                 pond += 0.33 * positions[0]
         pond[-1] = 0.4
         weighted += [pond]
-    plot_polytope_H_rep(Af,bf, color = "r", just_pts = False, ax = ax)
+    # ~ plot_polytope_H_rep(Af,bf, color = "r", just_pts = False, ax = ax)
         # ~ plot(Ineq(Afoot,k), ax = ax, show = False, color = colors[footId])
     # ~ [print("wtf", (Af[:,:2].dot(el[:2])-bf).max() ) for el in weighted]
     
@@ -790,7 +790,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
 
 
 # gurobi cost functions
-def targetCom(pb, cVars, endCom):
+def targetCom(pb, cVars, initPos, endPos, initCom, endCom):
     nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
     cx_end_diff = cVars[-nVarEnd]   - endCom[0]
     cy_end_diff = cVars[-nVarEnd+1] - endCom[1]
@@ -800,7 +800,21 @@ def targetCom(pb, cVars, endCom):
     return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff
     
 # gurobi cost functions
-def targetLegCenter(pb, cVars, endCom):
+def targetEndPos(pb, cVars, initPos, endPos, initCom, endCom):
+    obj = 0
+    nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
+    if endPos is not None:     
+        print ("None !!!!!!!!!!!!!!!!!!!!!!!!!!")   
+        for idFoot, pos in enumerate(endPos):
+            # ~ print("adding end", idRow )
+            cx_end_diff = cVars[-nVarEnd + idFoot *3 + 4]   - endPos[idFoot][0]
+            cy_end_diff = cVars[-nVarEnd + idFoot *3 + 5]   - endPos[idFoot][1]
+            obj += cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff
+    print ("OBJ ", obj)
+    return obj
+    
+# gurobi cost functions
+def targetLegCenter(pb, cVars, initPos, endPos, initCom, endCom):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
@@ -825,7 +839,7 @@ def targetLegCenter(pb, cVars, endCom):
     print ("cost ", cost)
     return cost
 
-def posturalCost(pb, cVars, initPos, initCom):
+def posturalCost(pb, cVars, initPos, endPos, initCom, endCom):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
@@ -845,7 +859,7 @@ def posturalCost(pb, cVars, initPos, initCom):
         startCol = endCol
     return cost
     
-def stepSizeCost(pb, cVars, initPos, initCom):
+def stepSizeCost(pb, cVars, initPos, endPos, initCom, endCom):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
@@ -864,7 +878,7 @@ def stepSizeCost(pb, cVars, initPos, initCom):
         startCol = endCol
     return cost
     
-def maxStepSizeCost(pb, cVars, initPos, initCom):
+def maxStepSizeCost(pb, cVars, initPos, endPos, initCom, endCom):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
@@ -884,7 +898,8 @@ def maxStepSizeCost(pb, cVars, initPos, initCom):
     return cost
 
 
-def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None):  
+def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None,
+costs = [(1, posturalCost),(2, targetCom)]):  
     if not MIP_OK:
         print ("Mixed integer formulation requires gurobi packaged in cvxpy")
         raise ImportError
@@ -899,6 +914,7 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
     # ~ E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
     #todo is end constraint desirable ?
     E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, None)
+    # ~ E,e = addInitEndConstraint(pb, E, e, None, None, None, None)
     slackMatrix = wSelectionMatrix(pb)    
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
     numSlackVariables = len([el for el in slackMatrix if el > 0])
@@ -1042,11 +1058,14 @@ def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, ini
     if initPos is not None:
         obj = 0
         print (" initPos is not None !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
         # ~ obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
+        # ~ obj += 1 * posturalCost(pb, cVars,  initPos, initCom)
         # ~ obj += stepSizeCost(pb, cVars,  initPos, initCom)
         # ~ obj += 10. * targetCom(pb, cVars,  endCom)
-        obj += 10. * targetCom(pb, cVars,  endCom)
+        # ~ obj +=  2 * targetCom(pb, cVars,  endCom)
+        for (weight, cost) in costs:
+            obj += weight * cost(pb, cVars, initPos, endPos, initCom, endCom)
+        # ~ obj += targetEndPos(pb, cVars,  endPos)
         # ~ obj = targetLegCenter(pb, cVars,  endCom)
         model.setObjective(obj)
     

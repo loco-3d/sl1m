@@ -42,6 +42,14 @@ def staticEq(positions, com):
     except:
         return False
 
+def gen_init_state(feetPos, fullBody, q_init, limbNames, offsetz, normal = z):
+    s = rbprmstate.State(fullBody, q = q_init, limbsIncontact = limbNames[:])
+    sres, succ = StateHelper.cloneState(s)
+    for limbId, pos in zip(limbNames, feetPos):
+        l = pos.tolist(); l[2] += offsetz
+        sres, succ = state_alg.addNewContact(sres, limbId, l, normal.tolist(), num_max_sample= 200)    
+    return sres
+
 def gen_state(pb, coms, allfeetpos,fullBody, limbNames, s, pId,  num_max_sample = 1, first = False, normal = z, newContact = True , useCom = False ):
     #~ pId = 6
     feetPos = allfeetpos[pId]
@@ -121,11 +129,13 @@ from numpy.linalg import  norm
 extraDof = [0 for _ in range(6)]
 
 
-def exportCS(fullBody, q_init, states, pb, allfeetpos, limbNames, effectorNames):
+def exportCS(fullBody, q_init, states, pb, allfeetpos, limbNames, effectorNames, squeeze = False):
     configs = [ st.q() + extraDof for st in states[:]]; i = 0
     cs = ContactSequence(0)
     addPhaseFromConfig(fullBody, cs, q_init, limbNames[:])
     rot = Quaternion.Identity() #todo update
+    preveffId = None
+    prevPlacement = None
     for pId in range(1, len(states)):
         print ('phase ', pId)
         # ~ rot = Quaternion.Identity()
@@ -140,11 +150,15 @@ def exportCS(fullBody, q_init, states, pb, allfeetpos, limbNames, effectorNames)
                 placement = SE3()
                 placement.translation = np.array(pos).T
                 placement.rotation = rot.matrix()
-                cs.moveEffectorToPlacement(effId, placement)  
+                if preveffId is not None and (not squeeze or preveffId != effId ):
+                    cs.moveEffectorToPlacement(preveffId, prevPlacement) 
+                preveffId = effId
+                prevPlacement = placement
         if not switch:
-            print ("no switch at phase")
-        q_end = configs[-1][:]
-        fullBody.setCurrentConfig(q_end[:-6])
-        com = fullBody.getCenterOfMass()
-        setFinalState(cs, com, q=q_end)
+            print ("no switch at phase")    
+    cs.moveEffectorToPlacement(preveffId, prevPlacement) 
+    q_end = configs[-1][:]
+    fullBody.setCurrentConfig(q_end[:-6])
+    com = fullBody.getCenterOfMass()
+    setFinalState(cs, com, q=q_end)
     return cs

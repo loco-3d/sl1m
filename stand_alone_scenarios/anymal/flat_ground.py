@@ -55,7 +55,7 @@ def draw_scene(surfaces, ax = None, color = "p"):
     
 def solve(initCom = None, initPos = None, endCom = None):
     if endCom is None and initCom is not None:
-        endCom  = initCom + array([0.6, 0.0, 0.0])
+        endCom  = initCom + array([100, 0.0, 0.0])
         # ~ endCom  = initCom + array([6, 0.0, 0.0])
     initGlobals(nEffectors = 4)  
     pb = gen_flat_pb()  
@@ -63,7 +63,7 @@ def solve(initCom = None, initPos = None, endCom = None):
     print ("initCom ", initCom)
     endPos = None
     # ~ print ("initPos", initPos)
-    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom, costs = [(0.01, posturalCost),(100, targetCom)])
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     return pb, coms, footpos, allfeetpos, res
     
