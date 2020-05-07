@@ -150,7 +150,7 @@ def solve(initCom = None, initPos = None, endCom = None, surfaces = surfaces, ax
     pb = gen_pb()  
     endPos = None
     # ~ print ("initPos", initPos)
-    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom, costs = [(100, targetCom)])
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     if ax is not None:
         plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
@@ -162,7 +162,7 @@ def solve(initCom = None, initPos = None, endCom = None, surfaces = surfaces, ax
     print ("coms ", Coms)
     print ("Allfeetpos ", Allfeetpos)
     
-    for i in range(11):
+    for i in range(3):
     # ~ for i in range(1):
         # ~ print("round !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", i )
         pb = gen_pb()  
