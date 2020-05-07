@@ -61,14 +61,14 @@ all_surfaces = [el[0] for el in surfaces_and_normals]
 
 all_surfaces_array = [array(el).T for el in all_surfaces]
 
-default_surfaces = [all_surfaces_array for _ in range (10)]
+default_surfaces = [all_surfaces_array for _ in range (6)]
 
 
 surfaces = None
 
-def genSurf():
+def genSurf(nsurfs = 6):
     global surfaces
-    surfaces = [all_surfaces_array for _ in range (6)]
+    surfaces = [all_surfaces_array for _ in range (nsurfs)]
 
 genSurf()
 
@@ -123,7 +123,7 @@ def solve(initCom = None, initPos = None, endCom = None, endPos = None, surfaces
     # ~ if endCom is None:
         # ~ endCom  = default_init_com + array([0.2, 0.0, 0.0])
     initGlobals(nEffectors = 4)  
-    
+    genSurf()
     
     pb = gen_pb()  
     # ~ endPos = None
@@ -171,7 +171,27 @@ def solve(initCom = None, initPos = None, endCom = None, endPos = None, surfaces
             # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
     
     return pb, Coms, Footpos, Allfeetpos, res
+
+def solveFeas(initCom = None, initPos = None, endCom = None, endPos = None, surfaces = surfaces, ax = None):
+    print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!initPos ", initPos)
+    # ~ print ("default_init_pos ", default_init_pos)
+    # ~ if endCom is None:
+        # ~ endCom  = default_init_com + array([0.2, 0.0, 0.0])
+    initGlobals(nEffectors = 4)  
+    genSurf(15)
     
+    pb = gen_pb()  
+    # ~ endPos = None
+    print ("endCom", endCom)
+    pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom, costs = [(1.5, targetCom)])
+    coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+    if ax is not None:
+        plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
+    
+    # ~ off = 2
+    # ~ Coms = coms[:off];  Footpos = footpos[:off]; Allfeetpos = allfeetpos[:off]
+    Coms = coms[:];  Footpos = footpos[:]; Allfeetpos = allfeetpos[:]
+    return pb, Coms, Footpos, Allfeetpos, res
     
 ############# main ###################    
 
@@ -207,30 +227,46 @@ if __name__ == '__main__':
  # ~ array([-1.6, 0.2, 0.13]),
  # ~ array([-1.6, -0.2, 0.13])]
  
-    initPos = [array([0.60700772, 0.35028565, 0.19173743]),
- array([0.38222138, 0.23795264, 0.15202783]),
- array([-0.36776191,  0.34361369,  0.23769671]),
- array([-0.25487645, -0.23401013,  0.25597898])]
+    # ~ initPos = [array([0.60700772, 0.35028565, 0.19173743]),
+ # ~ array([0.38222138, 0.23795264, 0.15202783]),
+ # ~ array([-0.36776191,  0.34361369,  0.23769671]),
+ # ~ array([-0.25487645, -0.23401013,  0.25597898])]
 
-    initPos = [array([0.38437629, 0.18974121, 0.13850503]),
- array([ 0.38437629, -0.18974121,  0.1326605 ]),
- array([-0.38437629,  0.18974121,  0.11856727]),
- array([-0.38437629, -0.18974121,  0.05008679])]
+    # ~ initPos = [array([0.38437629, 0.18974121, 0.13850503]),
+ # ~ array([ 0.38437629, -0.18974121,  0.1326605 ]),
+ # ~ array([-0.38437629,  0.18974121,  0.11856727]),
+ # ~ array([-0.38437629, -0.18974121,  0.05008679])]
 
-    
     # ~ initPos = [array([0.6, 0.3, 0.2]),
  # ~ array([0.6, -0.5, 0.2]),
  # ~ array([0.2, 0.3, 0.2]),
  # ~ array([0.5, -0.5, 0.2])]
 
+    initPos = [array([0.38437629, 0.18974121, 0.13850503]),
+     array([ 0.38437629, -0.18974121,  0.1326605 ]),
+     array([-0.38437629,  0.18974121,  0.11856727]),
+     array([-0.38437629, -0.18974121,  0.05008679])]
 
-    
-    endCom = [0, 1, 0.4]
-    
+
     ax = draw_scene()
     plotPoints(ax, initPos)
+
+    initPos = [array([0.38437629, 0.18974121, 0.13850503]),
+     array([ 0.38437629, -0.18974121,  0.1326605 ]),
+     array([-0.38437629,  0.18974121,  0.11856727]),
+     array([-0.38437629, -0.18974121,  0.05008679])]
+
+    #in case reduceSize changed
+    # ~ overrideSurfaces(surfaces_from_path.getAllSurfaces(afftool))
+
+    endCom = [0, 1.25, 0.4]
+    
+    endComFeas = array([1.05012165, 0.83104905, 0.62293721])
+    
     # ~ plt.show()
-    pb, coms, footpos, allfeetpos, res = solve(initPos = initPos, endCom=endCom, endPos = None, ax = ax)
+    # ~ pb, coms, footpos, allfeetpos, res = solve(initPos = initPos, endCom=endCom, ax = None)
+    # ~ pb, coms, footpos, allfeetpos, res = solveFeas(initPos = initPos, endCom=endComFeas, ax = None)
+    pb, coms, footpos, allfeetpos, res = solveFeas(initPos = initPos, endCom=endComFeas, ax = None)
     
     
     # ~ for i in range(15):
@@ -248,7 +284,7 @@ if __name__ == '__main__':
     
     
     
-    # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True, ax = ax)
+    # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False, plotSupport = True)
     plt.show(block = False)
     
     

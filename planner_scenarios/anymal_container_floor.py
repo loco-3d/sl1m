@@ -1,13 +1,15 @@
 from sl1m.planner_scenarios.state_methods import  *
 from sl1m.planner_scenarios.anymal_constants import *
 
+from sl1m.stand_alone_scenarios.anymal.container_floor import solve
+
 #load scene
-from hpp.corbaserver.affordance.affordance import AffordanceTool
-afftool = AffordanceTool ()
-afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.05])
-afftool.loadObstacleModel ("hpp_environments", "ori/race_slopes_container", "planning", v)
-afftool.visualiseAffordances('Support', v, v.color.lightBrown)
-v.addLandmark(v.sceneName,1)
+# ~ from hpp.corbaserver.affordance.affordance import AffordanceTool
+# ~ afftool = AffordanceTool ()
+# ~ afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.05])
+# ~ afftool.loadObstacleModel ("hpp_environments", "ori/container_floor", "planning", v)
+# ~ afftool.visualiseAffordances('Support', v, v.color.lightBrown)
+# ~ v.addLandmark(v.sceneName,1)
 
 
 #retrieve surfaces from scene for sl1m
@@ -22,29 +24,23 @@ from hpp.corbaserver.rbprm.tools import surfaces_from_path
 
 endCom =  [10., 0., 0.4]
 
-from sl1m.stand_alone_scenarios.anymal.race_slopes_container import solve, solveFeas, overrideSurfaces
+from sl1m.stand_alone_scenarios.anymal.race_slopes_container import solve, overrideSurfaces
 
 
 #starting position
-q_init [0:3] = [0, 0, 0.58]
-v(q_init)
+# ~ q_init [0:3] = [0, 0, 0.58]
 initContacts, initPos, initCom = initConstraintsFrom_q_init(fullBody, q_init, limbNames)
 
-initPos = [array([0.38437629, 0.18974121, 0.13850503]),
- array([ 0.38437629, -0.18974121,  0.1326605 ]),
- array([-0.38437629,  0.18974121,  0.11856727]),
- array([-0.38437629, -0.18974121,  0.05008679])]
+q_init[2] += footOffset
+v(q_init)
+
 
 
 #in case reduceSize changed
-# ~ overrideSurfaces(surfaces_from_path.getAllSurfaces(afftool))
-
-# ~ endCom = [0, 1.25, 0.4]
-endCom = [10, 0, 0.4]
+overrideSurfaces(surfaces_from_path.getAllSurfaces(afftool))
 
 # ~ #compute contact sequence
-# ~ pb, coms, footpos, allfeetpos, res = solve(initPos = initPos, endCom = endCom)
-pb, coms, footpos, allfeetpos, res = solveFeas(initPos = initPos, endCom = endCom)
+pb, coms, footpos, allfeetpos, res = solve(initPos = initPos, endCom = endCom)
 
 # ~ q_init[2] += footOffset
 # ~ v(q_init)

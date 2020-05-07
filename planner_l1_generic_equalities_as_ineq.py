@@ -913,7 +913,7 @@ costs = [(1, posturalCost),(2, targetCom)]):
     print ("initpos ", initPos)
     # ~ E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
     #todo is end constraint desirable ?
-    E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, None)
+    E,e = addInitEndConstraint(pb, E, e, initPos, None, None, None)
     # ~ E,e = addInitEndConstraint(pb, E, e, None, None, None, None)
     slackMatrix = wSelectionMatrix(pb)    
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
@@ -1055,19 +1055,19 @@ costs = [(1, posturalCost),(2, targetCom)]):
             boolvars[i].start = el
         
     
-    if initPos is not None:
-        obj = 0
-        print (" initPos is not None !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        # ~ obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
-        # ~ obj += 1 * posturalCost(pb, cVars,  initPos, initCom)
-        # ~ obj += stepSizeCost(pb, cVars,  initPos, initCom)
-        # ~ obj += 10. * targetCom(pb, cVars,  endCom)
-        # ~ obj +=  2 * targetCom(pb, cVars,  endCom)
-        for (weight, cost) in costs:
-            obj += weight * cost(pb, cVars, initPos, endPos, initCom, endCom)
-        # ~ obj += targetEndPos(pb, cVars,  endPos)
-        # ~ obj = targetLegCenter(pb, cVars,  endCom)
-        model.setObjective(obj)
+    # ~ if initPos is not None:
+    obj = 0
+    print (" initPos is not None !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # ~ obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
+    # ~ obj += 1 * posturalCost(pb, cVars,  initPos, initCom)
+    # ~ obj += stepSizeCost(pb, cVars,  initPos, initCom)
+    # ~ obj += 10. * targetCom(pb, cVars,  endCom)
+    # ~ obj +=  2 * targetCom(pb, cVars,  endCom)
+    for (weight, cost) in costs:
+        obj += weight * cost(pb, cVars, initPos, endPos, initCom, endCom)
+    # ~ obj += targetEndPos(pb, cVars,  endPos)
+    # ~ obj = targetLegCenter(pb, cVars,  endCom)
+    model.setObjective(obj)
     
     # ~ grb.setParam('SOLUTION_LIMIT', 1)
     # ~ grb.setParam('TIME_LIMIT', 10)
