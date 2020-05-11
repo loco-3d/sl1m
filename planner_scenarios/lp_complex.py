@@ -2,9 +2,9 @@ from hpp.corbaserver.rbprm.hrp2 import Robot
 from hpp.gepetto import Viewer
 from tools.display_tools import *
 import time
-print "Plan guide trajectory ..."
-import lp_complex_path as tp
-print "Done."
+print("Plan guide trajectory ...")
+from . import lp_complex_path as tp
+print("Done.")
 import time
 
 pId = tp.ps.numberPaths() -1
@@ -34,7 +34,7 @@ fullBody.setPostureWeights(fullBody.postureWeights[::])
 #~ fullBody.setPostureWeights(fullBody.postureWeights[::])
 #fullBody.usePosturalTaskContactCreation(True)
 
-print "Generate limb DB ..."
+print("Generate limb DB ...")
 tStart = time.time()
 # generate databases : 
 
@@ -46,8 +46,8 @@ fullBody.runLimbSampleAnalysis(fullBody.lLegId, "ReferenceConfiguration", True)
 
 
 tGenerate =  time.time() - tStart
-print "Done."
-print "Databases generated in : "+str(tGenerate)+" s"
+print("Done.")
+print("Databases generated in : "+str(tGenerate)+" s")
 
 #define initial and final configurations : 
 configSize = fullBody.getConfigSize() -fullBody.client.robot.getDimensionExtraConfigSpace()
@@ -103,7 +103,7 @@ def gen_state(s, pId, com , num_max_sample = 1, first = False, normal = z, newCo
     else:
         sres, succ = StateHelper.cloneState(s)
     if not succ:
-        print "succes ?", succ
+        print("succes ?", succ)
     succCom = False
     ite = 0
     #~ if first:
@@ -121,7 +121,7 @@ def gen_state(s, pId, com , num_max_sample = 1, first = False, normal = z, newCo
             sres.setQ(q)
             succCom =  fullBody.projectStateToCOM(sres.sId ,com, num_max_sample)
             if not succCom:
-                print "refail"
+                print("refail")
     v(sres.q())
     return sres
     
@@ -175,7 +175,7 @@ for i in range(0, 5):
 extraDof = [0 for _ in range(6)]
 configs = [ st.q() + extraDof for st in all_states[:]]; i = 0
 
-print "SID ", [s.sId for s in all_states]
+print("SID ", [s.sId for s in all_states])
 
 beginId = 0
 
@@ -239,7 +239,7 @@ def projCom(state, c, qref):
         if succCom:
             return s
     #~ else:
-    print "fail to project com"
+    print("fail to project com")
     #~ return state.q()
     return state
         
@@ -270,7 +270,7 @@ def nil():
     for j in range(0,len(all_states),2):    
     #~ for j in range(4,10,2):    
     #~ for j in range(4,50,2):    
-        print "state ", j
+        print("state ", j)
         pathId = fullBody.limbRRT(all_states[j].sId, all_states[j+1].sId)
         #~ print "state ", j
         #~ pathId2 = fullBody.limbRRT(all_states[j+1].sId, all_states[j+2].sId)

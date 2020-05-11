@@ -209,7 +209,7 @@ def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):
         varOffset = DEFAULT_NUM_VARS #foot and com positions
         for row in range(startRow, startRow + numSurfaces * NUM_INEQ_SLACK_PER_SURFACE, NUM_INEQ_SLACK_PER_SURFACE):
             i = row - startRow
-            col = startCol+varOffset + i / NUM_INEQ_SLACK_PER_SURFACE * NUM_SLACK_PER_SURFACE
+            col = (int) (startCol+varOffset + i / NUM_INEQ_SLACK_PER_SURFACE * NUM_SLACK_PER_SURFACE)
             A[row  , col:col+2] = [-1,  1];  #  - a0 + a1  <= 0
             A[row+1, col:col+2] = [-1, -1];  # -a0 - a1 <= 0
             idRow = row + NUM_INEQ_SLACK_PER_SURFACE       
@@ -338,7 +338,7 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
         comb *= el  
     res = []
     if comb >1000:
-        print "problem probably too big ", comb
+        print("problem probably too big ", comb)
     else:
         genCombinatorialRec(pb, indices, wrongsurfaces, res)
     return res
@@ -359,7 +359,7 @@ def bestSelectedSurfaces(pb, res):
         else:
             startIdx = cIdx + DEFAULT_NUM_VARS
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
-            assert betas >= -0.00000001
+            assert min(betas) >= -0.00000001
             bestIdx = betas.index(array(betas).min())
             surfaces = surfaces + [phase["S"][bestIdx]]
             
@@ -446,7 +446,7 @@ def plotConstraints(ax, pb, allfeetpos, coms):
                 plot_polytope_H_rep(relK,relk.reshape((-1,1)), ax = ax)
                 #~ plot_polytope_H_rep(K,k.reshape((-1,1)), ax = ax)
             except: 
-                print "qhullfailed"
+                print("qhullfailed")
     
         
 def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True):
@@ -493,9 +493,9 @@ if __name__ == '__main__':
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
     t3 = clock()
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     ax = draw_scene(None)
@@ -515,9 +515,9 @@ if __name__ == '__main__':
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)
     t3 = clock()
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     ax = draw_scene(None)

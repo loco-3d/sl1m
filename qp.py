@@ -63,5 +63,5 @@ if __name__ == '__main__':
 
         res2 = solve_least_square(A, b, G, h)
         res1 =  quadprog_solve_qp(P, q, G, h)
-        print res1
-        print res2
+        print(res1)
+        print(res2)

@@ -50,7 +50,7 @@ t = ps.solve ()
 
 
 
-print t;
+print(t);
 #~ if isinstance(t, list):
 	#~ t = t[0]* 3600000 + t[1] * 60000 + t[2] * 1000 + t[3]
 #~ f = open('log.txt', 'a')

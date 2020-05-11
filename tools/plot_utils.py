@@ -217,7 +217,7 @@ def plotQuantityVsQuantityPerSolver(quantity, quantityPerSolver, legend, solver_
         r=2;
         c=3;
     else:
-        print "ERROR in plotQuantityVsQuantityPerSolver, number of solvers not managed";
+        print("ERROR in plotQuantityVsQuantityPerSolver, number of solvers not managed");
         return;
     f, ax = plt.subplots(r, c, sharex=True, sharey=True);
     for i in range(len(solver_names)):

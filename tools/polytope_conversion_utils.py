@@ -171,25 +171,25 @@ def eliminate_redundant_inequalities(A,b):
     return (A_plot, b_plot);
     
 if __name__ == "__main__":
-    print "Gonna test polytope conversion utils"
+    print("Gonna test polytope conversion utils")
 
-    print " *** Test cone span to face ***"
+    print(" *** Test cone span to face ***")
     S = np.array([[1,-1, 1],
                   [1, 1, 2]]);
     F = cone_span_to_face(S);
-    print "Span"
-    print S
-    print "Face"
-    print F
+    print("Span")
+    print(S)
+    print("Face")
+    print(F)
     
-    print "\n *** Test polytope span to face ***"
+    print("\n *** Test polytope span to face ***")
     S = np.array([[1, 1,-1, -1, 0.8,-0.3],
                   [1,-1, 1, -1,-0.9, 0.1]]);
     (F,f) = poly_span_to_face(S);
-    print "Span"
-    print S
-    print "Face"
-    print F
-    print f
+    print("Span")
+    print(S)
+    print("Face")
+    print(F)
+    print(f)
     
     

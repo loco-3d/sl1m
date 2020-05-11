@@ -1,8 +1,8 @@
 import numpy as np
-print "Plan guide trajectory ..."
-import lp_complex1_path as tp
+print("Plan guide trajectory ...")
+from . import lp_complex1_path as tp
 #import lp_ramp_path as tp
-print "Guide planned."
+print("Guide planned.")
 from tools.surfaces_from_path import getSurfacesFromGuideContinuous
 
 from sl1m.constants_and_tools import *
@@ -101,12 +101,12 @@ def gen_pb(root_init,R, surfaces):
     #p0 = [array([-3.0805096486250154, 0.335, 0.]), array([-3.0805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
     #p0 = [array([-0.1805096486250154, 0.335, 0.]), array([-0.1805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
     p0 = [lf_0,rf_0];
-    print "p0 used : ",p0
+    print("p0 used : ",p0)
     
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
     #res = { "p0" : None, "c0" : None, "nphases": nphases}
     
-    print "surfaces = ",surfaces
+    print("surfaces = ",surfaces)
     #TODO in non planar cases, K must be rotated
     #phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(left_foot_constraints,right_foot_constraints,index = i, rotation = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints,index = i, rotation = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]

@@ -99,9 +99,9 @@ def solve():
     t3 = clock()
     
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     
@@ -131,9 +131,9 @@ if __name__ == '__main__':
     t3 = clock()
     
     
-    print "time to set up problem" , timMs(t1,t2)
-    print "time to solve problem"  , timMs(t2,t3)
-    print "total time"             , timMs(t1,t3)
+    print("time to set up problem" , timMs(t1,t2))
+    print("time to solve problem"  , timMs(t2,t3))
+    print("total time"             , timMs(t1,t3))
     
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     

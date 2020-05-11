@@ -2,9 +2,9 @@ from hpp.corbaserver.rbprm.hrp2 import Robot
 from hpp.gepetto import Viewer
 from tools.display_tools import *
 import time
-print "Plan guide trajectory ..."
-import lp_complex_path as tp
-print "Done."
+print("Plan guide trajectory ...")
+from . import lp_complex_path as tp
+print("Done.")
 import time
 DEFAULT_COM_HEIGHT = 0.72
 pId = tp.ps.numberPaths() -1
@@ -29,7 +29,7 @@ fullBody.setCurrentConfig (q_init)
 fullBody.setPostureWeights(fullBody.postureWeights[::] + [0]*6)
 #fullBody.usePosturalTaskContactCreation(True)
 
-print "Generate limb DB ..."
+print("Generate limb DB ...")
 tStart = time.time()
 # generate databases : 
 
@@ -41,8 +41,8 @@ fullBody.runLimbSampleAnalysis(fullBody.lLegId, "ReferenceConfiguration", True)
 
 
 tGenerate =  time.time() - tStart
-print "Done."
-print "Databases generated in : "+str(tGenerate)+" s"
+print("Done.")
+print("Databases generated in : "+str(tGenerate)+" s")
 
 #define initial and final configurations : 
 configSize = fullBody.getConfigSize() -fullBody.client.robot.getDimensionExtraConfigSpace()
@@ -101,7 +101,7 @@ def gen_state(s, pId, com , num_max_sample = 0, first = False, normal = z, newCo
     movingID = fullBody.lLegId
     if moving == RF:
         movingID = fullBody.rLegId
-    print "# gen state for phase Id = ",pId
+    print("# gen state for phase Id = ",pId)
     #print "current config q=",s.q()
     #print "move limb ",movingID
     pos = allfeetpos[pId+2]; # +2 because it contains also the 2 feet pos at the init config
@@ -111,15 +111,15 @@ def gen_state(s, pId, com , num_max_sample = 0, first = False, normal = z, newCo
     else:
         sres, succ = StateHelper.cloneState(s)
     if not succ:
-      print "Cannot project config q = ",sres.q()
-      print "To new contact position for "+movingID+" = "+str(pos.tolist())+" : n = "+str(normal.tolist())
+      print("Cannot project config q = ",sres.q())
+      print("To new contact position for "+movingID+" = "+str(pos.tolist())+" : n = "+str(normal.tolist()))
       raise RuntimeError("Cannot project feet to new contact position") # try something else ?? 
     if projectCOM :
         #print "config before projecting to com q1=",sres.q()
         successCOM = projectCoMInSupportPolygon(sres)
         if not successCOM:
             # is it really an issue ? 
-            print "Unable to project CoM in the center of the support polygone"
+            print("Unable to project CoM in the center of the support polygone")
     v(sres.q())
     return sres
     
@@ -172,7 +172,7 @@ for i in range(0, len(pb["phaseData"])):
 #~ all_states = all_states[:-1]
 configs = [ st.q() for st in all_states[:]]; i = 0
 
-print "SID ", [s.sId for s in all_states]
+print("SID ", [s.sId for s in all_states])
 
 beginId = 0
 """

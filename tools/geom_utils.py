@@ -1,11 +1,11 @@
 #from polytope_conversion_utils import *
 from numpy import zeros, sqrt, array, vstack
-from transformations import euler_matrix
+from .transformations import euler_matrix
 import numpy as np
 #from math import cos, sin, tan, atan, pi
 import matplotlib.pyplot as plt
 import cdd
-import plot_utils as plut
+from . import plot_utils as plut
 
 NUMBER_TYPE = 'float'  # 'float' or 'fraction'
 
@@ -56,7 +56,7 @@ def find_intersection(a1, c1, a2, c2):
     x = np.zeros(2);
     den = (a1[0]*a2[1] - a2[0]*a1[1]);
     if(abs(den)<1e-6):
-        print "ERROR: Impossible to find intersection between two lines that are parallel";
+        print("ERROR: Impossible to find intersection between two lines that are parallel");
         return x;
         
     if(np.abs(a1[0])>np.abs(a2[0])):
@@ -102,7 +102,7 @@ def compute_triangle_area(a, b, c):
 '''
 def plot_inequalities(F_com, f_com, x_bounds, y_bounds, ls='--', color='k', ax=None, lw=8):
     if(F_com.shape[1]!=2):
-        print "[ERROR in plot_inequalities] matrix does not have 2 columns";
+        print("[ERROR in plot_inequalities] matrix does not have 2 columns");
         return;
 #    if(F_com.shape[0]!=len(f_com)):
 #        print "[ERROR in plot_inequalities] matrix and vector does not have the same number of rows";

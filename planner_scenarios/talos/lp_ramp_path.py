@@ -87,7 +87,7 @@ ps.addGoalConfig (q_goal)
 v(q_goal)
 
 t = ps.solve ()
-print "done planning, optimize path ..."
+print("done planning, optimize path ...")
 #v.solveAndDisplay('rm',2,0.005)
 for i in range(5):
   ps.optimizePath(ps.numberPaths() -1)
@@ -106,7 +106,7 @@ ps.addGoalConfig (q_goal)
 v(q_goal)
 
 t = ps.solve ()
-print "done planning, optimize path ..."
+print("done planning, optimize path ...")
 #v.solveAndDisplay('rm',2,0.005)
 for i in range(5):
   ps.optimizePath(ps.numberPaths() -1)
@@ -117,7 +117,7 @@ pId_bridge =  ps.numberPaths() -1
 ps.concatenatePath(pId_platform,pId_bridge)
 pathId = pId_platform
 
-print "done optimizing."
+print("done optimizing.")
 from hpp.gepetto import PathPlayer
 pp = PathPlayer (v)
 pp.dt=0.1

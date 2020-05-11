@@ -1,10 +1,10 @@
 import numpy as np
-print "Plan guide trajectory ..."
+print("Plan guide trajectory ...")
 import scenarios.sandbox.talos_maze_path as tp
 v = tp.v
 ps = tp.ps
 root_init = tp.q_init
-print "Guide planned."
+print("Guide planned.")
 from tools.surfaces_from_path import getSurfacesFromGuideContinuous
 
 from sl1m.constants_and_tools import *
@@ -29,7 +29,7 @@ def gen_pb(root_init,R, surfaces):
     lf_0 = array(root_init[0:3]) + array([0, 0.085,-0.98]) # values for talos ! 
     rf_0 = array(root_init[0:3]) + array([0,-0.085,-0.98]) # values for talos ! 
     p0 = [lf_0,rf_0];
-    print "p0 used : ",p0
+    print("p0 used : ",p0)
     
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
     #res = { "p0" : None, "c0" : None, "nphases": nphases}
@@ -97,7 +97,7 @@ def solve():
         pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, None)
         success = True
       except :  
-        print "## Planner failed at iter : "+str(it)+" with step length = "+str(step)
+        print("## Planner failed at iter : "+str(it)+" with step length = "+str(step))
       it += 1
     if not success :
       raise RuntimeError("planner always fail.") 

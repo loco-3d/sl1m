@@ -1,6 +1,6 @@
 from sl1m.constants_and_tools import *
 
-import qp
+from . import qp
 
 np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 

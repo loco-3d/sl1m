@@ -2,9 +2,9 @@ from hpp.corbaserver.rbprm.hrp2 import Robot
 from hpp.gepetto import Viewer
 from tools.display_tools import *
 import time
-print "Plan guide trajectory ..."
-import lp_stair_bauzil_hrp2_path as tp
-print "Done."
+print("Plan guide trajectory ...")
+from . import lp_stair_bauzil_hrp2_path as tp
+print("Done.")
 import time
 
 pId = tp.ps.numberPaths() -1
@@ -34,7 +34,7 @@ fullBody.setPostureWeights(fullBody.postureWeights[::])
 #~ fullBody.setPostureWeights(fullBody.postureWeights[::])
 #fullBody.usePosturalTaskContactCreation(True)
 
-print "Generate limb DB ..."
+print("Generate limb DB ...")
 tStart = time.time()
 # generate databases : 
 
@@ -46,8 +46,8 @@ fullBody.runLimbSampleAnalysis(fullBody.lLegId, "ReferenceConfiguration", True)
 
 
 tGenerate =  time.time() - tStart
-print "Done."
-print "Databases generated in : "+str(tGenerate)+" s"
+print("Done.")
+print("Databases generated in : "+str(tGenerate)+" s")
 
 #define initial and final configurations : 
 configSize = fullBody.getConfigSize() -fullBody.client.robot.getDimensionExtraConfigSpace()
@@ -90,12 +90,12 @@ def gen_state(s, pId, com , num_max_sample = 1, first = False ):
         movingID = fullBody.rLegId
     pos = allfeetpos[pId]; pos[2]+=0.01
     com[2] += 0.5
-    print "com" , com
-    print "pos" , pos.tolist()
+    print("com" , com)
+    print("pos" , pos.tolist())
     #~ q = fullBody.getCurrentConfig()
     #~ s, succ = state_alg.addNewContact(s, fullBody.rLegId, rfPos.tolist(), z.tolist())
     sres, succ = state_alg.addNewContact(s, movingID, pos.tolist(), z.tolist(), num_max_sample= num_max_sample)
-    print "succes ?", succ
+    print("succes ?", succ)
     succCom = False
     ite = 0
     #~ if first:
@@ -106,7 +106,7 @@ def gen_state(s, pId, com , num_max_sample = 1, first = False ):
         succCom =  fullBody.projectStateToCOM(sres.sId ,com, num_max_sample)
         com[2] -= 0.05
         ite += 1
-    print "COM?", succCom
+    print("COM?", succCom)
     v(sres.q())
     return sres
     
@@ -134,7 +134,7 @@ for i in range(1, len(pb["phaseData"])):
 all_states = all_states[4:-1]
 configs = [ st.q() for st in all_states[:]]; i = 0
 
-print "SID ", [s.sId for s in all_states]
+print("SID ", [s.sId for s in all_states])
 
 beginId = 4
 

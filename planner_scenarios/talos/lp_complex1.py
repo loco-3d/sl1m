@@ -13,7 +13,7 @@ tp = lp.tp
 pb, coms, footpos, allfeetpos, res = lp.solve() 
 
 
-print "Done."
+print("Done.")
 import time
 #Robot.urdfSuffix+="_safeFeet"
 
@@ -39,7 +39,7 @@ fullBody.setReferenceConfig(q_ref)
 fullBody.setPostureWeights(fullBody.postureWeightsRootRotationConstrained[::] + [0]*6)
 #fullBody.usePosturalTaskContactCreation(True)
 
-print "Generate limb DB ..."
+print("Generate limb DB ...")
 tStart = time.time()
 # generate databases : 
 
@@ -51,8 +51,8 @@ fullBody.runLimbSampleAnalysis(fullBody.lLegId, "ReferenceConfiguration", True)
 
 
 tGenerate =  time.time() - tStart
-print "Done."
-print "Databases generated in : "+str(tGenerate)+" s"
+print("Done.")
+print("Databases generated in : "+str(tGenerate)+" s")
 
 configSize = fullBody.getConfigSize() -fullBody.client.robot.getDimensionExtraConfigSpace()
 q_init = q_ref[::] 
@@ -95,7 +95,7 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
     movingID = fullBody.lLegId
     if moving == lp.RF:
         movingID = fullBody.rLegId
-    print "# gen state for phase Id = ",pId
+    print("# gen state for phase Id = ",pId)
     if USE_ORIENTATION:
       if pId < len(pb["phaseData"])-1:
         if phase["moving"] == lp.RF: 
@@ -113,7 +113,7 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
     #print "current config q=",s.q()
     #print "move limb ",movingID
     pos = allfeetpos[pId];
-    print "Try to add contact for "+movingID+" pos = "+str(pos.tolist()+rot)
+    print("Try to add contact for "+movingID+" pos = "+str(pos.tolist()+rot))
     disp.moveSphere('c',v,pos.tolist()+rot)
     if newContact:
         sres, succ = StateHelper.addNewContact(s, movingID, pos.tolist(), normal.tolist(), num_max_sample= num_max_sample,rotation = rot)
@@ -124,15 +124,15 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
     else:
         sres, succ = StateHelper.cloneState(s)
     if not succ:
-      print "Cannot project config q = ",sres.q()
-      print "To new contact position for "+movingID+" = "+str(pos.tolist()+rot)+" ; n = "+str(normal.tolist())
+      print("Cannot project config q = ",sres.q())
+      print("To new contact position for "+movingID+" = "+str(pos.tolist()+rot)+" ; n = "+str(normal.tolist()))
       raise RuntimeError("Cannot project feet to new contact position") # try something else ?? 
     if projectCOM :
         #print "config before projecting to com q1=",sres.q()
         successCOM = projectCoMInSupportPolygon(sres)
         if not successCOM:
             # is it really an issue ? 
-            print "Unable to project CoM in the center of the support polygone"
+            print("Unable to project CoM in the center of the support polygone")
         
     v(sres.q())
     return sres
@@ -174,7 +174,7 @@ configs = [ st.q() for st in all_states[:]]; i = 0
 #displayContactSequence(v,configs)
 
 
-print "SID ", [s.sId for s in all_states]
+print("SID ", [s.sId for s in all_states])
 
 beginId = 0
 
