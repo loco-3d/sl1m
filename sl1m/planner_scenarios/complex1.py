@@ -15,6 +15,7 @@ from sl1m.planner import *
 
 
 from sl1m.plot_plytopes import *
+from sl1m.planner_l1 import *
 
 floor2  = [[-3., 0.4  , 0.  ], [-2.7 ,  0.4, 0. ], [-2.7 , 0.1, 0.  ], [-03., 0.1, 0.  ], ]
 floor  = [[-0.23, 0.54  , 0.  ], [-0.1 ,  0.54, 0. ], [-0.1 , -0.46, 0.  ], [-0.23, -0.46, 0.  ], ]
@@ -143,7 +144,6 @@ def min_dist(size):
 
 
 def solveL1():    
-    from sl1m.planner_l1 import *
     #~ draw_rectangle(l,ax)
     #~ plt.show()
     
@@ -204,7 +204,6 @@ def solveL1():
         for i, idx in enumerate(solutionIndices):
             pb["phaseData"][idx]["S"] = [surfaces[i][solutionComb[i]]]
             
-        from sl1m.planner import *
             
         t1 = clock()
         A, b, E, e = convertProblemToLp(pb)
