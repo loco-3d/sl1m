@@ -148,6 +148,10 @@ def surfacePointsToIneq(S, normal):
     
 ############ BENCHMARKING ###############
 
-from time import  clock
+try:
+    from time import perf_counter as clock
+except ImportError:
+    from time import  clock
+
 def timMs(t1, t2):
     return (t2-t1) * 1000.
