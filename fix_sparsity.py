@@ -35,12 +35,12 @@ def solve(pb,surfaces, draw_scene = None, plot = True):
     c = zeros(A.shape[1])
     t2 = clock()
     res = qp.quadprog_solve_qp(C, c,A,b,E,e)    ######
+    t3 = clock()
     if res.success:
         res = res.x
     else:
         print ("CASE3: turned out to be infeasible")
         return 3, 3, 3
-    t3 = clock()
     
     print("time to set up problem" , timMs(t1,t2))
     print("time to solve problem"  , timMs(t2,t3))
@@ -64,8 +64,8 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     c = pl1.slackSelectionMatrix(pb)
         
     t1 = clock()
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e).x
-    # ~ res = qp.solve_lp_gurobi(c,A,b,E,e).x
+    # ~ res = qp.quadprog_solve_qp(C, c,A,b,E,e).x
+    res = qp.solve_lp_gurobi(c,A,b,E,e).x
     # ~ res = qp.solve_lp_glpk(c,A,b,E,e).x
     t2 = clock()
     print("time to solve lp ", timMs(t1,t2))
@@ -81,7 +81,6 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
         pl1.plotQPRes(pb, res, ax=ax)
         # ~ return
         
-    ok = pl1.isSparsityFixed(pb, res)
     solutionIndices = None
     solutionComb = None
     pbs = None
@@ -100,8 +99,8 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
             C = identity(A.shape[1]) * 0.00001
             c = pl1.slackSelectionMatrix(pbComb)
             
-            # ~ res = qp.quadprog_solve_qp(C, c,A,b,E,e)    ######
-            res = qp.solve_lp_gurobi(c,A,b,E,e).x
+            res = qp.quadprog_solve_qp(C, c,A,b,E,e)    ######
+            # ~ res = qp.solve_lp_gurobi(c,A,b,E,e)
             if res.success:
                 res = res.x
                 if pl1.isSparsityFixed(pbComb, res):       
@@ -136,6 +135,74 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     return 2, 2, 2   
         
         # return solve(pb,surfaces, draw_scene = draw_scene, plot = True )  
+
+
+EPS_ = 0.01
+#update cost function based on previous iteration
+def reweight(x_i, c):
+    return (1. / (x_i + ones(x_i.shape[0]) * EPS_)) * c
+    # ~ assert norm(c2-c) > 0.1
+
+def card(c):
+    return len([el for el in c if el > 0.001])
+
+def solveL1Reweighted(pb, surfaces, draw_scene = None, plot = True):      
+    A, b, E, e = pl1.convertProblemToLp(pb)    
+    C = identity(A.shape[1]) * 0.00001
+    c = pl1.slackSelectionMatrix(pb)                
+    t1 = clock()
+    # ~ res = qp.quadprog_solve_qp(C, c,A,b,E,e).x
+    res = qp.solve_lp_gurobi(c,A,b,E,e).x
+    # ~ res = qp.solve_lp_glpk(c,A,b,E,e).x
+    t2 = clock()
+    print("time to solve lp ", timMs(t1,t2))
+    # ~ print ("res ", res)
+    # ~ res = res.x
+    
+    ok = pl1.isSparsityFixed(pb, res)
+    
+    plot = plot and draw_scene is not None 
+    # ~ if ok and plot:
+    if plot:
+        ax = draw_scene(surfaces)
+        pl1.plotQPRes(pb, res, ax=ax)
+        # ~ return
+        
+    solutionIndices = None
+    solutionComb = None
+    pbs = None
+    
+    i = 0
+    MAX_ITER = 70
+    t3 = clock()  
+    while not ok and i < MAX_ITER:
+        i +=1
+        c = reweight(array(res), c)
+        print ("i ", i)
+        # ~ res = qp.solve_lp_gurobi(c,A,b,E,e).x
+        res = res = qp.solve_lp_glpk(c,A,b,E,e).x
+        ok = pl1.isSparsityFixed(pb, res)
+            
+        if ok:
+            t4 = clock()              
+            print("time to solve combinatorial ", timMs(t3,t4))
+    
+    if ok:
+    # ~ if True:
+        surfacesret, indices = pl1.bestSelectedSurfaces(pb, res)        
+        for i, phase in enumerate(pb["phaseData"]): 
+            phase["S"] = [surfaces[i][indices[i]]]
+        if solutionIndices is not None:
+            for i, idx in enumerate(solutionIndices):
+                pb["phaseData"][idx]["S"] = [surfaces[idx][solutionComb[i]]]
+        
+        return solve (pb, surfaces, draw_scene, plot)  
+    
+    print ("CASE2: combinatorials all sparsity not fixed")
+    if plot:
+        ax = draw_scene(surfaces)
+        pl1.plotQPRes(pb, res, ax=ax)
+    return 2, 2, 2   
 
 
 ############### MIXED-INTEGER SOLVER ###############
