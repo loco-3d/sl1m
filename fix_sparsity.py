@@ -21,7 +21,7 @@ except ImportError:
 
 from time import clock
 
-np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
+#np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
 
 
 
