@@ -1,16 +1,14 @@
+import matplotlib.colors as colors
+import mpl_toolkits.mplot3d as a3
 import numpy as np
-
-from numpy import array, asmatrix, matrix, zeros, ones
-from numpy import array, dot, stack, vstack, hstack, asmatrix, identity, cross, concatenate
+import scipy as sp
+from numpy import array, asmatrix, concatenate, cross, dot, hstack, identity, matrix, ones, stack, vstack, zeros
 from numpy.linalg import norm
-
 
 from sl1m.constants_and_tools import *
 from sl1m.planner import *
 
-
-
-from constraints import *
+from .constraints import *
 
 floor = [ [0.16, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.16, -1., 0.]  ]
 
@@ -30,7 +28,7 @@ step4 = [[1.2, 0.6, 0.4 ],[1.2, -0.16, 0.4 ],[1.5, -0.16, 0.4 ],[1.5, 0.6, 0.4 ]
 
 all_surfaces = [floor, step1, step2, step3, step4]
 
-afloor = array(floor).T 
+afloor = array(floor).T
 astep1 = array(step1).T
 astep2 = array(step2).T
 astep3 = array(step3).T
@@ -45,15 +43,12 @@ def gen_stair_pb():
     p0 = None
     p0 = [array([0.,0., 0.]), array([0.,0., 0.])];
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
-    
+
     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i) % 2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
     res ["phaseData"] = phaseData
-    return res 
-    
-    
-import mpl_toolkits.mplot3d as a3
-import matplotlib.colors as colors
-import scipy as sp
+    return res
+
+
 
 def draw_rectangle(l, ax):
     #~ plotPoints(ax,l)
@@ -62,28 +57,24 @@ def draw_rectangle(l, ax):
     cy = [c[1] for c in lr]
     cz = [c[2] for c in lr]
     ax.plot(cx, cy, cz)
-    
+
 def draw_scene(surfaces, ax = None, color = "p"):
-    if ax is None:        
+    if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     [draw_rectangle(l,ax) for l in all_surfaces]
     return ax
-    
-    
-    
-############# main ###################    
+
+
+
+############# main ###################
 
 if __name__ == '__main__':
-    
-    
+
+
     from sl1m.fix_sparsity import solveL1, solveMIP
-    
+
     pb = gen_stair_pb()
     solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
     pb = gen_stair_pb()
     solveL1(pb, surfaces, draw_scene, plot = True)
-    
-    
-    
-    
