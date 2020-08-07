@@ -354,7 +354,7 @@ def FootContinuityEqualityConstraint(pb, phaseDataT, E, e, previousStartCol, sta
     return idRow    
         
     
-def convertProblemToLp(pb, convertSurfaces = True):        
+def convertProblemToLp(pb, convertSurfaces = True, constraint_init_pos_surface = True):        
     assert DEFAULT_NUM_VARS is not None, "call initGlobals first"
     if convertSurfaces:
         replace_surfaces_with_ineq_in_problem(pb, eqAsIneq = True)
@@ -378,8 +378,9 @@ def convertProblemToLp(pb, convertSurfaces = True):
         endCol = startCol + numVariablesForPhase(phaseDataT)
         startRow = FootCOMKinConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow, phaseId)
         startRow = RelativeDistanceConstraint(pb, phaseDataT, A, b, startCol, endCol, startRow, phaseId)
-        startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow)
-        startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
+        if constraint_init_pos_surface or phaseId >= 1:
+            startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow)
+            startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
         
         #equalities     
         #no weighted com on first phase   
@@ -711,7 +712,7 @@ except ImportError:
 def tovals(variables):
     return array([el.value for el in variables])
     
-def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
+def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, constraint_init_pos_surface = True):  
     if not MIP_OK:
         print("Mixed integer formulation requires gurobi packaged in cvxpy")
         raise ImportError
@@ -719,7 +720,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):
     gurobipy.setParam('LogFile', '')
     gurobipy.setParam('OutputFlag',0)
        
-    A, b, E, e = convertProblemToLp(pb, True)   
+    A, b, E, e = convertProblemToLp(pb, True, constraint_init_pos_surface = constraint_init_pos_surface)   
     E,e = addInitEndConstraint(pb, E, e)
     slackMatrix = wSelectionMatrix(pb)
     surfaceSlackMatrix = alphaSelectionMatrix(pb)
@@ -899,7 +900,7 @@ def maxStepSizeCost(pb, cVars, initPos, endPos, initCom, endCom):
 
 
 def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None,
-costs = [(1, posturalCost),(2, targetCom)]):  
+costs = [(1, posturalCost),(2, targetCom)], constraint_init_pos_surface = True):  
     if not MIP_OK:
         print ("Mixed integer formulation requires gurobi packaged in cvxpy")
         raise ImportError
@@ -908,8 +909,8 @@ costs = [(1, posturalCost),(2, targetCom)]):
     grb.setParam('OutputFlag', 0)
     
     grb.setParam('OutputFlag', 1)
-       
-    A, b, E, e = convertProblemToLp(pb)   
+
+    A, b, E, e = convertProblemToLp(pb, constraint_init_pos_surface = constraint_init_pos_surface)   
     print ("initpos ", initPos)
     # ~ E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
     #todo is end constraint desirable ?
