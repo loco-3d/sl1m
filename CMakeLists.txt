@@ -22,11 +22,15 @@ FINDPYTHON()
 SET(${PROJECT_NAME}_SOURCES
   __init__.py
   constants_and_tools.py
+  solver.py
+  generic_solver.py
   fix_sparsity.py
-  planner_l1.py
-  planner.py
+  problem_data.py
+  constraints.py
+  constraints_biped.py
+  planner_generic.py
+  planner_biped.py
   problem_definition.py
-  qp.py
   )
 
 SET(${PROJECT_NAME}_PLANNER_SCENARIOS_SOURCES
@@ -49,13 +53,15 @@ SET(${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES
   __init__.py
 
   complex1.py
-  constraints.py
+  problem_definition_talos.py
   lp_complex1_path.py
   lp_complex1.py
   lp_ramp_path.py
   lp_rubbles_path.py
   lp_slalom_debris_path.py
   lp_slalom_debris.py
+  lp_stairs_path.py
+  stairs.py
   maze.py
   ramp_noGuide.py
   rubbles.py
@@ -65,6 +71,7 @@ SET(${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES
 
 SET(${PROJECT_NAME}_RBPRM_SOURCES
   __init__.py
+  narrow_convex_hull.py
   constants_and_tools.py
   surfaces_from_planning.py
   )
@@ -82,6 +89,7 @@ SET(${PROJECT_NAME}_TOOLS_SOURCES
   obj_to_constraints.py
   plot_plytopes.py
   plot_utils.py
+  plot_tools.py
   polytope_conversion_utils.py
   transformations.py
   )

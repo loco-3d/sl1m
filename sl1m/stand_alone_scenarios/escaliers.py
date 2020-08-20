@@ -8,7 +8,7 @@ from numpy.linalg import norm
 from sl1m.constants_and_tools import *
 from sl1m.planner import *
 
-from .constraints import *
+from sl1m.stand_alone_scenarios.constraints import *
 
 floor = [ [0.16, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.16, -1., 0.]  ]
 
@@ -75,6 +75,6 @@ if __name__ == '__main__':
     from sl1m.fix_sparsity import solveL1, solveMIP
 
     pb = gen_stair_pb()
-    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
+    solveMIP(pb, surfaces, draw_scene, plot = True)
     pb = gen_stair_pb()
     solveL1(pb, surfaces, draw_scene, plot = True)

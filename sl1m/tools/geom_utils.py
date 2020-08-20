@@ -5,7 +5,7 @@ import numpy as np
 #from math import cos, sin, tan, atan, pi
 import matplotlib.pyplot as plt
 import cdd
-from . import plot_utils as plut
+import sl1m.tools.plot_utils as plut
 
 NUMBER_TYPE = 'float'  # 'float' or 'fraction'
 
