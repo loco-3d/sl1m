@@ -791,7 +791,7 @@ def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True, constrain
 
 
 # gurobi cost functions
-def targetCom(pb, cVars, initPos, endPos, initCom, endCom):
+def targetCom(pb, cVars, initPos, endPos, initCom, endCom, refPos):
     nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
     cx_end_diff = cVars[-nVarEnd]   - endCom[0]
     cy_end_diff = cVars[-nVarEnd+1] - endCom[1]
@@ -801,7 +801,7 @@ def targetCom(pb, cVars, initPos, endPos, initCom, endCom):
     return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff
     
 # gurobi cost functions
-def targetEndPos(pb, cVars, initPos, endPos, initCom, endCom):
+def targetEndPos(pb, cVars, initPos, endPos, initCom, endCom, refPos):
     obj = 0
     nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
     if endPos is not None:     
@@ -815,7 +815,7 @@ def targetEndPos(pb, cVars, initPos, endPos, initCom, endCom):
     return obj
     
 # gurobi cost functions
-def targetLegCenter(pb, cVars, initPos, endPos, initCom, endCom):
+def targetLegCenter(pb, cVars, initPos, endPos, initCom, endCom, refPos):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
@@ -840,14 +840,14 @@ def targetLegCenter(pb, cVars, initPos, endPos, initCom, endCom):
     print ("cost ", cost)
     return cost
 
-def posturalCost(pb, cVars, initPos, endPos, initCom, endCom):
+def posturalCost(pb, cVars, initPos, endPos, initCom, endCom, refPos):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
     #~ fixedFootMatrix = None;
     footOffset = 4
-    
-    refCost = [ initPos[i] - initPos[0] for i in range(1, N_EFFECTORS) ]
+    print("ref pos in posturalCost= ", refPos)
+    refCost = [ refPos[i] - refPos[0] for i in range(1, N_EFFECTORS) ]
     cost = 0
     
     for phaseId, phaseDataT in enumerate(pb["phaseData"]):   
@@ -860,7 +860,7 @@ def posturalCost(pb, cVars, initPos, endPos, initCom, endCom):
         startCol = endCol
     return cost
     
-def stepSizeCost(pb, cVars, initPos, endPos, initCom, endCom):
+def stepSizeCost(pb, cVars, initPos, endPos, initCom, endCom, refPos):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
@@ -879,7 +879,7 @@ def stepSizeCost(pb, cVars, initPos, endPos, initCom, endCom):
         startCol = endCol
     return cost
     
-def maxStepSizeCost(pb, cVars, initPos, endPos, initCom, endCom):
+def maxStepSizeCost(pb, cVars, initPos, endPos, initCom, endCom, refPos):
     startCol = 0;
     previousStartCol = 0;
     endCol   = 0;
@@ -900,11 +900,10 @@ def maxStepSizeCost(pb, cVars, initPos, endPos, initCom, endCom):
 
 
 def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None,
-costs = [(1, posturalCost),(2, targetCom)], constraint_init_pos_surface = True):  
+costs = [(1, posturalCost),(2, targetCom)], constraint_init_pos_surface = True, refPos = None):  
     if not MIP_OK:
         print ("Mixed integer formulation requires gurobi packaged in cvxpy")
         raise ImportError
-        
     grb.setParam('LogFile', '')
     grb.setParam('OutputFlag', 0)
     
@@ -1059,13 +1058,16 @@ costs = [(1, posturalCost),(2, targetCom)], constraint_init_pos_surface = True):
     # ~ if initPos is not None:
     obj = 0
     print (" initPos is not None !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    if refPos is None:
+        refPos = initPos
     # ~ obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
     # ~ obj += 1 * posturalCost(pb, cVars,  initPos, initCom)
     # ~ obj += stepSizeCost(pb, cVars,  initPos, initCom)
     # ~ obj += 10. * targetCom(pb, cVars,  endCom)
     # ~ obj +=  2 * targetCom(pb, cVars,  endCom)
+
     for (weight, cost) in costs:
-        obj += weight * cost(pb, cVars, initPos, endPos, initCom, endCom)
+        obj += weight * cost(pb, cVars, initPos, endPos, initCom, endCom, refPos)
     # ~ obj += targetEndPos(pb, cVars,  endPos)
     # ~ obj = targetLegCenter(pb, cVars,  endCom)
     model.setObjective(obj)
