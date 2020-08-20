@@ -37,7 +37,14 @@ def convert_surface_to_inequality(s, eqAsIneq):
     if n[2] <= 0.:
         for i in range(3):
             n[i] = -n[i]
-    n /= norm(n)
+    norm_n = norm(n)
+    if norm_n > 1e-6:
+        n /= norm(n)
+    else:
+        # FIXME: to something better here
+        print("WARNING: the norm of a normal vector was null, use default value along Z axis")
+        print("vector was : ",n)
+        n = array([0,0,1])
     return surfacePointsToIneq(s, n, eqAsIneq)
     
 def replace_surfaces_with_ineq_in_phaseData(phase, eqAsIneq):
