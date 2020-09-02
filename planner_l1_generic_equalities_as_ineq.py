@@ -898,6 +898,16 @@ def maxStepSizeCost(pb, cVars, initPos, endPos, initCom, endCom, refPos):
         startCol = endCol
     return cost
 
+def add_selected_surfaces_to_pb(pb, bool_vars):
+    begin_phase_id = 0
+    for phase in pb["phaseData"]:
+        end_phase_id = begin_phase_id + len(phase["S"])
+        bool_vars_phase = bool_vars[begin_phase_id:end_phase_id]
+        if bool_vars_phase.count(0) != 1:
+            raise ValueError("There must be exactly one surface selected for each phase")
+        phase["id_surface"] = bool_vars_phase.index(0) # add a new field in the phase data
+        begin_phase_id = end_phase_id
+    
 
 def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None,
 costs = [(1, posturalCost),(2, targetCom)], constraint_init_pos_surface = True, refPos = None):  
@@ -1080,11 +1090,15 @@ costs = [(1, posturalCost),(2, targetCom)], constraint_init_pos_surface = True, 
     t2 = clock()
     res = [el.x for el in cVars]
     resbool = [el.x for el in boolvars]
+    resboolvarsSurf = [el.x for el in boolvarsSurf]
     print ("resbool", resbool)
     print ("time to solve MIP ", timMs(t1,t2))
     
-    
+    print("boolvarsSurf len : ", len(resboolvarsSurf))
+    print("boolvarsSurf = ", resboolvarsSurf)
     #~ return timMs(t1,t2)
+
+    add_selected_surfaces_to_pb(pb, resboolvarsSurf)
     
     return pb, res, timMs(t1,t2)
     # ~ if MIP:
