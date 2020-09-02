@@ -258,7 +258,7 @@ def SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow):
     sRow = startRow
     nSurfaces = len(phaseDataT["S"])
     idS = ALPHA_START
-    for (S,s) in phaseDataT["S"]:   
+    for (S,s,_) in phaseDataT["S"]:   
         for footId in range(N_EFFECTORS):
             idRow = sRow + S.shape[0]
             # Sl pi - M alphal <= sl + M2 (1 - w_t)
