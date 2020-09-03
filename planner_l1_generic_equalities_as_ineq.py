@@ -901,12 +901,15 @@ def maxStepSizeCost(pb, cVars, initPos, endPos, initCom, endCom, refPos):
 def add_selected_surfaces_to_pb(pb, bool_vars):
     begin_phase_id = 0
     for phase in pb["phaseData"]:
-        end_phase_id = begin_phase_id + len(phase["S"])
-        bool_vars_phase = bool_vars[begin_phase_id:end_phase_id]
-        if bool_vars_phase.count(0) != 1:
-            raise ValueError("There must be exactly one surface selected for each phase")
-        phase["id_surface"] = bool_vars_phase.index(0) # add a new field in the phase data
-        begin_phase_id = end_phase_id
+        if len(phase["S"]) == 1:
+            phase["id_surface"] = 0
+        else:
+            end_phase_id = begin_phase_id + len(phase["S"])
+            bool_vars_phase = bool_vars[begin_phase_id:end_phase_id]
+            if bool_vars_phase.count(0) != 1:
+                raise ValueError("There must be exactly one surface selected for each phase")
+            phase["id_surface"] = bool_vars_phase.index(0) # add a new field in the phase data
+            begin_phase_id = end_phase_id
     
 
 def solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, initGuess = None, initGuessMip = None, l1Contact = False, initPos = None,  endPos = None, initCom = None,  endCom = None,
