@@ -30,15 +30,15 @@ def normalize(Ab):
 def genKinematicConstraints(lf_constraints_fun, rf_constraints_fun, index = 0, rotation = [Id,Id], normals = [z, z], min_height = None):   #assume that root transform is given in 3x3 rotation matrix
     res = [None, None]
     if index == 0 :
-        trLF = default_transform_from_pos_normal_(rotation[index], zero3, normals[LF])
-        trRF = default_transform_from_pos_normal_(rotation[index], zero3, normals[RF])
+        trLF = default_transform_from_pos_normal(zero3, normals[LF], rotation[index])
+        trRF = default_transform_from_pos_normal(zero3, normals[RF], rotation[index])
     elif index % 2 == LF : # left foot is moving
-        trLF = default_transform_from_pos_normal_(rotation[index], zero3, normals[LF])
-        trRF = default_transform_from_pos_normal_(rotation[index-1], zero3, normals[RF])
+        trLF = default_transform_from_pos_normal(zero3, normals[LF], rotation[index])
+        trRF = default_transform_from_pos_normal(zero3, normals[RF], rotation[index-1])
     elif index % 2 == RF : # right foot is moving
         #print index
-        trLF = default_transform_from_pos_normal_(rotation[index-1], zero3, normals[LF])
-        trRF = default_transform_from_pos_normal_(rotation[index], zero3, normals[RF])
+        trLF = default_transform_from_pos_normal(zero3, normals[LF], rotation[index-1])
+        trRF = default_transform_from_pos_normal(zero3, normals[RF], rotation[index])
 
     #~ KLF = left_foot_talos_constraints  (trLF)
     #~ KRF = right_foot_talos_constraints (trRF)
@@ -58,14 +58,14 @@ def genKinematicConstraints(lf_constraints_fun, rf_constraints_fun, index = 0, r
 def genFootRelativeConstraints(rf_in_lf_frame_constraints_fun,  lf_in_rf_frame_constraints_fun, index = 0, rotation = [Id,Id], normals = [z, z]): #assume that root transform is given in 3x3 rotation matrix
     res = [None, None]
     if index == 0 :
-        trLF = default_transform_from_pos_normal_(rotation[index], zero3, normals[LF])
-        trRF = default_transform_from_pos_normal_(rotation[index], zero3, normals[RF])
+        trLF = default_transform_from_pos_normal(zero3, normals[LF], rotation[index])
+        trRF = default_transform_from_pos_normal(zero3, normals[RF], rotation[index])
     elif index % 2 == LF : # left foot is moving
-        trLF = default_transform_from_pos_normal_(rotation[index], zero3, normals[LF])
-        trRF = default_transform_from_pos_normal_(rotation[index-1], zero3, normals[RF])
+        trLF = default_transform_from_pos_normal(zero3, normals[LF], rotation[index])
+        trRF = default_transform_from_pos_normal(zero3, normals[RF], rotation[index-1])
     elif index % 2 == RF : # right foot is moving
-        trLF = default_transform_from_pos_normal_(rotation[index-1], zero3, normals[LF])
-        trRF = default_transform_from_pos_normal_(rotation[index], zero3, normals[RF])
+        trLF = default_transform_from_pos_normal(zero3, normals[LF], rotation[index-1])
+        trRF = default_transform_from_pos_normal(zero3, normals[RF], rotation[index])
     #~ KRF = right_foot_in_lf_frame_talos_constraints  (trLF)
     #~ KLF = left_foot_in_rf_frame_talos_constraints (trRF)   
     
