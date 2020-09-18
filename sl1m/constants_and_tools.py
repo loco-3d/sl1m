@@ -34,10 +34,15 @@ def convert_surface_to_inequality(s):
     #TODO does normal orientation matter ?
     #it will for collisions
     n = cross(s[:,1] - s[:,0], s[:,2] - s[:,0])
+    
+    if norm(n) < 1e-6:
+        n = cross(s[:,len(s[0])/3] - s[:,0], s[:,len(s[0])/2] - s[:,0])
+
     if n[2] <= 0.:
         for i in range(3):
             n[i] = -n[i]
     n /= norm(n)
+
     return surfacePointsToIneq(s, n)
     
 def replace_surfaces_with_ineq_in_phaseData(phase):
@@ -105,7 +110,7 @@ def default_transform_from_pos_normal_(transform, pos, normal):
     rot = np.dot(rot1,rot2)
     return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
     
-
+    
 def default_transform_from_pos_normal(pos, normal):
     f = array([0.,0.,1.])
     t = array(normal)
@@ -123,8 +128,8 @@ def default_transform_from_pos_normal(pos, normal):
               [h*vx*vy+vz, c+h*vy**2, h*vy*vz-vx],
               [h*vx*vz - vy, h*vy*vz + vx, c+h*vz**2]])
     return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
-
     
+
 #last is equality
 def surfacePointsToIneq(S, normal):
     n = array(normal)
