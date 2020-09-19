@@ -45,7 +45,7 @@ def getContactsIntersections(rbprmBuilder,i,q):
 # get all the contact surfaces (pts and normal)
 def getAllSurfaces(afftool) :
     l = afftool.getAffordancePoints("Support")
-    return sorted([(getSurfaceExtremumPoints(el), normal(el[0])) for el in l])
+    return [(getSurfaceExtremumPoints(el), normal(el[0])) for el in l]
     
 # get surface information
 def getAllSurfacesDict (afftool) :
