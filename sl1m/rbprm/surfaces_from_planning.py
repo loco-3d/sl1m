@@ -4,7 +4,7 @@ from pinocchio import XYZQUATToSE3
 from numpy import array
 from sl1m.problem_definition import LF, RF
 
-MAX_SURFACE = 0.1 # about forth the size of the foot area 
+MAX_SURFACE = 0.1 # about fourth the size of the foot area 
 ROBOT_NAME = 'talos'
 
 
@@ -91,21 +91,18 @@ def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,viewer = None,step = 
         # end current phase
         
         seq = []
-        if useIntersection : 
-            for i, contact in enumerate(phase_contacts):
-                if area(contact) > MAX_SURFACE:
+
+        for i,contact in enumerate(phase_contacts):
+            if contact != []:
+                if viewer:
+                    displaySurfaceFromPoints(viewer,contact,[0,0,1,1])
+                if useIntersection and area(contact) > MAX_SURFACE:
                     seq.append(contact)
                 else:
-                    seq.append(surfaces_dict[phase_contacts_names[i]][0])
-
-        # get all the surfaces from the names and add it to seqs: 
-        else :
-            for name in phase_contacts_names:
-                surface = surfaces_dict[name][0]
-                if surface not in seq: # check if there is duplicate
-                    seq.append(surface)
-        
-        sorted(seq)
+                    surface = surfaces_dict[phase_contacts_names[i]][0]
+                    if surface not in seq: # check if there is duplicate
+                        seq.append(surface)
+                    sorted(seq)
         seqs.append(seq)
 
         # increase value for the next phase
@@ -153,13 +150,11 @@ def getSurfacesFromGuide(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useInte
         assert len(contacts) == len(contact_names)
 
         for j, contact in enumerate(contacts):
-            if viewer:
-                displaySurfaceFromPoints(viewer,contact,[0,0,1,1])
             if contact != []:
+                if viewer:
+                    displaySurfaceFromPoints(viewer,contact,[0,0,1,1])
                 if useIntersection and area(contact) > MAX_SURFACE:
                     seq.append(contact) 
-                    # if viewer:
-                    #     displaySurfaceFromPoints(viewer,contact,[0,0,1,1])
                 else:
                     seq.append(surfaces_dict[contact_names[j]][0])
 
