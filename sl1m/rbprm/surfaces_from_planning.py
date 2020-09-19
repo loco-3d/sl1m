@@ -4,7 +4,7 @@ from pinocchio import XYZQUATToSe3
 from numpy import array
 from sl1m.problem_definition import LF
 
-MAX_SURFACE = 0.3 # if a contact surface is greater than this value, the intersection is used instead of the whole surface
+MAX_SURFACE = 0.1 # about forth the size of the foot area
 
 def rotationMatrixFromConfigs(configs):
     R = []
@@ -23,15 +23,10 @@ def listToArray (seqs):
     return nseqs
 
 def area(s):
-    #print "in area, s = ",s
-    area = 0
-    for i in range(1,len(s)-1):
-      #area += x[i]*( y[i+1] - y[i-1] );
-      area += abs(s[i][0]*(s[i+1][1] - s[i-1][1]))
-    i = len(s) -1 
-    area += abs(s[i][0]*(s[0][1] - s[i-1][1]))
-    #print "area = ",area*0.5
-    return area * 0.5
+    a = 0
+    for i in range(len(s)-1):
+      a += (s[i][0]*s[i+1][1])-(s[i][1]*s[i+1][0])
+    return abs(a * 0.5)
 
 def getContactsNames(rbprmBuilder,i,q):
     if i % 2 == LF : # left leg moving
