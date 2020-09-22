@@ -8,7 +8,8 @@ from sl1m.problem_definition import *
 #### constraint specification ####  
 
 DEFAULT_NUM_VARS = 4
-SLACK_SCALE = 10.
+SLACK_SCALE = 1.
+THRESHOLD = 0.001
 
 #extra variables when multiple surface: a0, variable for inequality, a1 slack for equality constraint, then a2 = |a1|
 #so vars are x, y, z, zcom, a0, a1
@@ -285,28 +286,28 @@ def slackSelectionMatrix(pb):
     return c
     
 def num_non_zeros(pb, res):
-    nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
+    # nvars = getTotalNumVariablesAndIneqConstraints(pb)[1]
     indices = []
     cIdx = 0
     wrongsurfaces = []
+    wrongsurfaces_indices = []
     for i, phase in enumerate(pb["phaseData"]):  
         numSurfaces = len(phase["S"])
         phaseVars = numVariablesForPhase(phase)
         if numSurfaces > 1:
             startIdx = cIdx + DEFAULT_NUM_VARS
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
-            if array(betas).min() > 0.01:
-                #~ print "wrong ", i, array(betas).min()
+            if array(betas).min() > THRESHOLD:
+                #~ print "wrong ", i, sorted(betas)
                 indices += [i]
                 sorted_surfaces = np.argsort(betas)
-                #~ print "sorted_surfaces ",sorted_surfaces
+                wrongsurfaces_indices += [sorted_surfaces]
                 wrongsurfaces += [[[phase["S"][idx]] for idx in sorted_surfaces]  ]
-                #~ print "lens ", len([[phase["S"][idx]] for idx in sorted_surfaces]  )
         cIdx += phaseVars
-    return indices, wrongsurfaces
+    return indices, wrongsurfaces, wrongsurfaces_indices
     
 def isSparsityFixed(pb, res):
-    indices, wrongsurfaces = num_non_zeros(pb, res)
+    indices, wrongsurfaces, wrongsurfaces_indices = num_non_zeros(pb, res)
     return len(indices) == 0
    
 def genOneComb(pb,indices, surfaces, res):
@@ -318,33 +319,33 @@ def genOneComb(pb,indices, surfaces, res):
 import itertools
 import copy
    
-def genCombinatorialRec(pb, indices, wrongsurfaces, res):
-    lenss  = [len(surfs) for surfs in wrongsurfaces]
+def genCombinatorialRec(pb, indices, wrongsurfaces, wrongsurfaces_indices, res):
+    # lenss  = [len(surfs) for surfs in wrongsurfaces]
     all_indexes = [[el for el in range(lens)]  for lens in [len(surfs) for surfs in wrongsurfaces]]
+    wrong_combs = [el for el in itertools.product(*wrongsurfaces_indices)]
+
     combs = [el for el in itertools.product(*all_indexes)]
-    for comb in combs:
+    for j, comb in enumerate(combs):
         pb1 = copy.deepcopy(pb)
         for i, idx in enumerate(indices):
             pb1["phaseData"][idx]["S"] = wrongsurfaces[i][comb[i]]
-        res += [[pb1, comb, indices]]
-        
+        res += [[pb1, wrong_combs[j], indices]]
     
     
 def generateAllFixedScenariosWithFixedSparsity(pb, res):
-    indices, wrongsurfaces = num_non_zeros(pb, res)
+    indices, wrongsurfaces, wrongsurfaces_indices = num_non_zeros(pb, res)
     all_len = [len(surfs) for surfs in wrongsurfaces]
     comb = 1
     for el in all_len:
         comb *= el  
     res = []
-    if comb >1000:
-        print("problem probably too big ", comb)
+    if comb >4000:
+        # print("problem probably too big ", comb)
+        return None
     else:
-        genCombinatorialRec(pb, indices, wrongsurfaces, res)
+        genCombinatorialRec(pb, indices, wrongsurfaces, wrongsurfaces_indices, res)
     return res
-    
-    
-    
+
 def bestSelectedSurfaces(pb, res):
     surfaces = []
     indices  = []
@@ -362,12 +363,13 @@ def bestSelectedSurfaces(pb, res):
             assert min(betas) >= -0.00000001
             bestIdx = betas.index(array(betas).min())
             surfaces = surfaces + [phase["S"][bestIdx]]
-            
+
             indices = indices + [bestIdx]
         cIdx += phaseVars
     assert cIdx == nvars
     return surfaces, indices
-    
+
+
 ###########################" PLOTTING ################"
     
 import matplotlib.pyplot as plt
@@ -409,7 +411,7 @@ def plotPoints(ax, wps, color = "b", D3 = True, linewidth=2):
     y = array(wps)[:,1]
     if(D3):                
             z = array(wps)[:,2]
-            ax.scatter(x, y, z, c=color, marker='o', linewidth = 5) 
+            ax.scatter(x, y, z, color=color, marker='o', linewidth = 5) 
     else:
             ax.scatter(x,y,color=color, linewidth = linewidth)  
    
@@ -455,7 +457,7 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     ax.grid(False)
-        
+
     ax.set_autoscale_on(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
     
@@ -524,7 +526,4 @@ if __name__ == '__main__':
     plotQPRes(pb, res, ax=ax, plot_constraints = False)
         
     
-    
-    
-    
-        
+     
