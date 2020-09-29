@@ -80,16 +80,13 @@ def default_transform_from_pos_normal(pos, normal,transform=Id):
     else:
         u = v/norm(v)
         h = (1. - c)/(1. - c**2)
-        s = (1. - c**2)
-        assert s > 0
-        s = np.sqrt(s)
 
-        ux, uy, uz = u
-        rot =array([[c + h*ux**2, h*ux*uy - uz*s, h*ux*uz + uy*s],
-                    [h*ux*uy + uz*s, c + h*ux**2, h*uy*uz - ux*s],
-                    [h*ux*uz - uy*s, h*uy*uz + ux*s, c + h*uz**2]])
+        vx, vy, vz = v
+        rot =array([[c + h*vx**2, h*vx*vy - vz, h*vx*vz + vy],
+              [h*vx*vy+vz, c+h*vy**2, h*vy*vz-vx],
+              [h*vx*vz - vy, h*vy*vz + vx, c+h*vz**2]])
               
-    rot = np.dot(transform,rot)
+    rot = np.dot(rot,transform)
     return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
     
 
