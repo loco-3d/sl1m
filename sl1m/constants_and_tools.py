@@ -109,7 +109,7 @@ def surfacePointsToIneq(S, normal):
     b = concatenate([ine.b, d, -d]).reshape((-1,))
     A = vstack([ine.A, n])
     b = concatenate([ine.b, d]).reshape((-1,))
-    return A, b
+    return A, b, n
     
 ############ BENCHMARKING ###############
 

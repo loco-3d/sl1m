@@ -8,8 +8,8 @@ from sl1m.problem_definition import *
 #### constraint specification ####  
 
 DEFAULT_NUM_VARS = 4
-SLACK_SCALE = 1.
-THRESHOLD = 0.001
+# SLACK_SCALE = 1.
+THRESHOLD = 0.003
 
 #extra variables when multiple surface: a0, variable for inequality, a1 slack for equality constraint, then a2 = |a1|
 #so vars are x, y, z, zcom, a0, a1
@@ -189,11 +189,11 @@ def FixedFootConstraintRelativeDistance(pb, phaseDataT, A, b, previousCol, start
         return FixedFootRelativeDistanceConstraintVarPhase (pb, phaseDataT, A, b, previousCol, startCol, endCol, startRow)
         
     
-def SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow):
+def SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow, SLACK_SCALE):
     sRow = startRow
     nSurfaces = len(phaseDataT["S"])
     idS = DEFAULT_NUM_VARS
-    for (S,s) in phaseDataT["S"]:   
+    for (S,s,_) in phaseDataT["S"]:   
         idRow = sRow + S.shape[0]-1
         A[sRow:idRow, startCol:startCol+footExpressionMatrix.shape[1]] = S[:-1,:].dot(footExpressionMatrix)
         b[sRow:idRow                 ] = s[:-1]
@@ -216,7 +216,7 @@ def SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow):
             idRow = row + NUM_INEQ_SLACK_PER_SURFACE       
     return idRow
     
-def EqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq):    
+def EqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq, SLACK_SCALE):    
     sRow = startRowEq
     nSurfaces = len(phaseDataT["S"])
     if nSurfaces == 1:
@@ -225,7 +225,7 @@ def EqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq):
         return sRow+1
     else:
         idS = DEFAULT_NUM_VARS
-        for (S,s) in phaseDataT["S"]:   
+        for (S,s,_) in phaseDataT["S"]:   
             E[sRow, startCol:startCol+footExpressionMatrix.shape[1]] = S[-1,:].dot(footExpressionMatrix)
             #~ E[sRow, startCol+idS+1] = -1 # E x  + a1 = e
             E[sRow, startCol+idS+1] = -1 * SLACK_SCALE # E x  + a1 = e
@@ -234,7 +234,7 @@ def EqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq):
             sRow += 1
         return sRow 
     
-def convertProblemToLp(pb, convertSurfaces = True):    
+def convertProblemToLp(pb, convertSurfaces = True, SLACK_SCALE=1.):    
     if convertSurfaces:
         replace_surfaces_with_ineq_in_problem(pb)
     #define first problem
@@ -258,9 +258,9 @@ def convertProblemToLp(pb, convertSurfaces = True):
         startRow = FixedFootCOMConstraint (pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow) 
         startRow = FixedFootConstraintRelativeDistance (pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow, first = i == 0) 
         startRow = MovingFootCOMConstraint(pb,phaseDataT, A, b, previousStartCol, startCol, endCol, startRow, first = i == 0)
-        startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow)
+        startRow = SurfaceConstraint(phaseDataT, A, b, startCol, endCol, startRow, SLACK_SCALE)
         startRow = SlackPositivityConstraint(phaseDataT, A, b, startCol, endCol, startRow)
-        startRowEq = EqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq)
+        startRowEq = EqualityConstraint(phaseDataT, E, e, startCol, endCol, startRowEq, SLACK_SCALE)
         previousStartCol = startCol
         startCol   = endCol 
     
@@ -298,7 +298,7 @@ def num_non_zeros(pb, res):
             startIdx = cIdx + DEFAULT_NUM_VARS
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
             if array(betas).min() > THRESHOLD:
-                #~ print "wrong ", i, sorted(betas)
+                print "wrong ", i, sorted(betas)
                 indices += [i]
                 sorted_surfaces = np.argsort(betas)
                 wrongsurfaces_indices += [sorted_surfaces]
@@ -324,6 +324,13 @@ def genCombinatorialRec(pb, indices, wrongsurfaces, wrongsurfaces_indices, res):
     all_indexes = [[el for el in range(lens)]  for lens in [len(surfs) for surfs in wrongsurfaces]]
     wrong_combs = [el for el in itertools.product(*wrongsurfaces_indices)]
 
+    # if len(all_indexes) > 80:
+    #         new_comb_indices = []
+    #         for i,a in enumerate(wrongsurfaces_indices):
+    #             new_comb_indices += [a[:len(a)/3+1]]
+    #             wrong_combs = [el for el in itertools.product(*new_comb_indices)]
+    #             all_indexes = [[el for el in range(lens)]  for lens in [len(surfs) for surfs in wrong_combs]]
+
     combs = [el for el in itertools.product(*all_indexes)]
     for j, comb in enumerate(combs):
         pb1 = copy.deepcopy(pb)
@@ -339,7 +346,7 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
     for el in all_len:
         comb *= el  
     res = []
-    if comb >4000:
+    if comb >2000:
         # print("problem probably too big ", comb)
         return None
     else:
@@ -360,7 +367,7 @@ def bestSelectedSurfaces(pb, res):
         else:
             startIdx = cIdx + DEFAULT_NUM_VARS
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
-            assert min(betas) >= -0.00000001
+            assert min(betas) >= -0.00000001*10.
             bestIdx = betas.index(array(betas).min())
             surfaces = surfaces + [phase["S"][bestIdx]]
 
@@ -526,4 +533,4 @@ if __name__ == '__main__':
     plotQPRes(pb, res, ax=ax, plot_constraints = False)
         
     
-     
+
