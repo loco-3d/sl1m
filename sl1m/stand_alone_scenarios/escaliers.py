@@ -75,6 +75,6 @@ if __name__ == '__main__':
     from sl1m.fix_sparsity import solveL1, solveMIP
 
     pb = gen_stair_pb()
-    solveMIP(pb, surfaces, MIP = True, draw_scene = draw_scene, plot = True)
+    solveMIP(pb, surfaces, draw_scene, plot = True)
     pb = gen_stair_pb()
     solveL1(pb, surfaces, draw_scene, plot = True)

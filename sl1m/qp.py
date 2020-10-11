@@ -45,7 +45,16 @@ class ResultData:
     def __repr__(self):
         return self.__str__()
 
-
+def get_nonzero_rows(M):
+    nonzero_rows = {}
+    rows, cols = M.nonzero()
+    for ij in zip(rows, cols):
+        i, j = ij
+        if i not in nonzero_rows:
+            nonzero_rows[i] = []
+        nonzero_rows[i].append(j)
+    return nonzero_rows
+    
 #min (1/2)x' P x + q' x  
 #subject to  G x <= h
 #subject to  C x  = d
@@ -103,6 +112,7 @@ if GLPK_OK:
     #subject to  CI x <= ci0
     #subject to  CE x  = ce0
     def solve_lp_glpk(q, CI=None, ci0=None, CE=None, ce0=None):
+        
         t1 = clock()
         lp = glpk.LPX() 
         # ~ lp.name = 'sample'
@@ -155,6 +165,56 @@ if GLPK_OK:
         return ResultData(array([c.primal for c in lp.cols]), lp.status, lp.status == "opt", lp.obj.value, timMs(t1, t2))
 
 if GUROBI_OK:  
+
+    def solve_qp_gurobi(P, q, G=None, h=None, A=None, b=None, verbose=False):
+    
+        t1 = clock()
+        grb.setParam('OutputFlag', 1 if verbose else 0)
+        n = P.shape[1]
+        model = grb.Model("qp")
+
+        cVars = []
+        for i in range(n):
+            cVars.append(model.addVar(vtype=grb.GRB.CONTINUOUS,  lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+        
+        # Update model to integrate new variables
+        model.update()
+        x = array(model.getVars(), copy=False)
+
+        # minimize
+        #     1/2 x.T * P * x + q * x
+        obj = grb.QuadExpr()
+        rows, cols = P.nonzero()
+        for i, j in zip(rows, cols):
+            obj += 0.5 * x[i] * P[i, j] * x[j]
+        for i in range(n):
+            obj += q[i] * x[i]
+        model.setObjective(obj, grb.GRB.MINIMIZE)
+
+        # subject to
+        #     G * x <= h
+        if G is not None:
+            G_nonzero_rows = get_nonzero_rows(G)
+            for i, row in G_nonzero_rows.items():
+                model.addConstr(grb.quicksum(G[i, j] * x[j] for j in row) <= h[i])
+
+        # subject to
+        #     A * x == b
+        if A is not None:
+            A_nonzero_rows = get_nonzero_rows(A)
+            for i, row in A_nonzero_rows.items():
+                model.addConstr(grb.quicksum(A[i, j] * x[j] for j in row) == b[i])
+
+        model.optimize()
+
+        t2 = clock()
+        try:
+            res = [el.x for el in cVars]
+            print model.ObjVal
+            return ResultData(res, model.Status, model.Status == grb.GRB.OPTIMAL, model.ObjVal, timMs(t1, t2))
+        except:
+            return ResultData(None,  model.Status, False, 0., timMs(t1, t2))
+
     #solve linear programm using gurobi
     # min q' x  
     #subject to  A x <= b
@@ -166,7 +226,7 @@ if GUROBI_OK:
         #add continuous variables
         cVars = []
         for el in (c):
-            cVars.append(model.addVar(obj=el, vtype=grb.GRB.CONTINUOUS, lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
+            cVars.append(model.addVar(vtype=grb.GRB.CONTINUOUS,  lb = -grb.GRB.INFINITY, ub = grb.GRB.INFINITY))
         
         # Update model to integrate new variables
         model.update()
@@ -190,8 +250,31 @@ if GUROBI_OK:
                 coeff = A[i,idx]
                 expr = grb.LinExpr(coeff, variables)
                 model.addConstr(expr, grb.GRB.LESS_EQUAL, b[i])
+
+        
+        # slackIndices = [i for i,el in enumerate (c) if el > 0]
             
-        model.modelSense = grb.GRB.MINIMIZE
+        # # set objective
+        # variables = []
+        # previousL = 0
+        # obj = 0
+        # for i, el in enumerate(slackIndices):
+        #     if i != 0 and el - previousL > 2.:
+        #         assert len(variables) > 0
+        #         expr = grb.LinExpr(ones(len(variables))/(len(variables)-1), variables)
+        #         # expr = grb.LinExpr(ones(len(variables)), variables)
+        #         obj += expr
+        #         variables = [x[el]]
+        #     elif el!=0:
+        #         variables += [x[el]]
+        #     previousL = el
+        # if len(variables) > 1:
+        #     expr = grb.LinExpr(ones(len(variables))/(len(variables)-1), variables)
+        #     # expr = grb.LinExpr(ones(len(variables)), variables)
+        #     obj += expr 
+            
+        model.setObjective(obj, grb.GRB.MINIMIZE)
+        # model.modelSense = grb.GRB.MINIMIZE
         # model.update()            
         model.optimize()
         
@@ -219,7 +302,6 @@ if GUROBI_OK:
         # Update model to integrate new variables
         model.update()              
         x = array(model.getVars(), copy=False)
-        y = array([el for el in model.getVars() if el.varName == 'slack'], copy=False)
         
         # inequality constraints
         if A.shape[0] > 0:
@@ -242,7 +324,6 @@ if GUROBI_OK:
         model.update()
         
         slackIndices = [i for i,el in enumerate (c) if el > 0]
-        numSlackVariables = len([el for el in c if el > 0])
             
         # equality slack sum
         variables = []
@@ -252,9 +333,9 @@ if GUROBI_OK:
                 assert len(variables) > 0
                 expr = grb.LinExpr(ones(len(variables)), variables)
                 model.addConstr(expr, grb.GRB.EQUAL, len(variables) -1)
-                variables = [y[i]]
+                variables = [x[el]]
             elif el!=0:
-                variables += [y[i]]
+                variables += [x[el]]
             previousL = el
         if len(variables) > 1:
             expr = grb.LinExpr(ones(len(variables)), variables)

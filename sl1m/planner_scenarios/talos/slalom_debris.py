@@ -1,8 +1,8 @@
 import numpy as np
 print("Plan guide trajectory ...")
-from . import lp_slalom_debris_path as tp
+from sl1m.planner_scenarios.talos import lp_slalom_debris_path as tp
 print("Guide planned.")
-from tools.surfaces_from_path import getSurfacesFromGuideContinuous
+from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuide, getSurfacesFromGuideContinuous
 
 from sl1m.constants_and_tools import *
 
@@ -17,6 +17,29 @@ import random
 from sl1m.planner import *
 Z_AXIS = np.array([0,0,1]).T
 from sl1m.planner_scenarios.talos.constraints import *
+
+
+
+TEST = True
+GUIDE = True
+CONTINUOUS = False
+INTERSECT = False
+SOLVER = 0 # GUROBI
+CPP = True
+THRESHOLD = 0.001
+
+if TEST:
+    PLOT = True
+    SAVE = False
+    OPT = True
+    MAX_RUN = 1
+else:
+    PLOT = False
+    SAVE = True
+    OPT = False
+    MAX_RUN = 100
+    v = None
+
 """
 from sl1m.plot_plytopes import *
 rubB1 =   [[-0.5079353885643417, 1.282387089736744, 0.0021999916093061456],  [-0.5079353885643416, 1.2444260597154655, 0.0021999916093061456],  [-0.4555532842024058, 1.244426054175804, 0.016235816474940087],  [-0.4555533048779398, 1.2823870841970821, 0.016235812378438574]]
@@ -82,26 +105,36 @@ surfaces = [[abeginFloor],[abeginFloor],[abeginFloor],[abeginFloor],[abeginFloor
 final = [[2 ,0.15 ,0.],[2.1 ,0.15 ,0.],[2.1 ,-0.15 ,0.],[2 ,-0.15 ,0.]]
 afinal = array(final).T
 
-def gen_pb(root_init,R, surfaces):
+# def gen_pb(root_init,R, surfaces):
+    
+#     nphases = len(surfaces)
+#     lf_0 = array(root_init[0:3]) + array([0, 0.085,-0.98]) # values for talos ! 
+#     rf_0 = array(root_init[0:3]) + array([0,-0.085,-0.98]) # values for talos ! 
+#     #p0 = [array([-3.0805096486250154, 0.335, 0.]), array([-3.0805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
+#     #p0 = [array([-0.1805096486250154, 0.335, 0.]), array([-0.1805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
+#     p0 = [lf_0,rf_0];
+#     print("p0 used : ",p0)
+    
+#     res = { "p0" : p0, "c0" : None, "nphases": nphases}
+#     #res = { "p0" : None, "c0" : None, "nphases": nphases}
+    
+#     #print "surfaces = ",surfaces
+#     #TODO in non planar cases, K must be rotated
+#     #phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
+#     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(left_foot_constraints,right_foot_constraints,index = i, rotation = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints,index = i, rotation = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
+#     res ["phaseData"] = phaseData
+#     return res 
+
+# generate problem 
+def gen_pb(init, c0, R, surfaces):
     
     nphases = len(surfaces)
-    lf_0 = array(root_init[0:3]) + array([0, 0.085,-0.98]) # values for talos ! 
-    rf_0 = array(root_init[0:3]) + array([0,-0.085,-0.98]) # values for talos ! 
-    #p0 = [array([-3.0805096486250154, 0.335, 0.]), array([-3.0805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
-    #p0 = [array([-0.1805096486250154, 0.335, 0.]), array([-0.1805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
-    p0 = [lf_0,rf_0];
-    print("p0 used : ",p0)
+    res = { "p0" : init, "c0" : c0, "nphases": nphases}
     
-    res = { "p0" : p0, "c0" : None, "nphases": nphases}
-    #res = { "p0" : None, "c0" : None, "nphases": nphases}
-    
-    #print "surfaces = ",surfaces
-    #TODO in non planar cases, K must be rotated
-    #phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
+    # phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [copyKin(kinematicConstraints) for _ in range(len(surfaces[i]))], "relativeK" : [relativeConstraints[(i)%2] for _ in range(len(surfaces[i]))], "S" : surfaces[i] } for i in range(nphases)]
     phaseData = [ {"moving" : i%2, "fixed" : (i+1) % 2 , "K" : [genKinematicConstraints(left_foot_constraints,right_foot_constraints,index = i, rotation = R, min_height = 0.3) for _ in range(len(surfaces[i]))], "relativeK" : [genFootRelativeConstraints(right_foot_in_lf_frame_constraints,left_foot_in_rf_frame_constraints,index = i, rotation = R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation" : R[i], "S" : surfaces[i] } for i in range(nphases)]
     res ["phaseData"] = phaseData
-    return res 
-    
+    return res     
     
 import mpl_toolkits.mplot3d as a3
 import matplotlib.colors as colors
@@ -118,32 +151,36 @@ def draw_rectangle(l, ax):
 def plotSurface (points, ax, plt,color_id = -1):
     xs = np.append(points[0,:] ,points[0,0] ).tolist()
     ys = np.append(points[1,:] ,points[1,0] ).tolist()
-    zs = (np.append(points[2,:] ,points[2,0] ) - np.ones(len(xs))*0.005*color_id).tolist()
+    zs = (np.append(points[2,:] ,points[2,0]) - np.ones(len(xs))*0.005*color_id).tolist()
     colors = ['r','g','b','m','y','c']
     if color_id == -1: ax.plot(xs,ys,zs)
-    else: ax.plot(xs,ys,zs,colors[color_id])
-    plt.draw()
+    else: ax.plot(xs,ys,zs, color = colors[color_id%6])
         
-def draw_scene(surfaces,ax = None):
+def draw_scene(surfaces, ax = None):
     colors = ['r','g','b','m','y','c']
     color_id = 0
     if ax is None:        
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
-    #[draw_rectangle(l,ax) for l in all_surfaces]
-    for surfaces_phase in surfaces: 
-      for surface in surfaces_phase:
-        plotSurface(surface, ax, plt,color_id)
-      color_id += 1
-      if color_id >= len(colors):
-        color_id = 0
-    return ax
+    # [draw_rectangle(l,ax) for l in all_surfaces]
+    for i, surfaces_phase in enumerate(surfaces): 
+        for surface in surfaces_phase:
+            plotSurface(surface, ax, plt, color_id)
+        color_id += 1
+        
+    plt.ion()
+    plt.show()
     
+    return ax    
     
+def footPosFromCOM(init_com):
+    lf_0 = array(init_com[0:3]) + array([0, 0.085,-0.98])
+    rf_0 = array(init_com[0:3]) + array([0,-0.085,-0.98])
+    return [lf_0,rf_0]    
     
 ############# main ###################    
 def solve():
-    from sl1m.fix_sparsity import solveL1
+    from sl1m.fix_sparsity import solveL1, solveMIP
     success = False
     maxIt = 50
     it = 0
@@ -153,7 +190,8 @@ def solve():
     while not success and it < maxIt:
       if it > 0 :
         step = defaultStep + random.uniform(-variation,variation)
-      R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,None,step,True)
+      # R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,None,step,True)
+      R, surfaces = getSurfacesFromGuide(tp.rbprmBuilder, tp.ps, tp.afftool, tp.v, step, True)
       pb = gen_pb(tp.q_init,R,surfaces)
       try:
         pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, None)
@@ -166,11 +204,19 @@ def solve():
     return pb, coms, footpos, allfeetpos, res
 
 if __name__ == '__main__':
-    from sl1m.fix_sparsity import solveL1
-    step = 1.
-    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,None,step,True)
+    from sl1m.fix_sparsity import solveL1, solveMIP
+    step = 0.9
+    # R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,None,step,True)
+    R, surfaces = getSurfacesFromGuide(tp.rbprmBuilder, tp.ps, tp.afftool, tp.v, step, INTERSECT, tp.pathId)
+    # R, surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.v,step,INTERSECT, tp.pathId)
 
-    pb = gen_pb(tp.q_init,R,surfaces)
+    s_p0 = tp.ps.getInitialConfig()[0:3]; init = footPosFromCOM(s_p0)
+    pb = gen_pb(init, s_p0,R,surfaces)
+    # res_L1 = solveL1(pb, surfaces, draw_scene, PLOT, CPP, SOLVER, OPT)
+    # print res_L1
 
-    pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, draw_scene)
+    res_MI = solveMIP(pb, surfaces, draw_scene, PLOT, CPP)
+    print res_MI
+
+    # pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, draw_scene)
 

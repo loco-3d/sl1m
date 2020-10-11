@@ -60,12 +60,13 @@ def getAllSurfacesDict (afftool) :
     surfaces_dict = dict(zip(all_names, all_surfaces)) # map surface names to surface points
     return surfaces_dict
 
-def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useIntersection= False):
+def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useIntersection= False, pathId=None):
     if viewer : 
         from tools.display_tools import displaySurfaceFromPoints  # tool from hpp-rbprm
     
     window_size = 0.5 # smaller step at which we check the colliding surfaces
-    pathId = ps.numberPaths() -1
+    if pathId == None:
+        pathId = ps.numberPaths() -1
     pathLength = ps.pathLength(pathId) #length of the path
     
     # get surface information
@@ -126,11 +127,12 @@ def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,viewer = None,step = 
     return R,seqs
 
 
-def getSurfacesFromGuide(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useIntersection = False):
+def getSurfacesFromGuide(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useIntersection = False, pathId = None):
     if viewer : 
         from tools.display_tools import displaySurfaceFromPoints  # tool from hpp-rbprm
 
-    pathId = ps.numberPaths() -1
+    if pathId == None:
+        pathId = ps.numberPaths() -1
     pathLength = ps.pathLength(pathId) #length of the path
     configs = []
     # get configuration along the path
@@ -167,3 +169,30 @@ def getSurfacesFromGuide(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useInte
     R = getRotationsFromConfigs(configs)
     return R,seqs
     
+
+    
+# ONLY FOR EXPERIMENTS
+def getSurfacesAll(ps,afftool,step_num):
+    all_surfaces = sorted(getAllSurfaces(afftool))
+    phase = [surf[0] for surf in all_surfaces]
+    init = ps.getInitialConfig()
+
+    seqs = []; R =[]
+    for i in range(step_num):
+        seqs.append(phase)
+        R.append(XYZQUATToSE3([0,0,0]+init[3:7]).rotation)
+
+    if (len(seqs[0])!= 1):
+        seqs[0]=[seqs[0][0]]; seqs[-1]=[seqs[-1][-1]]
+    seqs = listToArray(seqs) 
+
+    return R,seqs
+
+# contacts = getContactsIntersections (rbprmBuilder,i,q)
+# contact_names = getContactsNames (rbprmBuilder,i,q)
+# contact_surfaces = [surface_dict[contact_name][0] for contact_name in contact_names]
+# contact_surfaces_ = [[array(contact_surface).T] for contact_surface in contact_surfaces]
+# contacts_ = [[contact] for contact in surfaces[9]]
+
+# draw_scene(contacts_)
+# draw_scene(contact_surfaces_)
