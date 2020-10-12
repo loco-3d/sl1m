@@ -1,4 +1,4 @@
-from hpp.corbaserver.rbprm.anymal import Robot
+from anymal_rbprm.anymal import Robot
 from hpp.gepetto import Viewer
 from hpp.corbaserver import Client
 from tools.display_tools import *

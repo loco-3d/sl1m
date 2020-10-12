@@ -481,11 +481,8 @@ def retrieve_points_from_res(pb, res):
             footPos[footId] += [posE]
                 # ~ allFeetPos += [pos]
             
-            print("posE", posE)
             allFeetPhase += [posE]
-        print ("allFeetPhase" , allFeetPhase)
         allFeetPos += [allFeetPhase]
-        print ("allFeetPos" , allFeetPos)
         col += numVariablesForPhase(phaseDataT)    
     return coms, footPos, allFeetPos
     
@@ -536,6 +533,95 @@ def plotConstraints(ax, pb, allfeetpos, coms):
     
 from scipy.spatial import ConvexHull   
 from sl1m.tools.plot_plytopes import plot_hull   
+def plotConcatenatedData(pb, coms, footpos, allfeetpos, linewidth=2, ax = None, plot_constraints = False, show = True, plotSupport = False):
+    # ~ coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+    
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+    ax.grid(False)    
+    ax.set_xlim3d(0, 2)
+    ax.set_ylim3d(0,2)
+    ax.set_zlim3d(0,2)
+        
+    ax.set_autoscale_on(False)
+    ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
+    
+    from sl1m.tools.plot_plytopes import plot_polytope_H_rep
+    from collections import namedtuple
+    Ineq = namedtuple("Inequality", "A b")
+    
+    colors = ["r","b","g","y"]
+    Af = None
+    bf = None
+    
+    weighted = []
+    for footId, (K, k) in enumerate(pb["phaseData"][0]["K"][0]):
+        Afoot = K
+        bfoot = (k + K.dot(footpos[footId][0])).reshape([-1,1])
+        if Af is None:
+            Af = K; bf = bfoot
+        else:
+            Af = np.vstack([Af, Afoot])
+            bf = np.vstack([bf, bfoot])
+        # ~ print ("footposid", footpos[footId][0])
+        # ~ bfoot = k.reshape([-1,1])
+        # ~ print ("range", (K.dot([-1,0.,0.]) - k).max())
+        pond = zeros(3); 
+        for otherFootId, positions in enumerate(footpos):
+            if otherFootId != footId:
+                pond += 0.33 * positions[0]
+        pond[-1] = 0.4
+        weighted += [pond]
+    # ~ plot_polytope_H_rep(Af,bf, color = "r", just_pts = False, ax = ax)
+        # ~ plot(Ineq(Afoot,k), ax = ax, show = False, color = colors[footId])
+    # ~ [print("wtf", (Af[:,:2].dot(el[:2])-bf).max() ) for el in weighted]
+    
+    
+    Afreez = Af[:,2:3]
+    for el in weighted:
+        bFreez = bf.reshape((-1,)) - Af[:,:2].dot(el[:2])
+        # ~ print ('AAAAAAAAAAAAAAAAAAA',bf.shape)
+        from sl1m.qp import solve_lp
+        z = solve_lp(zeros(1),Afreez, bFreez)
+        el[-1] = z.x
+        plotPoints(ax, [el], color = "b")
+        
+    
+    # ~ plotPoints(ax, coms[1:], color = "b")
+    
+    footColors = ['r', 'g', 'y', 'b']
+    
+    # ~ plotPoints(ax, coms, )
+    [plotPoints(ax, footpos[idx], color = footColors[idx]) for idx in range(N_EFFECTORS)]
+    
+    cx = [c[0] for c in coms[1:]]
+    cy = [c[1] for c in coms[1:]]
+    cz = [c[2] for c in coms[1:]]
+    ax.plot(cx, cy, cz)
+    idC = 0;
+    if plotSupport:
+        for el in allfeetpos[:]:
+            # ~ print("points ", [el[:2] for el in allfeetpos])
+            pts = [e[:2] for e in el]
+            apts = array(pts)
+            chul = ConvexHull(array([e[:2] for e in el]))
+            plot_hull(chul, pts = pts, apts = apts, ax = ax, color = footColors[idC])
+            idC = (idC + 1) % 4
+        # ~ px = [c[0] for c in el]
+        # ~ py = [c[1] for c in el]
+        # ~ pz = [c[2] for c in el]
+        # ~ ax.plot(px, py, pz)
+    px = [c[0] for el in allfeetpos  for c in el]
+    py = [c[1] for el in allfeetpos  for c in el]
+    pz = [c[2] for el in allfeetpos  for c in el]
+    ax.scatter(px, py, pz)
+        
+    if show:
+        plt.ion()
+        plt.show()
+       
+
 def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = True, plotSupport = False):
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
     
@@ -623,8 +709,7 @@ def plotQPRes(pb, res, linewidth=2, ax = None, plot_constraints = False, show = 
     if show:
         plt.ion()
         plt.show()
-       
-    
+           
     
 # ~ def addInitEndConstraint(pb, E, e, posInit= array([0.16, 0.585, 0.0]), posEnd = array([1.2, 0.37, 0.40])):
 def addInitEndConstraint(pb, E, e, posInit, posEnd, initCom, endCom):
@@ -643,8 +728,6 @@ def addInitEndConstraint(pb, E, e, posInit, posEnd, initCom, endCom):
     idRow = E.shape[0]
     nE[:idRow,:E.shape[1]] = E  
     ne[:idRow] = e[:]    
-    
-    print ("heo", E.shape)
     
     idRow = E.shape[0]
     nVarEnd = numVariablesForPhase(pb["phaseData"][-1])
@@ -797,6 +880,7 @@ def targetCom(pb, cVars, initPos, endPos, initCom, endCom):
     # ~ cz_end_diff = cVars[-nVarEnd+2] - endCom[2]
     #
     # ~ return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff + cz_end_diff * cz_end_diff
+    print ("target ", endCom)
     return cx_end_diff * cx_end_diff + cy_end_diff * cy_end_diff
     
 # gurobi cost functions
@@ -911,9 +995,14 @@ costs = [(1, posturalCost),(2, targetCom)]):
        
     A, b, E, e = convertProblemToLp(pb)   
     print ("initpos ", initPos)
+    print ("endPos ", endPos)
     # ~ E,e = addInitEndConstraint(pb, E, e, initPos, endPos, initCom, endCom)
     #todo is end constraint desirable ?
-    E,e = addInitEndConstraint(pb, E, e, initPos, None, None, None)
+    # ~ E,e = addInitEndConstraint(pb, E, e, initPos, None, None, None)
+    if MIP:
+        E,e = addInitEndConstraint(pb, E, e, initPos, endPos, None, None)
+    else:
+        E,e = addInitEndConstraint(pb, E, e, initPos, endPos, None, endCom)
     # ~ E,e = addInitEndConstraint(pb, E, e, None, None, None, None)
     slackMatrix = wSelectionMatrix(pb)    
     slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
@@ -1056,18 +1145,20 @@ costs = [(1, posturalCost),(2, targetCom)]):
         
     
     # ~ if initPos is not None:
-    obj = 0
-    print (" initPos is not None !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    # ~ obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
-    # ~ obj += 1 * posturalCost(pb, cVars,  initPos, initCom)
-    # ~ obj += stepSizeCost(pb, cVars,  initPos, initCom)
-    # ~ obj += 10. * targetCom(pb, cVars,  endCom)
-    # ~ obj +=  2 * targetCom(pb, cVars,  endCom)
-    for (weight, cost) in costs:
-        obj += weight * cost(pb, cVars, initPos, endPos, initCom, endCom)
-    # ~ obj += targetEndPos(pb, cVars,  endPos)
-    # ~ obj = targetLegCenter(pb, cVars,  endCom)
-    model.setObjective(obj)
+    if MIP:
+        obj = 0
+        print (" initPos is not None !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        # ~ obj += 0.01 * posturalCost(pb, cVars,  initPos, initCom)
+        # ~ obj += 1 * posturalCost(pb, cVars,  initPos, initCom)
+        # ~ obj += stepSizeCost(pb, cVars,  initPos, initCom)
+        # ~ obj += 10. * targetCom(pb, cVars,  endCom)
+        # ~ obj +=  2 * targetCom(pb, cVars,  endCom)
+        for (weight, cost) in costs:
+            obj += weight * cost(pb, cVars, initPos, endPos, initCom, endCom)
+        # ~ obj += targetEndPos(pb, cVars,  endPos)
+        # ~ obj = targetLegCenter(pb, cVars,  endCom)
+        print (" COST ", obj)
+        model.setObjective(obj)
     
     # ~ grb.setParam('SOLUTION_LIMIT', 1)
     # ~ grb.setParam('TIME_LIMIT', 10)
@@ -1076,8 +1167,9 @@ costs = [(1, posturalCost),(2, targetCom)]):
     model.optimize()
     t2 = clock()
     res = [el.x for el in cVars]
-    resbool = [el.x for el in boolvars]
-    print ("resbool", resbool)
+    if MIP:
+        resbool = [el.x for el in boolvars]
+        print ("resbool", resbool)
     print ("time to solve MIP ", timMs(t1,t2))
     
     
