@@ -7,8 +7,8 @@ from numpy.linalg import norm
 
 from sl1m.constants_and_tools import *
 from sl1m.planner_l1_generic_equalities_as_ineq import *
-from hpp.corbaserver.rbprm import  rbprmstate
-from hpp.corbaserver.rbprm import  state_alg
+# ~ from hpp.corbaserver.rbprm import  rbprmstate
+# ~ from hpp.corbaserver.rbprm import  state_alg
 from sl1m.stand_alone_scenarios.constraints_anymal import *
 
 all_surfaces = None
@@ -66,7 +66,7 @@ default_surfaces = [all_surfaces_array for _ in range (6)]
 
 surfaces = None
 
-def genSurf(nsurfs = 6):
+def genSurf(nsurfs = 4):
     global surfaces
     surfaces = [all_surfaces_array for _ in range (nsurfs)]
 
@@ -139,19 +139,7 @@ def solve(initCom = None, initPos = None, endCom = None, endPos = None, surfaces
     
     print ("coms ", Coms)
     print ("Allfeetpos ", Allfeetpos)
-    
-    for i in range(2):
-    # ~ for i in range(1):
-        # ~ print("round !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", i )
-        pb = gen_pb()  
-        initPos = None
-        # ~ endPos = None
-        initCom = Coms[-1].copy()
-        endCom  = endCom
-        initPos = Allfeetpos[-1].copy()
-        pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom,)
-        coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
-        Coms += coms[1:];  Footpos += footpos[1:]; Allfeetpos += allfeetpos[1:]        
+          
         # ~ if ax is not None:
     
     for i in range(3):
@@ -264,9 +252,9 @@ if __name__ == '__main__':
     endComFeas = array([1.05012165, 0.83104905, 0.62293721])
     
     # ~ plt.show()
-    # ~ pb, coms, footpos, allfeetpos, res = solve(initPos = initPos, endCom=endCom, ax = None)
+    pb, coms, footpos, allfeetpos, res = solve(initPos = initPos, endCom=endCom, ax = None)
     # ~ pb, coms, footpos, allfeetpos, res = solveFeas(initPos = initPos, endCom=endComFeas, ax = None)
-    pb, coms, footpos, allfeetpos, res = solveFeas(initPos = initPos, endCom=endComFeas, ax = None)
+    # ~ pb, coms, footpos, allfeetpos, res = solveFeas(initPos = initPos, endCom=endComFeas, ax = None)
     
     
     # ~ for i in range(15):

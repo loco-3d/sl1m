@@ -1,13 +1,15 @@
 from sl1m.planner_scenarios.state_methods import  *
 from sl1m.planner_scenarios.anymal_constants import *
 
-from sl1m.stand_alone_scenarios.anymal.flat_ground import solve
+# ~ from sl1m.stand_alone_scenarios.anymal.flat_ground import solve
+from sl1m.stand_alone_scenarios.anymal.palet import solve
 
 #load scene
 from hpp.corbaserver.affordance.affordance import AffordanceTool
 afftool = AffordanceTool ()
 afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.05])
-afftool.loadObstacleModel ("hpp_environments", "ori/modular_palet_flat", "planning", v,reduceSizes=[0.1,0,0])
+# ~ afftool.loadObstacleModel ("hpp_environments", "ori/modular_palet_flat", "planning", v,reduceSizes=[0.1,0,0])
+afftool.loadObstacleModel ("package://hpp_environments/urdf/ori/modular_palet_flat.urdf", "planning", v,reduceSizes=[0.1,0,0])
 afftool.visualiseAffordances('Support', v, v.color.lightBrown)
 v.addLandmark(v.sceneName,1)
 
@@ -24,7 +26,8 @@ initPos = [array([-0.8, 0.2, 0.13]),
  array([-0.8, -0.2, 0.13]),
  array([-1.6, 0.2, 0.13]),
  array([-1.6, -0.2, 0.13])]
-endCom =  [10., 0., 0.4]
+# ~ endCom =  [6, 0., 0.4]
+endCom =  [0., 0., 0.5]
 
 from sl1m.stand_alone_scenarios.anymal.palet import solve, overrideSurfaces
 

@@ -7,8 +7,8 @@ from numpy.linalg import norm
 
 from sl1m.constants_and_tools import *
 from sl1m.planner_l1_generic_equalities_as_ineq import *
-from hpp.corbaserver.rbprm import  rbprmstate
-from hpp.corbaserver.rbprm import  state_alg
+# ~ from hpp.corbaserver.rbprm import  rbprmstate
+# ~ from hpp.corbaserver.rbprm import  state_alg
 
 
 from sl1m.stand_alone_scenarios.constraints_anymal import *
@@ -63,9 +63,50 @@ def solve(initCom = None, initPos = None, endCom = None):
     print ("initCom ", initCom)
     endPos = None
     # ~ print ("initPos", initPos)
+    #MIP 
     pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom, costs = [(0.01, posturalCost),(10, targetCom)])
     coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
-    return pb, coms, footpos, allfeetpos, res
+    
+    
+    
+    #SL1M
+    pb = gen_flat_pb()  
+    endCom = coms[-1]
+    pb, res1, time = solveMIPGurobi(pb, surfaces, MIP = False, draw_scene = None, plot = True, l1Contact = True, initPos = initPos, endPos = None, initCom = None, endCom=  endCom, costs = [(0.01, posturalCost),(10, targetCom)])
+    coms1, footpos1, allfeetpos1 = retrieve_points_from_res(pb, res1)
+    
+    
+    Coms = coms.copy();  Footpos = footpos.copy(); Allfeetpos = allfeetpos.copy()
+    Coms1 = coms1[:];  Footpos1 = footpos1[:]; Allfeetpos1 = allfeetpos1[:]
+    
+    
+    print ("LEN COMS", len(Coms) )
+    ax = draw_scene(None)
+    plotQPRes(pb, res, ax=ax, plot_constraints = False, show = True)
+    
+    for i in range(0):
+        pb = gen_flat_pb()  
+        initPos = None
+        initCom = Coms[-1].copy()
+        initPos = Allfeetpos[-1].copy()        
+        endCom  = initCom + array([6, 0.0, 0.0])
+        pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom,costs = [(0.01, posturalCost),(10, targetCom)])
+        coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
+        Coms += coms[1:].copy();  Footpos += footpos.copy(); Allfeetpos += allfeetpos[1:].copy()
+        print ("LEN COMS", len(Coms) )
+        
+        
+        pb = gen_flat_pb()  
+        endCom = coms[-1]
+        pb, res1, time = solveMIPGurobi(pb, surfaces, MIP = False, draw_scene = None, plot = True, l1Contact = True, initPos = initPos, endPos = None, initCom = None, endCom=  endCom, costs = [])
+        coms1, footpos1, allfeetpos1 = retrieve_points_from_res(pb, res1)
+        Coms1 += coms1[1:].copy();  Footpos1 += footpos1.copy(); Allfeetpos1 += allfeetpos1[1:].copy()
+    
+    print ("LEN COMS", len(Coms) )
+    # ~ return pb, Coms, Footpos, Allfeetpos, res
+    return pb, Coms1, Footpos1, Allfeetpos1, res1
+    # ~ return pb, coms1, footpos1, allfeetpos1, res1
+    # ~ return pb, coms, footpos, allfeetpos, res
     
     
 ############# main ###################    
@@ -104,7 +145,8 @@ if __name__ == '__main__':
     
     ax = draw_scene(None)
     # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = False)
-    plotQPRes(pb, res, ax=ax, plot_constraints = False, show = True)
+    # ~ plotQPRes(pb, res, ax=ax, plot_constraints = False, show = True)
+    plotConcatenatedData(pb, coms, footpos, allfeetpos, ax=ax, plot_constraints = False, show = True, plotSupport = False)
     # ~ pb = gen_flat_pb()  
     # ~ A, b, E, e = convertProblemToLp(pb)   
     # ~ bcom = b - A[:,4:].dot(res[4:]) - A[:,2].dot(res[2]) 

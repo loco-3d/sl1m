@@ -162,16 +162,18 @@ def solve(initCom = None, initPos = None, endCom = None, surfaces = surfaces, ax
     print ("coms ", Coms)
     print ("Allfeetpos ", Allfeetpos)
     
-    for i in range(3):
+    for i in range(10):
     # ~ for i in range(1):
         # ~ print("round !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", i )
         pb = gen_pb()  
         initPos = None
         endPos = None
         initCom = Coms[-1].copy()
-        endCom  = Coms[-1].copy() + array([.2, 0.0, 0.0])
+        # ~ endCom  = Coms[-1].copy() + array([.2, 0.0, 0.0])
+        # ~ endCom  = Coms[-1].copy() + array([10., 0.0, 0.0])
         initPos = Allfeetpos[-1].copy()
-        pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom)
+        # ~ pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom, costs = [(2, posturalCost),(10, targetCom)])
+        pb, res, time = solveMIPGurobi(pb, surfaces, MIP = True, draw_scene = None, plot = True, l1Contact = False, initPos = initPos, endPos = endPos, initCom = initCom, endCom=  endCom, costs = [(10, targetCom)])
         coms, footpos, allfeetpos = retrieve_points_from_res(pb, res)
         Coms += coms[1:];  Footpos += footpos[1:]; Allfeetpos += allfeetpos[1:]        
         # ~ if ax is not None:
