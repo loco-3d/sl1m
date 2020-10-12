@@ -25,7 +25,7 @@ GUIDE = True
 CONTINUOUS = False
 INTERSECT = False
 SOLVER = 0 # GUROBI
-CPP = True
+CPP = False
 THRESHOLD = 0.001
 
 if TEST:
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     # print res_L1
 
     res_MI = solveMIP(pb, surfaces, draw_scene, PLOT, CPP)
-    print res_MI
+    print (res_MI)
 
     # pb, coms, footpos, allfeetpos, res = solveL1(pb, surfaces, draw_scene)
 

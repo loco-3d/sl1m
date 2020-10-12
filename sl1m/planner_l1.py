@@ -298,7 +298,7 @@ def num_non_zeros(pb, res):
             startIdx = cIdx + DEFAULT_NUM_VARS
             betas = [res[startIdx+j] for j in range(0,numSurfaces*2,2) ]
             if array(betas).min() > THRESHOLD:
-                print "wrong ", i, sorted(betas)
+                # ~ print "wrong ", i, sorted(betas)
                 indices += [i]
                 sorted_surfaces = np.argsort(betas)
                 wrongsurfaces_indices += [sorted_surfaces]

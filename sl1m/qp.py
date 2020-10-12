@@ -16,7 +16,7 @@ try:
     GLPK_OK = True
 
 except ImportError:
-    print "import error"
+    print ("import error")
     pass
 
 # import gurobipy
@@ -161,7 +161,7 @@ if GLPK_OK:
         lp.obj[:] = q.tolist()
         lp.simplex()
         t2 = clock()
-        print lp.obj.value
+        print (lp.obj.value)
         return ResultData(array([c.primal for c in lp.cols]), lp.status, lp.status == "opt", lp.obj.value, timMs(t1, t2))
 
 if GUROBI_OK:  
@@ -210,7 +210,7 @@ if GUROBI_OK:
         t2 = clock()
         try:
             res = [el.x for el in cVars]
-            print model.ObjVal
+            print (model.ObjVal)
             return ResultData(res, model.Status, model.Status == grb.GRB.OPTIMAL, model.ObjVal, timMs(t1, t2))
         except:
             return ResultData(None,  model.Status, False, 0., timMs(t1, t2))
@@ -281,7 +281,7 @@ if GUROBI_OK:
         t2 = clock()
         try:
             res = [el.x for el in cVars]
-            print model.ObjVal
+            print (model.ObjVal)
             return ResultData(res, model.Status, model.Status == grb.GRB.OPTIMAL, model.ObjVal, timMs(t1, t2))
         except:
             return ResultData(None,  model.Status, False, 0., timMs(t1, t2))
@@ -373,5 +373,5 @@ if __name__ == '__main__':
     
     resglpk = solve_lp_glpk(b, A, b, C, d)
     resgurobi = solve_lp_gurobi(b, A, b, C, d)
-    print resglpk.x
-    print resgurobi.x
+    print (resglpk.x  )
+    print (resgurobi.x)

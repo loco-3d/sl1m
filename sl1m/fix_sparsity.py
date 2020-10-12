@@ -102,7 +102,7 @@ def solveL1Reweighted(pb, surfaces, draw_scene = None, plot = True, CPP = False,
     c = pl1.slackSelectionMatrix(pb)
 
     res = callSolver(C,c,A,b,E,e,CPP,SOLVER)
-    print res.time
+    print (res.time)
     time1 = res.time
 
     if res.success:
@@ -167,7 +167,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True, CPP = False, SOLVER = 
     c = pl1.slackSelectionMatrix(pb)
 
     res = callSolver(C,c,A,b,E,e,CPP,SOLVER)
-    print res.time
+    print (res.time)
     time1 = res.time
 
     if res.success:
@@ -190,13 +190,13 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True, CPP = False, SOLVER = 
             c = pl1.slackSelectionMatrix(pbComb)
 
             res = callSolver(C,c,A,b,E,e,CPP,SOLVER)
-            print res.time
+            print (res.time)
             timeComb += res.time
 
             if res.success:
                 res = res.x
                 ok = pl1.isSparsityFixed(pbComb, res)
-                print ok
+                # ~ print ok
                 if ok:       
                     # coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pbComb, res)
                     pb = pbComb

@@ -1,5 +1,5 @@
 from numpy import arange
-from narrow_convex_hull import getSurfaceExtremumPoints, removeDuplicates, normal
+from sl1m.rbprm.narrow_convex_hull  import getSurfaceExtremumPoints, removeDuplicates, normal
 from pinocchio import XYZQUATToSE3
 from numpy import array
 from sl1m.problem_definition import LF, RF
