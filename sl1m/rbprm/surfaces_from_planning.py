@@ -1,10 +1,12 @@
 from numpy import arange
-from sl1m.rbprm.narrow_convex_hull  import getSurfaceExtremumPoints, removeDuplicates, normal
+
+from sl1m.rbprm.narrow_convex_hull import getSurfaceExtremumPoints, removeDuplicates, normal
+
 from pinocchio import XYZQUATToSE3
 from numpy import array
 from sl1m.problem_definition import LF, RF
 
-MAX_SURFACE = 0.1 # about fourth the size of the foot area 
+MAX_SURFACE = 0.1 # about fourth the size of the foot area
 ROBOT_NAME = 'talos'
 
 
@@ -32,18 +34,18 @@ def getRotationsFromConfigs(configs):
     for config in configs:
         q_rot = config[3:7]
         R.append(XYZQUATToSE3([0,0,0]+q_rot).rotation)
-    return R    
+    return R
 
 def getContactsNames(rbprmBuilder,i,q):
-    if i % 2 == LF : # left leg 
-        step_contacts = rbprmBuilder.clientRbprm.rbprm.getCollidingObstacleAtConfig(q, ROBOT_NAME + '_lleg_rom') 
+    if i % 2 == LF : # left leg
+        step_contacts = rbprmBuilder.clientRbprm.rbprm.getCollidingObstacleAtConfig(q, ROBOT_NAME + '_lleg_rom')
     elif i % 2 == RF : # right leg
         step_contacts = rbprmBuilder.clientRbprm.rbprm.getCollidingObstacleAtConfig(q,ROBOT_NAME + '_rleg_rom')
     return step_contacts
 
 def getContactsIntersections(rbprmBuilder,i,q):
       if i % 2 == LF : # left leg
-          intersections = rbprmBuilder.getContactSurfacesAtConfig(q,ROBOT_NAME + '_lleg_rom')  
+          intersections = rbprmBuilder.getContactSurfacesAtConfig(q,ROBOT_NAME + '_lleg_rom')
       elif i % 2 == RF : # right leg
           intersections = rbprmBuilder.getContactSurfacesAtConfig(q,ROBOT_NAME + '_rleg_rom')
       return intersections
@@ -52,23 +54,23 @@ def getContactsIntersections(rbprmBuilder,i,q):
 def getAllSurfaces(afftool) :
     l = afftool.getAffordancePoints("Support")
     return [(getSurfaceExtremumPoints(el), normal(el[0])) for el in l]
-    
+
 # get surface information
 def getAllSurfacesDict (afftool) :
-    all_surfaces = getAllSurfaces(afftool) 
+    all_surfaces = getAllSurfaces(afftool)
     all_names = afftool.getAffRefObstacles("Support") # id in names and surfaces match
     surfaces_dict = dict(zip(all_names, all_surfaces)) # map surface names to surface points
     return surfaces_dict
 
 def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useIntersection= False, pathId=None):
-    if viewer : 
+    if viewer :
         from tools.display_tools import displaySurfaceFromPoints  # tool from hpp-rbprm
-    
+
     window_size = 0.5 # smaller step at which we check the colliding surfaces
     if pathId == None:
         pathId = ps.numberPaths() -1
     pathLength = ps.pathLength(pathId) #length of the path
-    
+
     # get surface information
     surfaces_dict = getAllSurfacesDict(afftool) # map surface names to surface points
     seqs = [] # list of list of surfaces : for each phase contain a list of surfaces. One phase is defined by moving of 'step' along the path
@@ -90,7 +92,7 @@ def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,viewer = None,step = 
             t += window_size
             assert len(phase_contacts) == len(phase_contacts_names)
         # end current phase
-        
+
         seq = []
 
         for i,contact in enumerate(phase_contacts):
@@ -121,14 +123,14 @@ def getSurfacesFromGuideContinuous(rbprmBuilder,ps,afftool,viewer = None,step = 
     seqs = listToArray(seqs)
     configs = []
     for t in arange (0, pathLength, step) :
-        configs.append(ps.configAtParam(pathId, t)) 
+        configs.append(ps.configAtParam(pathId, t))
     R = getRotationsFromConfigs(configs)
 
     return R,seqs
 
 
 def getSurfacesFromGuide(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useIntersection = False, pathId = None):
-    if viewer : 
+    if viewer :
         from tools.display_tools import displaySurfaceFromPoints  # tool from hpp-rbprm
 
     if pathId == None:
@@ -137,16 +139,16 @@ def getSurfacesFromGuide(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useInte
     configs = []
     # get configuration along the path
     for s in arange (0, pathLength, step) :
-        configs.append(ps.configAtParam(pathId, s)) 
+        configs.append(ps.configAtParam(pathId, s))
 
     # get surface information
     surfaces_dict = getAllSurfacesDict(afftool)
-    
+
     # get surface candidate at each discretization step
     # suppose that we start with the left leg
     seqs = []
-    for i, q in enumerate(configs):    
-        seq = [] 
+    for i, q in enumerate(configs):
+        seq = []
         contacts = getContactsIntersections (rbprmBuilder,i,q)
         contact_names = getContactsNames (rbprmBuilder,i,q)
         assert len(contacts) == len(contact_names)
@@ -156,21 +158,21 @@ def getSurfacesFromGuide(rbprmBuilder,ps,afftool,viewer = None,step = 1.,useInte
                 if viewer:
                     displaySurfaceFromPoints(viewer,contact,[0,0,1,1])
                 if useIntersection and area(contact) > MAX_SURFACE:
-                    seq.append(contact) 
+                    seq.append(contact)
                 else:
                     seq.append(surfaces_dict[contact_names[j]][0])
 
         seqs.append(seq)
-    
-    # remove duplicates          
+
+    # remove duplicates
     for i, seq in enumerate(seqs): seqs[i] = removeDuplicates(seq)
-    
+
     seqs = listToArray(seqs) # change the format from list to array
     R = getRotationsFromConfigs(configs)
     return R,seqs
-    
 
-    
+
+
 # ONLY FOR EXPERIMENTS
 def getSurfacesAll(ps,afftool,step_num):
     all_surfaces = sorted(getAllSurfaces(afftool))
@@ -184,7 +186,7 @@ def getSurfacesAll(ps,afftool,step_num):
 
     if (len(seqs[0])!= 1):
         seqs[0]=[seqs[0][0]]; seqs[-1]=[seqs[-1][-1]]
-    seqs = listToArray(seqs) 
+    seqs = listToArray(seqs)
 
     return R,seqs
 
