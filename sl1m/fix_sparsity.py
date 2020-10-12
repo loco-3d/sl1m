@@ -196,8 +196,10 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True, CPP = False, SOLVER = 
             if res.success:
                 res = res.x
                 ok = pl1.isSparsityFixed(pbComb, res)
-                print (ok)
-                if ok:
+
+                # ~ print ok
+                if ok:       
+
                     # coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pbComb, res)
                     pb = pbComb
                     solutionIndices = indices[:]

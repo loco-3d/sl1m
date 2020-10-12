@@ -1,6 +1,7 @@
 from hpp.gepetto import Viewer
 from hpp.corbaserver import Client
-from hpp.corbaserver.rbprm.talos_abstract import Robot
+# ~ from hpp.corbaserver.rbprm.talos_abstract import Robot
+from talos_rbprm.talos_abstract import Robot 
 #Robot.urdfName += "_large"
 
 packageName = 'hpp_environments'
@@ -38,7 +39,9 @@ vf = ViewerFactory (ps)
 from hpp.corbaserver.affordance.affordance import AffordanceTool
 afftool = AffordanceTool ()
 afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.00005])
-afftool.loadObstacleModel (packageName, "multicontact/slalom_debris", "planning", vf,reduceSizes=[0.,0.,0.])
+# ~ afftool.loadObstacleModel (packageName, "multicontact/slalom_debris", "planning", vf,reduceSizes=[0.,0.,0.])
+afftool.loadObstacleModel ("package://hpp_environments/urdf/multicontact/slalom_debris.urdf", "planning", vf,reduceSizes=[0.,0.,0.])
+# ~ v.loadObstacleModel ("package://hpp_environments/urdf/multicontact/plateforme_not_flat.urdf", "planning") 
 v = vf.createViewer(displayArrows = True)
 afftool.visualiseAffordances('Support', v, [0.25, 0.5, 0.5])
 v.addLandmark(v.sceneName,1)
@@ -139,7 +142,7 @@ pp.dt=0.1
 pp.displayVelocityPath(pathId)
 v.client.gui.setVisibility("path_"+str(pathId)+"_root","ALWAYS_ON_TOP")
 pp.dt = 0.01
-
+# ~ pp(pathId)
 
 q_far = q_goal[::]
 q_far[2] = -5

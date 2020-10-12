@@ -373,5 +373,6 @@ if __name__ == '__main__':
 
     resglpk = solve_lp_glpk(b, A, b, C, d)
     resgurobi = solve_lp_gurobi(b, A, b, C, d)
+
     print (resglpk.x)
     print (resgurobi.x)
