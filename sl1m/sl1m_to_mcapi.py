@@ -2,7 +2,7 @@ from multicontact_api import ContactSequence, ContactPhase, ContactPatch
 from pinocchio import SE3, Quaternion
 import numpy as np
 from numpy.linalg import norm
-import mlp.utils.util as utils
+from mlp.utils.cs_tools import addPhaseFromConfig
 
 # Hardcoded data for solo !
 rLegId = 'talos_rleg_rom'
@@ -69,51 +69,6 @@ def computeCenterOfSupportPolygonFromPhase(phase, DEFAULT_HEIGHT):
     com[2] += DEFAULT_HEIGHT
     return com
 
-def generateConfigFromPhase(fb, phase, projectCOM=False):
-    """
-    Compute a wholebody configuration corresponding to the contact placements defined in the given phase
-    :param fb: an rbprm.FullBody object
-    :param phase: the phase used to get the contact placements
-    :param projectCOM: if True, the CoM position of the configuration is projected toward the center of the support polygon
-    :return: a list of joint position
-    """
-    fb.usePosturalTaskContactCreation(False)
-    effectorsInContact = phase.effectorsInContact()
-    contacts = []  # contacts should contains the limb names, not the effector names
-    list_effector = list(fb.dict_limb_joint.values())
-    for eeName in effectorsInContact:
-        contacts += [list(fb.dict_limb_joint.keys())[list_effector.index(eeName)]]
-    #q = phase.q_init.tolist() # should be the correct config for the previous phase, if used only from high level helper methods
-    q = fb.referenceConfig[::] + [0] * 6  # FIXME : more generic !
-    root = computeCenterOfSupportPolygonFromPhase(phase, fb.DEFAULT_COM_HEIGHT).tolist()
-    q[0:2] = root[0:2]
-    q[2] += root[2] - fb.DEFAULT_COM_HEIGHT
-    quat = Quaternion(phase.root_t.evaluateAsSE3(phase.timeInitial).rotation)
-    q[3:7] = [quat.x, quat.y, quat.z, quat.w]
-    # create state in fullBody :
-    state = State(fb, q=q, limbsIncontact=contacts)
-    # check if q is consistent with the contact placement in the phase :
-    fb.setCurrentConfig(q)
-    for limbId in contacts:
-        eeName = fb.dict_limb_joint[limbId]
-        placement_fb = SE3FromConfig(fb.getJointPosition(eeName))
-        placement_phase = phase.contactPatch(eeName).placement
-        if placement_fb != placement_phase:  # add a threshold instead of 0 ? how ?
-            # need to project the new contact :
-            placement = phase.contactPatch(eeName).placement
-            p = placement.translation.tolist()
-            n = utils.computeContactNormal(placement).tolist()
-            state, success = StateHelper.addNewContact(state, limbId, p, n, 1000)
-            if not success:
-                print("Cannot project the configuration to contact, for effector : ", eeName)
-                return state.q()
-            if projectCOM:
-                success = utils.projectCoMInSupportPolygon(state)
-                if not success:
-                    print("cannot project com to the middle of the support polygon.")
-    phase.q_init = np.array(state.q())
-
-    return state.q()
 
 def placement_from_sl1m(ee_name, pos, phase_data):
     #pos[2] += EPS_Z # FIXME: apply epsz along the normal
@@ -139,13 +94,14 @@ def build_cs_from_sl1m_mip(pb, allfeetpos, fb, q_init):
     print(" limbs names : ", limbs_names)
     cs = ContactSequence(0)
     # create the first contact phase :
-    cp_init = ContactPhase()
-    # cp_init.q_init = np.array(q_init)
-    for k, pos in enumerate(allfeetpos[0]):
-        phase_data = pb["phaseData"][0]
-        ee_name = dict_limb_joint[limbs_names[k]]
-        cp_init.addContact(ee_name, ContactPatch(placement_from_sl1m(ee_name, pos, phase_data)))
-    cs.append(cp_init)
+    # cp_init = ContactPhase()
+    # # cp_init.q_init = np.array(q_init)
+    # for k, pos in enumerate(allfeetpos[0]):
+    #     phase_data = pb["phaseData"][0]
+    #     ee_name = dict_limb_joint[limbs_names[k]]
+    #     cp_init.addContact(ee_name, ContactPatch(placement_from_sl1m(ee_name, pos, phase_data)))
+    # cs.append(cp_init)
+    cs.addPhaseFromConfig(fb, cs, q_init, limbs_names)
     # cp_init.q_init = generateConfigFromPhase(fb, cs.contactPhases[0])
     # print("Initial phase added, contacts : ", cs.contactPhases[0].effectorsInContact())
     # loop for all effector placements, and create the required contact phases
