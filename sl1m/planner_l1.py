@@ -156,16 +156,17 @@ def MovingFootCOMConstraint(pb, phaseDataT, A, b, previousStartCol, startCol, en
         return MovingFootCOMConstraintVarPhase (phaseDataT, A, b, previousStartCol, startCol, endCol, startRow)
     
     
-def FixedFootRelativeDistanceConstraintInitPhase(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow):
+def FixedFootRelativeDistanceConstraintInitPhase(pb, phaseDataT, A, b, startCol, endCol, startRow):
     fixed = phaseDataT["fixed"]
     K, k = phaseDataT["relativeK"][0]
-    footMatrix = currentFootExpressionMatrix(phaseDataT, startCol, endCol)
+    # footMatrix = currentFootExpressionMatrix(phaseDataT, startCol, endCol)
     pos   = pb["p0"][fixed]
-    idRow = K.shape[0]
-    offFoot = footMatrix.shape[1]
-    A[:idRow, startCol:startCol+offFoot] = K.dot(footMatrix)
-    b[:idRow                 ] = k + K.dot(pos)
-    return idRow + startRow
+    idRow = startRow + K.shape[0]
+    # offFoot = footMatrix.shape[1]
+    offFoot = footExpressionMatrix.shape[1]
+    A[startRow:idRow, startCol:startCol+offFoot] = K.dot(footExpressionMatrix)
+    b[startRow:idRow                 ] = k + K.dot(pos)
+    return idRow
     
 def FixedFootRelativeDistanceConstraintVarPhase(pb, phaseDataT, A, b, previousStartCol, startCol, endCol, startRow):
     K, k = phaseDataT["relativeK"][0]
@@ -179,7 +180,7 @@ def FixedFootRelativeDistanceConstraintVarPhase(pb, phaseDataT, A, b, previousSt
     
 def FixedFootConstraintRelativeDistance(pb, phaseDataT, A, b, previousCol, startCol, endCol, startRow, first):
     if first:
-        if True:
+        if pb["p0"] is None:
             K, k = phaseDataT["relativeK"][0] #0 constraints
             return startRow + K.shape[0]
         else:
