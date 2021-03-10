@@ -289,6 +289,7 @@ def num_non_zeros(pb, res):
     indices = []
     cIdx = 0
     wrongsurfaces = []
+    wrongsurfaces_indices = []
     for i, phase in enumerate(pb["phaseData"]):  
         numSurfaces = len(phase["S"])
         phaseVars = numVariablesForPhase(phase)
@@ -300,13 +301,14 @@ def num_non_zeros(pb, res):
                 indices += [i]
                 sorted_surfaces = np.argsort(betas)
                 #~ print "sorted_surfaces ",sorted_surfaces
+                wrongsurfaces_indices += [sorted_surfaces]
                 wrongsurfaces += [[[phase["S"][idx]] for idx in sorted_surfaces]  ]
                 #~ print "lens ", len([[phase["S"][idx]] for idx in sorted_surfaces]  )
         cIdx += phaseVars
-    return indices, wrongsurfaces
+    return indices, wrongsurfaces, wrongsurfaces_indices
     
 def isSparsityFixed(pb, res):
-    indices, wrongsurfaces = num_non_zeros(pb, res)
+    indices, wrongsurfaces, wrongsurfaces_indices = num_non_zeros(pb, res)
     return len(indices) == 0
    
 def genOneComb(pb,indices, surfaces, res):
@@ -318,20 +320,22 @@ def genOneComb(pb,indices, surfaces, res):
 import itertools
 import copy
    
-def genCombinatorialRec(pb, indices, wrongsurfaces, res):
-    lenss  = [len(surfs) for surfs in wrongsurfaces]
+def genCombinatorialRec(pb, indices, wrongsurfaces, wrongsurfaces_indices, res):
+    # lenss  = [len(surfs) for surfs in wrongsurfaces]
     all_indexes = [[el for el in range(lens)]  for lens in [len(surfs) for surfs in wrongsurfaces]]
+    wrong_combs = [el for el in itertools.product(*wrongsurfaces_indices)]
+    
     combs = [el for el in itertools.product(*all_indexes)]
-    for comb in combs:
+    for j, comb in enumerate(combs):
         pb1 = copy.deepcopy(pb)
         for i, idx in enumerate(indices):
             pb1["phaseData"][idx]["S"] = wrongsurfaces[i][comb[i]]
-        res += [[pb1, comb, indices]]
+        res += [[pb1, wrong_combs[j], indices]]
         
     
     
 def generateAllFixedScenariosWithFixedSparsity(pb, res):
-    indices, wrongsurfaces = num_non_zeros(pb, res)
+    indices, wrongsurfaces, wrongsurfaces_indices = num_non_zeros(pb, res)
     all_len = [len(surfs) for surfs in wrongsurfaces]
     comb = 1
     for el in all_len:
@@ -340,7 +344,7 @@ def generateAllFixedScenariosWithFixedSparsity(pb, res):
     if comb >1000:
         print("problem probably too big ", comb)
     else:
-        genCombinatorialRec(pb, indices, wrongsurfaces, res)
+        genCombinatorialRec(pb, indices, wrongsurfaces, wrongsurfaces_indices, res)
     return res
     
     
@@ -391,7 +395,7 @@ def retrieve_points_from_res(pb, res):
         fixed = phaseDataT["fixed"]
         pos = footExpressionMatrix.dot(res[col:col + footExpressionMatrix.shape[1]])
         footPos[moving] = footPos[moving] + [pos]
-        com = zeros(3);
+        com = zeros(3)
         com[2] = res[col + 3]
         if len(footPos[moving]) <2:
             footPos[moving] = footPos[moving] + [pos]
