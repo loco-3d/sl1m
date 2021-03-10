@@ -7,7 +7,6 @@ from numpy.linalg import norm
 import numpy as np
 
 from scipy.spatial import ConvexHull
-from .qp import solve_lp
 
 #~ import eigenpy
 #from curves import bezier3
@@ -63,51 +62,11 @@ def addHeightConstraint(K,k, val):
     return K1, k1
 
 
-def default_transform_from_pos_normal_(transform, pos, normal):
-    #return vstack( [hstack([transform,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] ) # FIXME : temp stuff, only work on flat floor
-    # FIXME : there is something wrong the the code above
-    #~ print "pos ", pos
-    #~ print "normal ", normal
-    #align the x-axis of the foot to the root heading direction    
-    f = x
-    xp = np.dot(transform, x).tolist()  
-    t = vectorProjection(xp, normal)
-    v = np.cross(f, t)
-    c = np.dot(f, t)
-    
-    if abs(c) > 0.99 :
-        return vstack( [hstack([transform,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )     
-    else:
-        u = v/norm(v)
-        h = (1. - c)/(1. - c**2)
-
-        vx, vy, vz = v
-        rot1 =array([[c + h*vx**2, h*vx*vy - vz, h*vx*vz + vy],
-              [h*vx*vy+vz, c+h*vy**2, h*vy*vz-vx],
-              [h*vx*vz - vy, h*vy*vz + vx, c+h*vz**2]])
-    #align the z-axis of the foot to the surface normal
+# transform matrix is a rotation matrix from the root trajectory
+# used to align the foot yaw (z-axis) orientation
+# surface normal is used to align the foot roll and pitch (x- and y- axes) orientation
+def default_transform_from_pos_normal(pos, normal, transform=Id):
     f = z
-    t = array(normal)
-    t = t / norm(t)
-    v = np.cross(f, t)
-    c = np.dot(f, t)    
-    if abs(c) > 0.99 :
-        rot2 = identity(3)    
-    else:
-        u = v/norm(v)
-        h = (1. - c)/(1. - c**2)
-
-        vx, vy, vz = v
-        rot2 =array([[c + h*vx**2, h*vx*vy - vz, h*vx*vz + vy],
-              [h*vx*vy+vz, c+h*vy**2, h*vy*vz-vx],
-              [h*vx*vz - vy, h*vy*vz + vx, c+h*vz**2]])
-              
-    rot = np.dot(rot1,rot2)
-    return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
-    
-
-def default_transform_from_pos_normal(pos, normal):
-    f = array([0.,0.,1.])
     t = array(normal)
     t = t / norm(t)
     v = np.cross(f, t)
@@ -117,11 +76,16 @@ def default_transform_from_pos_normal(pos, normal):
     else:
         u = v/norm(v)
         h = (1. - c)/(1. - c**2)
+        s = (1. - c**2)
+        assert s > 0
+        s = np.sqrt(s)
 
-        vx, vy, vz = v
-        rot =array([[c + h*vx**2, h*vx*vy - vz, h*vx*vz + vy],
-              [h*vx*vy+vz, c+h*vy**2, h*vy*vz-vx],
-              [h*vx*vz - vy, h*vy*vz + vx, c+h*vz**2]])
+        ux, uy, uz = u
+        rot = array([[c + h*ux**2, h*ux*uy - uz*s, h*ux*uz + uy*s],
+                    [h*ux*uy + uz*s, c + h*ux**2, h*uy*uz - ux*s],
+                    [h*ux*uz - uy*s, h*uy*uz + ux*s, c + h*uz**2]])
+    
+    rot = np.dot(transform, rot)
     return vstack( [hstack([rot,pos.reshape((-1,1))]), [ 0.        ,  0.        ,  0.        ,  1.        ] ] )
 
     
