@@ -1,10 +1,10 @@
-from numpy import arange
+from numpy import arange, array
+import numpy as np
 from sl1m.rbprm.narrow_convex_hull import getSurfaceExtremumPoints, removeDuplicates, normal
 from pinocchio import XYZQUATToSE3
-from numpy import array
 from sl1m.problem_definition import LF, RF
 
-MAX_SURFACE = 0.3 # if a contact surface is greater than this value, the intersection is used instead of the whole surface
+MAX_SURFACE = 0.09 # if a contact surface is greater than this value, the intersection is used instead of the whole surface
 
 
 def listToArray (seqs):
@@ -20,10 +20,9 @@ def area(s):
     #print "in area, s = ",s
     area = 0
     for i in range(1,len(s)-1):
-        #area += x[i]*( y[i+1] - y[i-1] );
-        area += abs(s[i][0]*(s[i+1][1] - s[i-1][1]))
-    i = len(s) -1 
-    area += abs(s[i][0]*(s[0][1] - s[i-1][1]))
+        p0, p1, p2 = array(s[0]), array(s[i]), array(s[i+1])
+        area += np.linalg.norm(np.cross(p1-p0,p2-p0))
+
     #print "area = ",area*0.5
     return area * 0.5
 
