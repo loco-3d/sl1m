@@ -5,19 +5,7 @@ from sl1m.constants_and_tools import *
 from sl1m import planner_l1 as pl1
 from sl1m import planner    as pl
 
-from . import qp
-
-
-# try to import mixed integer solver
-MIP_OK = False  
-try:
-    import gurobipy
-    import cvxpy as cp
-    MIP_OK = True
-
-except ImportError:
-    pass
-
+from sl1m import qp
 
 
 np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
@@ -33,7 +21,7 @@ def solve(pb,surfaces, draw_scene = None, plot = True ):
     C = identity(A.shape[1])
     c = zeros(A.shape[1])
     t2 = clock()
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    res = qp.quadprog_solve_qp(C,c,A,b,E,e)
     t3 = clock()
     
     print("time to set up problem" , timMs(t1,t2))
@@ -57,7 +45,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
     C = identity(A.shape[1]) * 0.00001
     c = pl1.slackSelectionMatrix(pb)
         
-    res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+    res = qp.gurobi_solve_lp(c,A,b,E,e)
         
     ok = pl1.isSparsityFixed(pb, res)
     solutionIndices = None
@@ -72,7 +60,7 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
             C = identity(A.shape[1]) * 0.00001
             c = pl1.slackSelectionMatrix(pbComb)
             try:
-                res = qp.quadprog_solve_qp(C, c,A,b,E,e)
+                res = qp.gurobi_solve_lp(c,A,b,E,e)
                 if pl1.isSparsityFixed(pbComb, res):       
                     coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pbComb, res)
                     pb = pbComb
@@ -104,62 +92,22 @@ def solveL1(pb, surfaces, draw_scene = None, plot = True):
 
 ############### MIXED-INTEGER SOLVER ###############
 
-def tovals(variables):
-    return array([el.value for el in variables])
-
-def solveMIP(pb, surfaces, MIP = True, draw_scene = None, plot = True):  
-    if not MIP_OK:
-        print("Mixed integer formulation requires gurobi packaged in cvxpy")
-        raise ImportError
-        
-    gurobipy.setParam('LogFile', '')
-    gurobipy.setParam('OutputFlag', 0)
-       
+def solveMIP(pb, surfaces, draw_scene = None, plot = True):  
     A, b, E, e = pl1.convertProblemToLp(pb)   
-    slackMatrix = pl1.slackSelectionMatrix(pb)
+    c = pl1.slackSelectionMatrix(pb)
     
-    rdim = A.shape[1]
-    varReal = cp.Variable(rdim)
-    constraints = []
-    constraintNormalIneq = A * varReal <= b
-    constraintNormalEq   = E * varReal == e
-    
-    constraints = [constraintNormalIneq, constraintNormalEq]
-    #creating boolean vars
-    
-    slackIndices = [i for i,el in enumerate (slackMatrix) if el > 0]
-    numSlackVariables = len([el for el in slackMatrix if el > 0])
-    boolvars = cp.Variable(numSlackVariables, boolean=True)    
-    obj = cp.Minimize(slackMatrix * varReal)
-    
-    if MIP:    
-        constraints = constraints + [varReal[el] <= 100. * boolvars[i] for i, el in enumerate(slackIndices)]   
-    
-        currentSum = []
-        previousL = 0
-        for i, el in enumerate(slackIndices):
-            if i!= 0 and el - previousL > 2.:
-                assert len(currentSum) > 0
-                constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
-                currentSum = [boolvars[i]]
-            elif el !=0:
-                currentSum = currentSum + [boolvars[i]]
-            previousL  = el
-        if len(currentSum) > 1:
-            constraints = constraints + [sum(currentSum) == len(currentSum) -1 ]
-    obj = cp.Minimize(ones(numSlackVariables) * boolvars)
-    prob = cp.Problem(obj, constraints)
     t1 = clock()
-    res = prob.solve(solver=cp.GUROBI, verbose=False )
+    res = qp.gurobi_solve_mip(c,A,b,E,e)
     t2 = clock()
-    res = tovals(varReal)
-    print("time to solve MIP ", timMs(t1,t2))
 
+    print("time to solve MIP ", timMs(t1,t2))
     
     plot = plot and draw_scene is not None 
     if plot:
         ax = draw_scene(surfaces)
         pl1.plotQPRes(pb, res, ax=ax)
     
-    return timMs(t1,t2)
+    coms, footpos, allfeetpos = pl1.retrieve_points_from_res(pb, res)
+    
+    return pb, coms, footpos, allfeetpos, res
         
