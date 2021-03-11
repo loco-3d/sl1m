@@ -115,64 +115,7 @@ print("done planning, optimize path ...")
 for i in range(5):
   ps.optimizePath(ps.numberPaths() -1)
 
-pId_stairs = ps.numberPaths() -1
-### END climb the stairs #####
-rbprmBuilder.setJointBounds ("root_joint", [-3.2,2.5,-0.8,0.3, 1.4,2.])
-ps.resetGoalConfigs()
-### BEGIN turn around on the platform #####
-ps.setParameter("Kinodynamic/velocityBound",0.2)
-ps.setParameter("Kinodynamic/accelerationBound",0.07)
-q_init = rbprmBuilder.getCurrentConfig ();
-#q_init [0:3] =  [-3.1, 0.2,0.98] ; v(q_init) # before rubblem
-#q_init [0:3] =  [-0.2, 0.2,0.98] ; v(q_init) # between rubble and stairs
-q_init = q_goal[::] ; v (q_init) #top of stairs
-#q_init [0:3] = [1.7, -0.6, 1.58]; v (q_init) #top of stairs
-#q_init[3:7] = [0,0,1,0]
-q_init[-6:-3] = [0.2,0,0]
-q_goal = q_init [::]
-# q_goal [0:3] = [1.7, 0.2, 1.58]; v (q_goal) #top of stairs
-#q_goal [0:3] = [-1.7, -0.6, 1.58]; v (q_goal) # after bridge
-q_goal [0:3] = [1.7, -0.6, 1.58]; v (q_goal) # before bridge
-q_goal[3:7] = [0,0,1,0]
-q_goal[-6:-3] = [-0.2,0,0]
-ps.setInitialConfig (q_init)
-ps.addGoalConfig (q_goal)
-v(q_goal)
-
-t = ps.solve ()
-print("done planning, optimize path ...")
-#v.solveAndDisplay('rm',2,0.005)
-for i in range(5):
-  ps.optimizePath(ps.numberPaths() -1)
-
-pId_platform =  ps.numberPaths() -1
-### END turn around on the platform #####
-ps.resetGoalConfigs()
-### BEGIN bridge cross #####
-ps.setParameter("Kinodynamic/velocityBound",0.3)
-ps.setParameter("Kinodynamic/accelerationBound",0.2)
-q_init = rbprmBuilder.getCurrentConfig ();
-q_init = q_goal[::]; v (q_init) #top of stairs
-q_goal [0:3] = [-1.7, -0.6, 1.58]; v (q_goal) # after bridge
-q_goal[3:7] = [0,0,1,0]
-q_goal[-6:-3] = [0.,0,0]
-ps.setInitialConfig (q_init)
-ps.addGoalConfig (q_goal)
-v(q_goal)
-
-t = ps.solve ()
-print("done planning, optimize path ...")
-#v.solveAndDisplay('rm',2,0.005)
-for i in range(5):
-  ps.optimizePath(ps.numberPaths() -1)
-
-pId_bridge =  ps.numberPaths() -1
-### END bridge cross #####
-# merge all paths
-pathId = pId_stairs
-#ps.concatenatePath(pathId,pId_stairs)
-ps.concatenatePath(pathId,pId_platform)
-ps.concatenatePath(pathId,pId_bridge)
+pathId = ps.numberPaths() -1
 
 
 print("done optimizing.")

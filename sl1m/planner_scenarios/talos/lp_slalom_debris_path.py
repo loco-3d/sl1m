@@ -1,6 +1,6 @@
 from hpp.gepetto import Viewer
 from hpp.corbaserver import Client
-from hpp.corbaserver.rbprm.talos_abstract import Robot
+from talos_rbprm.talos_abstract import Robot 
 #Robot.urdfName += "_large"
 
 packageName = 'hpp_environments'
@@ -38,7 +38,7 @@ vf = ViewerFactory (ps)
 from hpp.corbaserver.affordance.affordance import AffordanceTool
 afftool = AffordanceTool ()
 afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.00005])
-afftool.loadObstacleModel (packageName, "multicontact/slalom_debris", "planning", vf,reduceSizes=[0.,0.,0.])
+afftool.loadObstacleModel ("package://hpp_environments/urdf/multicontact/slalom_debris.urdf", "planning", vf,reduceSizes=[0.03,0.,0.])
 v = vf.createViewer(displayArrows = True)
 afftool.visualiseAffordances('Support', v, [0.25, 0.5, 0.5])
 v.addLandmark(v.sceneName,1)
@@ -66,12 +66,12 @@ ps.selectPathPlanner("DynamicPlanner")
 
 ### BEGIN up to the rubbles #####
 ps.setParameter("Kinodynamic/velocityBound",0.15)
-ps.setParameter("Kinodynamic/accelerationBound",0.1)
+ps.setParameter("Kinodynamic/accelerationBound",0.05)
 q_init = rbprmBuilder.getCurrentConfig ();
 q_init [0:3] = [-1.8, 0., rbprmBuilder.ref_height]; v (q_init)
 q_init[-6:-3] = [0.1,0,0]
 q_goal = q_init [::]
-q_goal [0:3] = [-0.9, 0.95, rbprmBuilder.ref_height]; v (q_goal) 
+q_goal [0:3] = [-0.8, 0.9, rbprmBuilder.ref_height]; v (q_goal) 
 q_goal[-6:-3] = [0.1,0,0]
 ps.setInitialConfig (q_init)
 ps.addGoalConfig (q_goal)
@@ -93,7 +93,7 @@ ps.setParameter("Kinodynamic/accelerationBound",0.1)
 q_init = rbprmBuilder.getCurrentConfig ();
 q_init = q_goal[::]; v (q_init) 
 #q_init[-6:-3] = [0.,0,0]
-q_goal [0:3] = [1.05, 0.95,rbprmBuilder.ref_height]; v (q_goal) 
+q_goal [0:3] = [1.05, 0.9,rbprmBuilder.ref_height]; v (q_goal) 
 q_goal[-6:-3] = [0.1,0,0]
 ps.setInitialConfig (q_init)
 ps.addGoalConfig (q_goal)
@@ -110,7 +110,7 @@ pId_rubbles =  ps.numberPaths() -1
 ps.resetGoalConfigs()
 ### BEGIN after rubbles #####
 ps.setParameter("Kinodynamic/velocityBound",0.15)
-ps.setParameter("Kinodynamic/accelerationBound",0.1)
+ps.setParameter("Kinodynamic/accelerationBound",0.05)
 q_init = rbprmBuilder.getCurrentConfig ();
 q_init = q_goal[::]; v (q_init) 
 q_goal [0:3] = [2.2, 0, rbprmBuilder.ref_height]; v (q_goal) 

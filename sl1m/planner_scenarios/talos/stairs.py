@@ -1,6 +1,6 @@
 import numpy as np
 print("Plan guide trajectory ...")
-from sl1m.planner_scenarios.talos import lp_complex1_path as tp
+from sl1m.planner_scenarios.talos import lp_stairs_path as tp
 #import lp_ramp_path as tp
 print("Guide planned.")
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuide, getSurfacesFromGuideContinuous
@@ -133,6 +133,7 @@ def plotSurface (points, ax, plt,color_id = -1):
     colors = ['r','g','b','m','y','c']
     if color_id == -1: ax.plot(xs,ys,zs)
     else: ax.plot(xs,ys,zs,colors[color_id])
+    plt.ion()
     plt.draw()
         
 def draw_scene(surfaces,ax = None):
@@ -155,7 +156,7 @@ def draw_scene(surfaces,ax = None):
 ############# main ###################    
 def solve():
     from sl1m.fix_sparsity import solveL1
-    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.4,True)
+    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.8,True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
 
@@ -164,7 +165,7 @@ def solve():
 if __name__ == '__main__':
     from sl1m.fix_sparsity import solveL1
 
-    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.4,True)
+    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.8,True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
 

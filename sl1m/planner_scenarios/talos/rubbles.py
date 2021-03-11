@@ -1,9 +1,9 @@
 import numpy as np
 print("Plan guide trajectory ...")
-from . import lp_rubbles_path as tp
+from sl1m.planner_scenarios.talos import lp_rubbles_path as tp
 #import lp_ramp_path as tp
 print("Guide planned.")
-from tools.surfaces_from_path import getSurfacesFromGuideContinuous,getSurfacesFromGuide
+from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuide, getSurfacesFromGuideContinuous
 from sl1m.constants_and_tools import *
 
 from numpy import array, asmatrix, matrix, zeros, ones
@@ -98,7 +98,7 @@ def gen_pb(root_init,R, surfaces):
     rf_0 = array(root_init[0:3]) + array([0,-0.085,-0.98]) # values for talos ! 
     #p0 = [array([-3.0805096486250154, 0.335, 0.]), array([-3.0805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
     #p0 = [array([-0.1805096486250154, 0.335, 0.]), array([-0.1805096486250154, 0.145,0.])];  ## FIXME : get it from planning too
-    p0 = [lf_0,rf_0];
+    p0 = [lf_0,rf_0]
     print("p0 used : ",p0)
     
     res = { "p0" : p0, "c0" : None, "nphases": nphases}
@@ -131,6 +131,7 @@ def plotSurface (points, ax, plt,color_id = -1):
     colors = ['r','g','b','m','y','c']
     if color_id == -1: ax.plot(xs,ys,zs)
     else: ax.plot(xs,ys,zs,colors[color_id])
+    plt.ion()
     plt.draw()
         
 def draw_scene(surfaces,ax = None):
@@ -153,7 +154,8 @@ def draw_scene(surfaces,ax = None):
 ############# main ###################    
 def solve():
     from sl1m.fix_sparsity import solveL1
-    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.3,False,True)
+    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.7,True)
+    # R,surfaces = getSurfacesFromGuide(tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 1.0, True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
 
@@ -162,7 +164,8 @@ def solve():
 if __name__ == '__main__':
     from sl1m.fix_sparsity import solveL1
 
-    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,1.3,False,True)
+    R,surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder,tp.ps,tp.afftool,tp.pathId,tp.v,0.7,True)
+    # R, surfaces = getSurfacesFromGuide(tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 1.0, True)
 
     pb = gen_pb(tp.q_init,R,surfaces)
 
