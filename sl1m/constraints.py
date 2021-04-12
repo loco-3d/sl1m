@@ -57,8 +57,8 @@ class Constraints:
         """
         i = i_start
         j = js[-1]
-        for foot, (K, k) in enumerate(phase["K"]):
-            if foot == phase["Moving"]:
+        for foot, (K, k) in enumerate(phase.K):
+            if foot == phase.moving:
                 l = k.shape[0]
                 G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_2 - self.foot)
                 h[i:i + l] = k
@@ -73,7 +73,7 @@ class Constraints:
             else:
                 l = k.shape[0]
                 G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_2)
-                foot_pose = pb["p0"][foot]
+                foot_pose = pb.p0[foot]
                 h[i:i + l] = k + K.dot(foot_pose)
                 i += l
         return i
@@ -94,8 +94,8 @@ class Constraints:
         """
         i = i_start
         j = js[-1]
-        for foot, (K, k) in enumerate(phase["K"]):
-            if foot == phase["Moving"]:
+        for foot, (K, k) in enumerate(phase.K):
+            if foot == phase.moving:
                 if feet_phase[foot] != -1:
                     l = k.shape[0]
                     j_foot = js[feet_phase[foot]]
@@ -106,7 +106,7 @@ class Constraints:
                 else:
                     l = k.shape[0]
                     G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_1)
-                    foot_pose = pb["p0"][foot]
+                    foot_pose = pb.p0[foot]
                     h[i:i + l] = k + K.dot(foot_pose)
                     i += l
             elif feet_phase[foot] != -1:
@@ -119,7 +119,7 @@ class Constraints:
             else:
                 l = k.shape[0]
                 G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_2)
-                foot_pose = pb["p0"][foot]
+                foot_pose = pb.p0[foot]
                 h[i:i + l] = k + K.dot(foot_pose)
                 i += l
         return i
@@ -159,7 +159,7 @@ class Constraints:
         """
         i = i_start
         j = js[-1]
-        constraints = phase["allRelativeK"][phase["Moving"]]
+        constraints = phase.allRelativeK[phase.moving]
         for (foot, (K, k)) in constraints:
             l = k.shape[0]
             G[i:i + l, j:j + self.default_n_variables] = -K.dot(self.foot)
@@ -168,7 +168,7 @@ class Constraints:
                 G[i:i + l, j_foot:j_foot + self.default_n_variables] = K.dot(self.foot)
                 h[i:i + l] = k
             else:
-                foot_pose = pb["p0"][foot]
+                foot_pose = pb.p0[foot]
                 h[i:i + l] = k - K.dot(foot_pose)
             i += l
         return i
@@ -185,7 +185,7 @@ class Constraints:
         @return i_start + the number of rows used by the constraint
         """
         i = i_start
-        n_surfaces = len(phase["S"])
+        n_surfaces = phase.n_surfaces
         if n_surfaces > 1:
             for s in range(n_surfaces):
                 G[i+s, j + self.default_n_variables + s] = -1
@@ -204,9 +204,9 @@ class Constraints:
         @return i_start + the number of rows used by the constraint
         """
         i = i_start
-        n_surfaces = len(phase["S"])
+        n_surfaces = phase.n_surfaces
         j_alpha = self.default_n_variables
-        for (S, s) in phase["S"]:
+        for (S, s) in phase.S:
             l = S.shape[0]
             G[i:i + l, j:j + self.default_n_variables] = S.dot(self.foot)
             h[i:i + l] = s
@@ -232,13 +232,13 @@ class Constraints:
         i = i_start
         j = js[-1]
         for foot in range(self.n_effectors):
-            if foot == phase["Moving"]:
+            if foot == phase.moving:
                 continue
             if feet_phase[foot] != -1:
                 j_foot = js[feet_phase[foot]]
                 C[i:i + 2, j_foot:j_foot + self.default_n_variables] = self.WEIGHTS[foot] * self.foot_xy
             else:
-                foot_pose = pb["p0"][foot]
+                foot_pose = pb.p0[foot]
                 d[i:i + 2] -= self.WEIGHTS[foot] * foot_pose[:2]
         C[i:i + 2, j:j + self.default_n_variables] = -self.com_xy
         i += 2
@@ -253,7 +253,7 @@ class Constraints:
         @param i_start     Initial row to use
         @return i_start + the number of rows used by the constraint
         """
-        initial_position = pb["c0"]
+        initial_position = pb.c0
         i = i_start
         C[i:i + 2, :self.default_n_variables] = self.com_xy
         d[i:i + 2] = initial_position[:2]

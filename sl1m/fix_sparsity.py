@@ -58,8 +58,9 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER=Solvers.GUROBI):
     alphas = planner.get_alphas(result.x)
     if is_sparsity_fixed(pb, alphas):
         surface_indices = selected_surfaces(pb, alphas)
-        for i, phase in enumerate(pb["phaseData"]):
-            phase["S"] = [phase["S"][surface_indices[i]]]
+        for i, phase in enumerate(pb.phaseData):
+            phase.S = [phase.S[surface_indices[i]]]
+            phase.n_surfaces = len(phase.S)
         return True, pb, t
 
     pbs = generate_fixed_sparsity_problems(pb, alphas)
@@ -88,9 +89,10 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER=Solvers.GUROBI):
         return False, pb, t
 
     surface_indices = selected_surfaces(pb, alphas)
-    for i, phase in enumerate(pb["phaseData"]):
-        if len(phase["S"]) > 1:
-            phase["S"] = [phase["S"][surface_indices[i]]]
+    for i, phase in enumerate(pb.phaseData):
+        if phase.n_surfaces > 1:
+            phase.S = [phase.S[surface_indices[i]]]
+            phase.n_surfaces = len(phase.S)
 
     return sparsity_fixed, pb, t
 
@@ -105,14 +107,13 @@ def get_undecided_surfaces(pb, alphas):
     indices = []
     surfaces = []
     surfaces_indices = []
-    for i, phase in enumerate(pb["phaseData"]):
-        n_surfaces = len(phase["S"])
-        if n_surfaces > 1:
+    for i, phase in enumerate(pb.phaseData):
+        if phase.n_surfaces > 1:
             if np.array(alphas[i]).min() > ALPHA_THRESHOLD:
                 indices.append(i)
                 sorted_surfaces = np.argsort(alphas[i])
                 surfaces_indices += [sorted_surfaces]
-                surfaces += [[[phase["S"][idx]] for idx in sorted_surfaces]]
+                surfaces += [[[phase.S[idx]] for idx in sorted_surfaces]]
     return indices, surfaces, surfaces_indices
 
 
@@ -160,7 +161,7 @@ def generate_combinatorials(pb, indices, surfaces, surface_indices):
     for j, combination in enumerate(combinations):
         fixed_pb = copy.deepcopy(pb)
         for i, idx in enumerate(indices):
-            fixed_pb["phaseData"][idx]["S"] = surfaces[i][combination[i]]
+            fixed_pb.phaseData[idx].S = surfaces[i][combination[i]]
         pbs += [[fixed_pb, indices, sorted_combinations[j]]]
     return pbs
 
@@ -172,9 +173,8 @@ def selected_surfaces(pb, alphas):
     Return the list of selected surfaces indices in the problem
     """
     indices = []
-    for id, phase in enumerate(pb["phaseData"]):
-        n_surfaces = len(phase["S"])
-        if n_surfaces == 1:
+    for id, phase in enumerate(pb.phaseData):
+        if phase.n_surfaces == 1:
             index = 0
         else:
             index = np.argmin(alphas[id])

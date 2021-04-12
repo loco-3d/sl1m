@@ -80,7 +80,7 @@ def inequality(v, n):
 def as_inequalities(obj):
 	#for each face, find first three points and deduce plane
 	#inequality is given by normal
-	A= np.empty([len(obj.F), 3])
+	A = np.empty([len(obj.F), 3])
 	b = np.empty(len(obj.F))
 	V = np.ones([len(obj.F), 4])
 	N = np.empty([len(obj.F), 3])
