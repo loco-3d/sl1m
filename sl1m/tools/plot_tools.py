@@ -62,7 +62,7 @@ def draw_scene(surfaces, gait, ax=None, alpha=1.):
         ax = fig.add_subplot(111, projection="3d")
     for i, surfaces_phase in enumerate(surfaces):
         for surface in surfaces_phase:
-            plot_surface(surface, ax, 3, alpha=alpha)
+            plot_surface(surface, ax, gait[i % len(gait)], alpha=alpha)
     return ax
 
 

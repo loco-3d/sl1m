@@ -54,15 +54,14 @@ class PhaseData:
 
 
 class Problem:
+    
     def __init__(self, Robot):
-        self.Robot = Robot
         self.n_effectors = len(Robot.limbs_names)
 
         self.com_objects = []
         self.foot_objects = []
         for foot in range(self.n_effectors):
             foot_name = Robot.limbs_names[foot]
-
             filekin = Robot.kinematic_constraints_path + "COM_constraints_in_" + \
                 foot_name + "_effector_frame_quasi_static_reduced.obj"
             self.com_objects.append(as_inequalities(load_obj(filekin)))

@@ -90,6 +90,7 @@ SET(${PROJECT_NAME}_TOOLS_SOURCES
   plot_plytopes.py
   plot_utils.py
   plot_tools.py
+  heightmap_tools.py
   polytope_conversion_utils.py
   transformations.py
   )
