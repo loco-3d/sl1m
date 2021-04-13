@@ -104,19 +104,19 @@ def gen_state(s, pId, num_max_sample=0, first=False, normal=lp.Z_AXIS, newContac
         if pId < len(pb["phaseData"])-1:
             if phase["moving"] == lp.RF:
                 # rotation of the root, from the guide
-                rot = quatConfigFromMatrix(pb["phaseData"][pId+1]["rootOrientation"])
+                rot = quatConfigFromMatrix(pb["phaseData"][pId+1]["root_orientation"])
             else:
                 # rotation of the root, from the guide
-                rot = quatConfigFromMatrix(pb["phaseData"][pId]["rootOrientation"])
-            #quat0 = Quaternion(pb["phaseData"][pId]["rootOrientation"])
-            #quat1 = Quaternion(pb["phaseData"][pId+1]["rootOrientation"])
+                rot = quatConfigFromMatrix(pb["phaseData"][pId]["root_orientation"])
+            #quat0 = Quaternion(pb["phaseData"][pId]["root_orientation"])
+            #quat1 = Quaternion(pb["phaseData"][pId+1]["root_orientation"])
             #rot = quatConfigFromMatrix((quat0.slerp(0.5,quat1)).matrix())
         else:
             # rotation of the root, from the guide
-            rot = quatConfigFromMatrix(phase["rootOrientation"])
+            rot = quatConfigFromMatrix(phase["root_orientation"])
     else:
         rot = [0, 0, 0, 1]
-    # rot = quatConfigFromMatrix(phase["rootOrientation"]) # rotation of the root, from the guide
+    # rot = quatConfigFromMatrix(phase["root_orientation"]) # rotation of the root, from the guide
     # print "current config q=",s.q()
     # print "move limb ",movingID
     pos = allfeetpos[pId]

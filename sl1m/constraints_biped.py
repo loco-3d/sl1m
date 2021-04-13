@@ -63,13 +63,13 @@ class BipedConstraints:
         :param: js          List of j_startumn corresponding to the start of each phase
         return  i_start + the number of rows used by the constraint
         """
-        fixed_foot = self.__fixed(phase["Moving"])
-        K, k = phase["K"][fixed_foot]
+        fixed_foot = self.__fixed(phase.moving)
+        K, k = phase.K[fixed_foot]
         l = K.shape[0]
 
         if id == 0:
-            if pb["p0"] is not None:
-                fixed_foot_z = pb["p0"][fixed_foot][-1:]
+            if pb.p0 is not None:
+                fixed_foot_z = pb.p0[fixed_foot][-1:]
                 A[i:i + l, j:j + self.default_n_variables] = K[:, -1:].dot(self.com_z)
                 b[i:i + l] = k + K[:, -1:].dot(fixed_foot_z)
         else:
@@ -94,14 +94,14 @@ class BipedConstraints:
         :param: js          List of j_startumn corresponding to the start of each phase
         return  i_start + the number of rows used by the constraint
         """
-        moving_foot = phase["Moving"]
+        moving_foot = phase.moving
         fixed_foot = self.__fixed(moving_foot)
-        K, k = phase["K"][moving_foot]
+        K, k = phase.K[moving_foot]
         l = K.shape[0]
 
         if id == 0:
-            if pb["p0"] is not None:
-                com_xy = pb["p0"][fixed_foot][:2]
+            if pb.p0 is not None:
+                com_xy = pb.p0[fixed_foot][:2]
                 A[i:i + l, j:j + self.default_n_variables] = K[:, -
                                                                1:].dot(self.com_z) - K.dot(self.foot)
                 b[i:i + l] = k - K[:, :2].dot(com_xy[:2])
@@ -126,13 +126,13 @@ class BipedConstraints:
         :param: js          List of j_startumn corresponding to the start of each phase
         return  i_start + the number of rows used by the constraint
         """
-        moving_foot = phase["Moving"]
-        fixed_foot, (K, k) = phase["allRelativeK"][moving_foot][0]
+        moving_foot = phase.moving
+        fixed_foot, (K, k) = phase.allRelativeK[moving_foot][0]
         l = K.shape[0]
 
         if id == 0:
-            if pb["p0"] is not None:
-                fixed_foot_position = pb["p0"][fixed_foot]
+            if pb.p0 is not None:
+                fixed_foot_position = pb.p0[fixed_foot]
                 A[i:i + l, j:j + self.default_n_variables] = K.dot(self.foot)
                 b[i:i + l] = k + K.dot(fixed_foot_position)
                 return i + l
@@ -155,10 +155,10 @@ class BipedConstraints:
         :param: j           Column corresponding to this phase variables
         return i + the number of rows used by the constraint
         """
-        n_surfaces = len(phase["S"])
+        n_surfaces = len(phase.S)
         j_slack = self.default_n_variables
         i = i_start
-        for (S, s) in phase["S"]:
+        for (S, s) in phase.S:
             l = S.shape[0]-1
             A[i:i + l, j:j + self.default_n_variables] = S[:-1, :].dot(self.foot)
             b[i:i + l] = s[:-1]
@@ -179,15 +179,15 @@ class BipedConstraints:
         :param: j           Column corresponding to this phase variables
         return i_start + the number of rows used by the constraint
         """
-        n_surfaces = len(phase["S"])
+        n_surfaces = len(phase.S)
         i = i_start
         if n_surfaces == 1:
-            E[i, j:j + self.default_n_variables] = phase["S"][0][0][-1].dot(self.foot)
-            e[i] = phase["S"][0][1][-1]
+            E[i, j:j + self.default_n_variables] = phase.S[0][0][-1].dot(self.foot)
+            e[i] = phase.S[0][1][-1]
             return i + 1
         else:
             j_slack = self.default_n_variables + 1
-            for (S, s) in phase["S"]:
+            for (S, s) in phase.S:
                 E[i, j:j + self.default_n_variables] = S[-1, :].dot(self.foot)
                 E[i, j + j_slack] = -1 * self.slack_scale
                 e[i] = s[-1]
@@ -209,7 +209,7 @@ class BipedConstraints:
         :param: j           Column corresponding to this phase variables
         return i_start + the number of rows used by the constraint
         """
-        n_surfaces = len(phase["S"])
+        n_surfaces = len(phase.S)
         i = i_start
         j = j_start
         if n_surfaces > 1:

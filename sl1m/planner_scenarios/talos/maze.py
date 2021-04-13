@@ -39,7 +39,7 @@ def gen_pb(root_init, R, surfaces):
     # print "surfaces = ",surfaces
     # TODO in non planar cases, K must be rotated
     phaseData = [{"moving": i % 2, "fixed": (i+1) % 2, "K": [genKinematicConstraints(left_foot_constraints, right_foot_constraints, index=i, rotation=R, min_height=0.3) for _ in range(len(surfaces[i]))], "relativeK": [
-        genFootRelativeConstraints(right_foot_in_lf_frame_constraints, left_foot_in_rf_frame_constraints, index=i, rotation=R)[(i) % 2] for _ in range(len(surfaces[i]))], "rootOrientation": R[i], "S": surfaces[i]} for i in range(nphases)]
+        genFootRelativeConstraints(right_foot_in_lf_frame_constraints, left_foot_in_rf_frame_constraints, index=i, rotation=R)[(i) % 2] for _ in range(len(surfaces[i]))], "root_orientation": R[i], "S": surfaces[i]} for i in range(nphases)]
     res["phaseData"] = phaseData
     return res
 

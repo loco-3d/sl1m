@@ -58,11 +58,11 @@ def normal_from_ineq(s_ineq):
 
 
 def replace_surfaces_with_ineq_in_phaseData(phase, eq_as_ineq):
-    phase["S"] = [convert_surface_to_inequality(S, eq_as_ineq) for S in phase["S"]]
+    phase.S = [convert_surface_to_inequality(S, eq_as_ineq) for S in phase.S]
 
 
 def replace_surfaces_with_ineq_in_problem(pb, eq_as_ineq=False):
-    [replace_surfaces_with_ineq_in_phaseData(phase, eq_as_ineq) for phase in pb["phaseData"]]
+    [replace_surfaces_with_ineq_in_phaseData(phase, eq_as_ineq) for phase in pb.phaseData]
 
 
 def ineqQHull(hull):

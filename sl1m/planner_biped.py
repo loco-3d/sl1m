@@ -50,7 +50,7 @@ class BipedPlanner:
         n_variables = self.__total_n_variables()
         selection_vector = np.zeros(n_variables)
         i = 0
-        for phase in self.pb["phaseData"]:
+        for phase in self.pb.phaseData:
             phase_n_variables = self.__phase_n_variables(phase)
             n_slacks = phase_n_variables - self.default_n_variables
             i_start = i + self.default_n_variables
@@ -74,7 +74,7 @@ class BipedPlanner:
         @return number of variables in the phase
         """
         n_variables = self.default_n_variables
-        n_surfaces = len(phase["S"])
+        n_surfaces = len(phase.S)
         if n_surfaces > 1:
             n_variables += n_surfaces * self.n_slack_per_surface
         return n_variables
@@ -84,7 +84,7 @@ class BipedPlanner:
         Counts the number of variables, inequalities constraints in the problem
         @return the number of variables of the problem
         """
-        return sum([self.__phase_n_variables(phase) for phase in self.pb["phaseData"]])
+        return sum([self.__phase_n_variables(phase) for phase in self.pb.phaseData])
 
     def __phase_n_ineq(self, phase):
         """
@@ -95,17 +95,17 @@ class BipedPlanner:
         @param phase concerned phase
         """
         # COM kinematic constraints
-        n_ineq = sum([k.shape[0] for (_, k) in phase["K"]])
+        n_ineq = sum([k.shape[0] for (_, k) in phase.K])
 
         # Foot relative distance
-        _, Ks = phase["allRelativeK"][phase["Moving"]][0]
+        _, Ks = phase.allRelativeK[phase.moving][0]
         n_ineq += Ks[0].shape[0]
 
         # Surfaces
-        n_ineq += sum([S[1].shape[0] - 1 for S in phase["S"]])
+        n_ineq += sum([S[1].shape[0] - 1 for S in phase.S])
 
         # Slack positivity
-        n_surfaces = len(phase["S"])
+        n_surfaces = len(phase.S)
         if n_surfaces > 1:
             n_ineq += n_surfaces * self.n_ineq_per_surface
         return n_ineq
@@ -115,21 +115,21 @@ class BipedPlanner:
         Counts the number of inequality constraints
         @return the number of inequality constraints of the problem
         """
-        return sum([self.__phase_n_ineq(phase) for phase in self.pb["phaseData"]])
+        return sum([self.__phase_n_ineq(phase) for phase in self.pb.phaseData])
 
     def __phase_n_eq(self, phase):
         """
         Counts the dimension of the equality constraints of a phase
         @param phase concerned phase
         """
-        return len(phase["S"])
+        return len(phase.S)
 
     def __total_n_eq(self):
         """
         Counts the number of equality constraints
         @return the number of equality constraints of the problem
         """
-        return sum([self.__phase_n_eq(phase) for phase in self.pb["phaseData"]])
+        return sum([self.__phase_n_eq(phase) for phase in self.pb.phaseData])
 
     def convert_pb_to_LP(self, pb, convert_surfaces=True):
         """
@@ -160,7 +160,7 @@ class BipedPlanner:
         j_previous = 0
 
         constraints = BipedConstraints()
-        for i, phase in enumerate(pb["phaseData"]):
+        for i, phase in enumerate(pb.phaseData):
             # inequality
             i_start = constraints.fixed_foot_com(pb, i, phase, A, b, j_previous, j, i_start)
             i_start = constraints.feet_relative_distance(pb, i, phase, A, b, j_previous, j, i_start)
@@ -187,7 +187,7 @@ class BipedPlanner:
         alphas = []
 
         j = 0
-        for phase in self.pb["phaseData"]:
+        for phase in self.pb.phaseData:
             phase_alphas = []
             for j_slack in range(self.default_n_variables, self.__phase_n_variables(phase), self.n_slack_per_surface):
                 phase_alphas.append(result[j + j_slack])
@@ -204,11 +204,11 @@ class BipedPlanner:
         """
         coms = []
         moving_foot_pos = []
-        all_feet_pos = [[self.pb["p0"][0]], [self.pb["p0"][1]]]
+        all_feet_pos = [[self.pb.p0[0]], [self.pb.p0[1]]]
 
         j = 0
-        for i, phase in enumerate(self.pb["phaseData"]):
-            moving_foot = phase["Moving"]
+        for i, phase in enumerate(self.pb.phaseData):
+            moving_foot = phase.moving
             fixed_foot = (moving_foot + 1) % 2
 
             # CoM
@@ -239,7 +239,7 @@ class BipedPlanner:
         q = np.zeros(n_variables)
 
         j = 0
-        for id, phase in enumerate(self.pb["phaseData"]):
+        for id, phase in enumerate(self.pb.phaseData):
             A = np.zeros((2, n_variables))
             A[:, j: j + self.default_n_variables] = self.com
             b = coms[id][:2]
@@ -263,7 +263,7 @@ class BipedPlanner:
 
         n_phases = self.pb["n_phases"]
         j = 0
-        for id, phase in enumerate(self.pb["phaseData"]):
+        for id, phase in enumerate(self.pb.phaseData):
             if id == n_phases - 1:
                 A = np.zeros((2, n_variables))
                 A[:, j: j + self.default_n_variables] = self.com_xy
@@ -287,11 +287,11 @@ class BipedPlanner:
 
         n_phases = self.pb["n_phases"]
         j = 0.
-        for id, phase in enumerate(self.pb["phaseData"]):
+        for id, phase in enumerate(self.pb.phaseData):
             if id >= n_phases - 2:
                 A = np.zeros((3, n_variables))
                 A[:, j: j + self.default_n_variables] = self.foot
-                b = effector_positions[phase["Moving"]][:3]
+                b = effector_positions[phase.moving][:3]
 
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
@@ -304,7 +304,7 @@ class BipedPlanner:
         Compute a cost to keep the feet relative positions as close as possible from the initial ones
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        relative_positions = [self.pb["p0"][1] - self.pb["p0"][0]]
+        relative_positions = [self.pb.p0[1] - self.pb.p0[0]]
 
         n_variables = self.__total_n_variables()
         P = np.zeros((n_variables, n_variables))
@@ -312,18 +312,18 @@ class BipedPlanner:
 
         j_previous = 0
         j = 0
-        for id, phase in enumerate(self.pb["phaseData"]):
+        for id, phase in enumerate(self.pb.phaseData):
             A = np.zeros((3, n_variables))
             b = np.zeros(3)
             if id == 0:
-                if phase["Moving"] == 0:
+                if phase.moving == 0:
                     A[:, j:j + self.default_n_variables] = -self.foot
-                    b = -self.pb["p0"][1]
+                    b = -self.pb.p0[1]
                 else:
                     A[:, j:j + self.default_n_variables] = self.foot
-                    b = self.pb["p0"][0]
+                    b = self.pb.p0[0]
             else:
-                if phase["Moving"] == 0:
+                if phase.moving == 0:
                     A[:, j:j + self.default_n_variables] = -self.foot
                     A[:, j_previous:j_previous + self.default_n_variables] = self.foot
                 else:
@@ -351,13 +351,13 @@ class BipedPlanner:
 
         j_previous = 0
         j = 0
-        for id, phase in enumerate(self.pb["phaseData"]):
-            foot = phase["Moving"]
+        for id, phase in enumerate(self.pb.phaseData):
+            foot = phase.moving
             A = np.zeros((2, n_variables))
             b = step_size
             A[:, j:j + self.default_n_variables] = self.foot_xy
             if id == 0:
-                b += self.pb["p0"][foot][:2]
+                b += self.pb.p0[foot][:2]
             else:
                 A[:, j_previous:j_previous + self.default_n_variables] = -self.foot_xy
 

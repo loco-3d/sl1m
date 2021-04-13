@@ -1,125 +1,116 @@
-from sl1m.constants_and_tools import *
-import sl1m.stand_alone_scenarios
 from sl1m.constants_and_tools import default_transform_from_pos_normal, convert_surface_to_inequality
 from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
 import numpy as np
 import os
-
-# General sl1m problem definition
-#
-# pb["n_effectors"]: number of effectors
-# pb["p0"]:      initial feet positions
-# pb["c0"]:      initial com positions
-# pb["nphases"]: number of phases
-# pb["phaseData"][i]["Moving"]: moving effector in phase i
-# pb["phaseData"][i]["K"]: Com constraints for phase i, for each limb and each surface
-# pb["phaseData"][i]["allRelativeK"]: Relative constraints for phase i for each limb and each surface
-# pb["phaseData"][i]["rootOrientation"]: root orientation for phase i
-# pb["phaseData"][i]["S"]: surfaces of phase i
+import sl1m.stand_alone_scenarios
 
 LIMB_NAMES = ["LF", "RF"]
 DIR = os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"
 
-Z = array([0., 0., 1.])
+Z = np.array([0., 0., 1.])
 LF = 0
 RF = 1
 
-
-def generate_problem(Robot, R, surfaces, gait, p0, c0=None, eq_as_ineq=True):
-    """
-    Build a SL1M problem for the Mixed Integer formulation,
-    with all the kinematics and foot relative position constraints required
-    :param Robot: an rbprm robot
-    :param R: a list of rotation matrix for the base of the robot (must be the same size as surfaces)
-    :param surfaces: A list of surfaces candidates, with one set of surface candidates for each phase
-    :param gait: The gait of the robot (list of id of the moving foot)
-    :param p0: The initial positions of the limbs
-    :param c0: The initial position of the com
-    :return: a "res" dictionnary with the format required by SL1M
-    """
-    n_phases = len(surfaces)
-    n_effectors = len(LIMB_NAMES)
-    res = {"n_effectors": n_effectors, "p0": p0, "c0": c0, "n_phases": n_phases}
-    res["phaseData"] = [{"Moving": gait[i % n_effectors],
-                         "K": com_constraint(i, R, min_height=0.3),
-                         "allRelativeK": relative_constraint(i, R),
-                         "S": surfaces[i]} for i in range(n_phases)]
-
-    return res
+# General sl1m problem definition
+#
+# pb.n_effectors = number of effectors
+# pb.p0 = initial feet positions
+# pb.c0 = initial com positions
+# pb.nphases = number of phases
+# pb.phaseData[i].moving =  moving effector in phase i
+# pb.phaseData[i].K =  Com constraints for phase i, for each limb and each surface
+# pb.phaseData[i].allRelativeK =  Relative constraints for phase i for each limb and each surface
+# pb.phaseData[i].root_orientation =  root orientation for phase i
+# pb.phaseData[i].S =  surfaces of phase i
 
 
-def com_constraint(index, rotations, min_height=None):
-    """
-    Generate the constraints on the CoM position for all the effectors
-    :param Robot:
-    :param rotations: the rotation to apply to the constraints
-    :param normals: the default contact normals of each effectors
-    :return: a list of [A,b] inequalities, in the form Ax <= b
-    """
-    if index == 0:
-        trLF = default_transform_from_pos_normal(zeros(3), Z, rotations[index])
-        trRF = trLF.copy()
-    else:
-        trLF = default_transform_from_pos_normal(zeros(3), Z, rotations[index-(index % 2)])
-        trRF = default_transform_from_pos_normal(zeros(3), Z, rotations[index-((index + 1) % 2)])
+class PhaseData:
+    def __init__(self, i, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
+        self.moving = moving_foot
+        self.root_orientation = R[i]
+        self.S = surfaces
+        self.n_surfaces = len(self.S)
+        self.generate_K(i, R, com_obj)
+        self.generate_relative_K(i, R, foot_obj)
 
-    KLF = com_in_effector_frame_constraint(trLF, LF)
-    KRF = com_in_effector_frame_constraint(trRF, RF)
-    if min_height is not None:
-        KLF = [np.vstack([KLF[0], -Z]), np.concatenate([KLF[1], -
-                                                        np.ones(1) * min_height]).reshape((-1,))]
-        KRF = [np.vstack([KRF[0], -Z]), np.concatenate([KRF[1], -
-                                                        np.ones(1) * min_height]).reshape((-1,))]
-    return [KLF, KRF]
+    def generate_K(self, i, R, com_obj):
+        """
+        Generate the constraints on the CoM position for all the effectors as a list of [A,b] 
+        inequalities, in the form Ax <= b
+        :param n_effectors:
+        :param obj: com constraint objects
+        """
+        if i == 0:
+            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
+            trRF = trLF.copy()
+        else:
+            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i-(i % 2)])
+            trRF = default_transform_from_pos_normal(np.zeros(3), Z, R[i-((i + 1) % 2)])
 
+        trLF[2, 3] += 0.105
+        ine = rotate_inequalities(com_obj[LF], trLF)
+        KLF = (ine.A, ine.b)
 
-def com_in_effector_frame_constraint(transform, foot):
-    """
-    Generate the inequalities constraints for the CoM position given a contact position for one limb
-    :param Robot:
-    :param transform: Transformation to apply to the constraints
-    :param foot: the Id of the limb used (see Robot.limbs_names list)
-    :return: [A, b] the inequalities, in the form Ax <= b
-    """
-    filekin = DIR + "COM_constraints_in_" + LIMB_NAMES[foot] + "_effector_frame.obj"
-    obj = load_obj(filekin)
-    ineq_right_foot = as_inequalities(obj)
-    transform2 = transform.copy()
-    transform2[2, 3] += 0.105
-    ine = rotate_inequalities(ineq_right_foot, transform2)
-    return (ine.A, ine.b)
+        trRF[2, 3] += 0.105
+        ine = rotate_inequalities(com_obj[RF], trRF)
+        KRF = (ine.A, ine.b)
 
+        KLF = [np.vstack([KLF[0], -Z]), np.concatenate([KLF[1], -np.ones(1) * 0.3]).reshape((-1,))]
+        KRF = [np.vstack([KRF[0], -Z]), np.concatenate([KRF[1], -np.ones(1) * 0.3]).reshape((-1,))]
 
-def relative_constraint(index, rotation):
-    """
-    Generate all the relative position constraints for all limbs
-    :param Robot:
-    :param rotation: the rotation to apply to the constraints
-    :param normals: the default contact normals of each effectors
-    :return: a list of [A,b] inequalities, in the form Ax <= b
-    """
-    if index == 0:
-        trLF = default_transform_from_pos_normal(zeros(3), Z, rotation[index])
-        trRF = trLF.copy()
-    else:
-        trLF = default_transform_from_pos_normal(zeros(3), Z, rotation[index-(index % 2)])
-        trRF = default_transform_from_pos_normal(zeros(3), Z, rotation[index-((index + 1) % 2)])
-    res = [None, None]
-    res[LF] = [(RF, foot_in_other_foot_frame_constraint(trRF, LF, RF))]
-    res[RF] = [(LF, foot_in_other_foot_frame_constraint(trLF, RF, LF))]
-    return res
+        self.K = [KLF, KRF]
 
+    def generate_relative_K(self, i, R, foot_obj):
+        """
+        Generate all the relative position constraints for all limbs as a list of [A,b] 
+        inequalities, in the form Ax <= b
+        :param n_effectors:
+        :param obj: foot relative constraints
+        """
+        if i == 0:
+            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
+            trRF = trLF.copy()
+        else:
+            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i-(i % 2)])
+            trRF = default_transform_from_pos_normal(np.zeros(3), Z, R[i-((i + 1) % 2)])
 
-def foot_in_other_foot_frame_constraint(transform, foot, other):
-    """
-    Generate the constraints for the position of a given effector, given another effector position
-    :param transform: The transform to apply to the constraints
-    :param foot: 
-    :param other: 
-    :return: [A, b] the inequalities, in the form Ax <= b
-    """
-    filekin = DIR + LIMB_NAMES[foot] + "_constraints_in_" + LIMB_NAMES[other] + ".obj"
-    obj = load_obj(filekin)
-    ineq_rf_in_rl = as_inequalities(obj)
-    ine = rotate_inequalities(ineq_rf_in_rl, transform)
-    return (ine.A, ine.b)
+        ineRF = rotate_inequalities(foot_obj[LF], trLF)
+        ineLF = rotate_inequalities(foot_obj[RF], trRF)
+
+        self.allRelativeK = [None, None]
+        self.allRelativeK[LF] = [(RF, (ineLF.A, ineLF.b))]
+        self.allRelativeK[RF] = [(LF, (ineRF.A, ineRF.b))]
+
+class Problem:
+    def __init__(self):
+        self.n_effectors = 2
+
+        self.com_objects = []
+        self.foot_objects = []
+        for foot in range(self.n_effectors):
+            f = DIR + "COM_constraints_in_" + LIMB_NAMES[foot] + "_effector_frame.obj"
+            self.com_objects.append(as_inequalities(load_obj(f)))
+
+            f = DIR + LIMB_NAMES[(foot + 1) % 2] + "_constraints_in_" + LIMB_NAMES[foot] + ".obj"
+            self.foot_objects.append(as_inequalities(load_obj(f)))
+
+    def generate_problem(self, R, surfaces, gait, p0, c0=None):
+        """
+        Build a SL1M problem for the Mixed Integer formulation,
+        with all the kinematics and foot relative position constraints required
+        :param Robot: an rbprm robot
+        :param R: a list of rotation matrix for the base of the robot (must be the same size as surfaces)
+        :param surfaces: A list of surfaces candidates, with one set of surface candidates for each phase
+        :param gait: The gait of the robot (list of id of the moving foot)
+        :param p0: The initial positions of the limbs
+        :param c0: The initial position of the com
+        :return: a "res" dictionnary with the format required by SL1M
+        """
+        normal = np.array([0, 0, 1])
+        self.p0 = p0
+        self.c0 = c0
+        self.n_phases = len(surfaces)
+        self.phaseData = []
+        for i in range(self.n_phases):
+            self.phaseData.append(PhaseData(
+                i, R, surfaces[i], gait[i % self.n_effectors], normal, self.n_effectors, self.com_objects, self.foot_objects))

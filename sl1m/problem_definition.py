@@ -11,20 +11,20 @@ import numpy as np
 # pb.phaseData[i].Moving =  moving effector in phase i
 # pb.phaseData[i].K =  Com constraints for phase i, for each limb and each surface
 # pb.phaseData[i].allRelativeK =  Relative constraints for phase i for each limb and each surface
-# pb.phaseData[i].rootOrientation =  root orientation for phase i
+# pb.phaseData[i].root_orientation =  root orientation for phase i
 # pb.phaseData[i].S =  surfaces of phase i
 
 class PhaseData:
     def __init__(self, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
         self.moving = moving_foot
-        self.rootOrientation = R
+        self.root_orientation = R
         self.S = [convert_surface_to_inequality(s, True) for s in surfaces]
         self.n_surfaces = len(self.S)
         self.transform = default_transform_from_pos_normal(np.zeros(3), normal, R)
-        self.generateK(n_effectors, com_obj)
-        self.generateRelativeK(n_effectors, foot_obj)
+        self.generate_K(n_effectors, com_obj)
+        self.generate_relative_K(n_effectors, foot_obj)
 
-    def generateK(self, n_effectors, obj):
+    def generate_K(self, n_effectors, obj):
         """
         Generate the constraints on the CoM position for all the effectors as a list of [A,b] 
         inequalities, in the form Ax <= b
@@ -36,7 +36,7 @@ class PhaseData:
             ine = rotate_inequalities(obj[foot], self.transform.copy())
             self.K.append((ine.A, ine.b))
 
-    def generateRelativeK(self, n_effectors, obj):
+    def generate_relative_K(self, n_effectors, obj):
         """
         Generate all the relative position constraints for all limbs as a list of [A,b] 
         inequalities, in the form Ax <= b

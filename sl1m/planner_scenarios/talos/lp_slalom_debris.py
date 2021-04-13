@@ -128,11 +128,11 @@ def gen_state(s, pId, num_max_sample = 0, first = False, normal = lp.Z_AXIS, new
         movingID = fullBody.rLegId
     print("# gen state for phase Id = ",pId)
     if False and pId < len(pb["phaseData"])-1:
-      quat0 = Quaternion(pb["phaseData"][pId]["rootOrientation"])
-      quat1 = Quaternion(pb["phaseData"][pId+1]["rootOrientation"])
+      quat0 = Quaternion(pb["phaseData"][pId]["root_orientation"])
+      quat1 = Quaternion(pb["phaseData"][pId+1]["root_orientation"])
       qrot = (quat0.slerp(0.5,quat1)).matrix()
     else:
-      qrot = Quaternion(phase["rootOrientation"]) # rotation of the root, from the guide
+      qrot = Quaternion(phase["root_orientation"]) # rotation of the root, from the guide
     
     #q_n = Quaternion().FromTwoVectors(np.matrix(Z_AXIS).T,np.matrix(normal).T)
     #rot = quatToConfig(qrot * q_n)
