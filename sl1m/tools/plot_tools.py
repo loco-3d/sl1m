@@ -3,7 +3,7 @@ import numpy as np
 
 
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
-          '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+          '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
 
 def plot_point(ax, point, color="b", linewidth=2):
@@ -29,6 +29,18 @@ def plot_surface(points, ax, color_id=0, alpha=1.):
         ax.plot(xs, ys, zs, color=COLORS[color_id % len(COLORS)], alpha=alpha)
 
 
+def draw_potential_surfaces(surfaces, gait, phase, ax=None, alpha=1.):
+    """
+    Plot all the potential surfaces of one phase of the problem
+    """
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+    for surface in surfaces:
+        plot_surface(surface, ax, gait[phase % (len(gait))])
+    return ax
+
+
 def draw_whole_scene(surface_dict, ax=None):
     """
     Plot all the potential surfaces
@@ -52,6 +64,7 @@ def draw_scene(surfaces, gait, ax=None, alpha=1.):
         for surface in surfaces_phase:
             plot_surface(surface, ax, 3, alpha=alpha)
     return ax
+
 
 def draw_first_surface(surfaces, gait, ax=None):
     """
@@ -166,6 +179,7 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
     else:
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
+
 def plot_planner_result(coms, moving_foot_pos, all_feet_pos, ax=None, show=True):
     if ax is None:
         fig = plt.figure()
@@ -173,19 +187,18 @@ def plot_planner_result(coms, moving_foot_pos, all_feet_pos, ax=None, show=True)
     ax.grid(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
 
-    plot_point_list(ax, coms, color=COLORS[2])
-    plot_point_list(ax, all_feet_pos[0], color=COLORS[0])
-    plot_point_list(ax, all_feet_pos[1], color=COLORS[1])
+    for foot in range(len(all_feet_pos)):
+        plot_point_list(ax, all_feet_pos[foot], color=COLORS[foot])
+        px = [c[0] for c in all_feet_pos[foot]]
+        py = [c[1] for c in all_feet_pos[foot]]
+        pz = [c[2] for c in all_feet_pos[foot]]
+        ax.plot(px, py, pz, color=COLORS[foot])
 
+    plot_point_list(ax, coms, color=COLORS[len(all_feet_pos)+1])
     cx = [c[0] for c in coms]
     cy = [c[1] for c in coms]
     cz = [c[2] for c in coms]
-    ax.plot(cx, cy, cz, color=COLORS[2])
-    px = [c[0] for c in moving_foot_pos]
-    py = [c[1] for c in moving_foot_pos]
-    pz = [c[2] for c in moving_foot_pos]
-    ax.plot(px, py, pz)
-
+    ax.plot(cx, cy, cz, color=COLORS[len(all_feet_pos)+1])
     if show:
         plt.draw()
         plt.show()

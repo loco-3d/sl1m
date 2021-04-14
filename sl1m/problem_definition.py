@@ -63,7 +63,7 @@ class Problem:
         for foot in range(self.n_effectors):
             foot_name = Robot.limbs_names[foot]
 
-            filekin = Robot.kinematic_constraints_path + "/COM_constraints_in_" + \
+            filekin = Robot.kinematic_constraints_path + "COM_constraints_in_" + \
                 foot_name + "_effector_frame_quasi_static_reduced.obj"
             self.com_objects.append(as_inequalities(load_obj(filekin)))
 
@@ -71,8 +71,7 @@ class Problem:
             for other in range(len(Robot.limbs_names)):
                 if other != foot:
                     other_name = Robot.dict_limb_joint[Robot.limbs_names[other]]
-                    filekin = Robot.relative_feet_constraints_path + "/" + \
-                        other_name + "_constraints_in_" + foot_name + "_reduced.obj"
+                    filekin = Robot.relative_feet_constraints_path + other_name + "_constraints_in_" + foot_name + "_reduced.obj"
                     foot_object.append(as_inequalities(load_obj(filekin)))
                 else:
                     foot_object.append(None)
@@ -99,3 +98,17 @@ class Problem:
         for i in range(self.n_phases):
             self.phaseData.append(PhaseData(
                 R[i], surfaces[i], gait[i % self.n_effectors], normal, self.n_effectors, self.com_objects, self.foot_objects))
+
+    def __str__(self):
+        string = "Problem: "
+        string += "\n \t n_effectors: " + str(self.n_effectors)
+        string += "\n \t n_phases: " + str(self.n_phases)
+        string += "\n \t p0: " + str(self.p0)
+        string += "\n \t c0: " + str(self.c0)
+        for i in range(self.n_phases):
+            string += "\n \t \t Phase: " + str(i)
+            string += "\n \t \t moving: " + str(self.phaseData[i].moving)
+            string += "\n \t \t n_surfaces: " + str(self.phaseData[i].n_surfaces)
+        return string
+        
+
