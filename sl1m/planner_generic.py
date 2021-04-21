@@ -381,11 +381,7 @@ class Planner:
 
     def compute_costs(self, costs=None):
         """
-        This solver is called when the sparsity is fixed.
-        It assumes the only contact surface for each phase is the one used for contact creation.
-        Solve the problem with a specific solver
-        @param costs cost dictionary with required data
-        @return None if wrong SOLVER, else ResultData
+        TODO : doc + poids
         """
         n_variables = self.__total_n_variables()
 

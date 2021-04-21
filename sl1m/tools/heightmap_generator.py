@@ -6,7 +6,7 @@ import os
 import sl1m.tools.plot_tools as plot
 from sl1m.tools.heightmap_tools import Heightmap
 
-from solo_rbprm.robot import Robot
+from solo_rbprm.solo_abstract import Robot
 
 from hpp.corbaserver.affordance.affordance import AffordanceTool
 from hpp.corbaserver.problem_solver import ProblemSolver
@@ -15,8 +15,8 @@ from hpp.gepetto import ViewerFactory
 # --------------------------------- PROBLEM DEFINITION ---------------------------------------------------------------
 
 ENV_URDF = "/opt/openrobots/share/hpp_environments/urdf/multicontact/bauzil_stairs.urdf"
+ENV_HEIGHTMAP = "/opt/openrobots/share/hpp_environments/heightmaps/multicontact/bauzil_stairs.pickle"
 
-HEIGHTMAP_FILENAME = "heightmap.pickle"
 N_X = 100
 N_Y = 50
 X_BOUNDS = [-0.5, 2.5]
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     heightmap = Heightmap(N_X, N_Y, X_BOUNDS, Y_BOUNDS)
     heightmap.build(affordances)
-    heightmap.save_pickle(HEIGHTMAP_FILENAME)
+    heightmap.save_pickle(ENV_HEIGHTMAP)
 
     ax_heightmap = plot.plot_heightmap(heightmap)
     plt.show()
