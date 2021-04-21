@@ -55,6 +55,14 @@ class Heightmap:
                 if len(intersections) != 0:
                     self.zv[i, j] = np.max(np.array(intersections))
 
+    def map_index(self, x, y):
+        """
+        Get the i, j indices of a given position in the heightmap
+        """
+        i = np.searchsorted(self.x, x) - 1
+        j = np.searchsorted(self.y, y) - 1
+        return i, j
+
 
 def affordance_to_convex(affordance):
     """
