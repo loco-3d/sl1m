@@ -8,11 +8,11 @@ from sl1m.problem_data import ProblemData
 
 # ----------------------- L1 -----------------------------------------------------------------------
 
-def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs=None):
+def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
     planner = Planner()
     sparsity_fixed, pb, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
-        pb_data = optimize_sparse_L1(planner, pb, qp_solver, costs)
+        pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver)
     else:
         return ProblemData(False, t)
     pb_data.time += t
@@ -20,11 +20,11 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
 
 
 
-def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.QUADPROG, costs=None):
+def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.QUADPROG, costs={}):
     planner = BipedPlanner()
     sparsity_fixed, pb, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
-        pb_data = optimize_sparse_L1(planner, pb, qp_solver, costs)
+        pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver)
     else:
         return ProblemData(False, t)
     pb_data.time += t
@@ -34,7 +34,7 @@ def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solv
 # ----------------------- MIP -----------------------------------------------------------------------
 
 
-def solve_MIP(pb, surfaces, costs=None, solver=Solvers.GUROBI):
+def solve_MIP(pb, surfaces, costs={}, solver=Solvers.GUROBI):
     planner = Planner()
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas
@@ -50,7 +50,7 @@ def solve_MIP(pb, surfaces, costs=None, solver=Solvers.GUROBI):
         return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, alphas)
     return ProblemData(False, result.time)
 
-def solve_MIP_biped(pb, surfaces, costs=None, solver=Solvers.GUROBI):
+def solve_MIP_biped(pb, surfaces, costs={}, solver=Solvers.GUROBI):
     planner = BipedPlanner()
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas

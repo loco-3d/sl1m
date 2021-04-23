@@ -11,9 +11,6 @@ from sl1m.generic_solver import solve_L1_combinatorial_biped, solve_L1_combinato
 
 from time import perf_counter as clock
 
-COSTS = {"step_size": None, "final_com": None,
-         "effector_positions": None, "coms": None, "posture": True}
-
 GAIT = [0, 1]
 LIMB_NAMES = ["LF", "RF"]
 
@@ -42,7 +39,7 @@ if __name__ == '__main__':
         if USE_MIP:
             result = solve_MIP_biped(pb, surfaces)
         else:
-            result = solve_L1_combinatorial_biped(pb, surfaces, costs=None)
+            result = solve_L1_combinatorial_biped(pb, surfaces)
     else:
         talos.kinematic_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
             "/share/talos-rbprm/com_inequalities/feet_quasi_flat/talos_"
@@ -56,7 +53,7 @@ if __name__ == '__main__':
         if USE_MIP:
             result = solve_MIP(pb, surfaces)
         else:
-            result = solve_L1_combinatorial(pb, surfaces, costs=None)
+            result = solve_L1_combinatorial(pb, surfaces)
 
     t_end = clock()
 

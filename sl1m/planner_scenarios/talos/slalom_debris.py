@@ -8,9 +8,6 @@ from sl1m.generic_solver import solve_L1_combinatorial_biped, solve_MIP_biped
 
 from time import perf_counter as clock
 
-COSTS = {"step_size": None, "final_com": None,
-         "effector_positions": None, "coms": None, "posture": True}
-
 GAIT = [0, 1]
 
 if __name__ == '__main__':
@@ -31,7 +28,7 @@ if __name__ == '__main__':
     pb = generate_problem(talos, R, surfaces, GAIT, initial_contacts, eq_as_ineq=False)
     t_4 = clock()
 
-    result = solve_MIP_biped(pb, surfaces, costs=None)
+    result = solve_MIP_biped(pb, surfaces)
     t_end = clock()
 
     print("Optimized number of steps:              ", pb["n_phases"])

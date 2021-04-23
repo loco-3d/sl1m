@@ -5,7 +5,6 @@ from talos_rbprm.talos import Robot as Talos
 import sl1m.tools.plot_tools as plot
 import numpy as np
 
-COSTS = {"step_size": None, "final_com": None, "effector_positions": None, "coms": None, "posture": None}
 GAIT = [0, 1]
 
 ### HARDCODED SURFACES, REPLACE IT WITH PATH PLANNING ####
@@ -76,7 +75,7 @@ if __name__ == '__main__':
     pb = generate_problem(talos, R, surfaces, GAIT, initial_contacts, eq_as_ineq=False)
     t_3 = clock()
 
-    result = solve_L1_combinatorial_biped(pb, surfaces, costs=None)
+    result = solve_L1_combinatorial_biped(pb, surfaces)
     t_end = clock()
 
     print("Optimized number of steps:              ", pb["n_phases"])

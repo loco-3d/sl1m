@@ -31,6 +31,12 @@ class BipedPlanner:
         self.com_xy = self.com[:2, :]
         self.foot_xy = self.foot[:2, :]
 
+        self.cost_dict = {"final_com": self.end_com_cost,
+                          "effector_positions": self.end_effectors_position_cost,
+                          "coms": self.com_cost,
+                          "posture": self.posture_cost,
+                          "step_size": self.step_size_cost}
+
     def __expression_matrix(self, size, j):
         """
         Generate a selection matrix for a given variable 
@@ -369,41 +375,26 @@ class BipedPlanner:
 
         return P, q
 
-    def compute_costs(self, costs=None):
+    def compute_costs(self, costs):
         """
-        This solver is called when the sparsity is fixed.
-        It assumes the only contact surface for each phase is the one used for contact creation.
-        Solve the problem with a specific solver
-        @param costs cost dictionary with required data
-        @return None if wrong SOLVER, else ResultData
+        This function computes the P and q cost matrix and vector given a cost dictionary
+        @param costs the cost dictionary. The keys should match keys from self.cost_dict
+        @return P, q the cost matrix and vector of the QP problem
         """
         n_variables = self.__total_n_variables()
 
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
-        if costs == None:
+        if costs == {}:
             P += np.identity(n_variables)
         else:
-            if costs["final_com"] is not None:
-                P_, q_ = self.end_com_cost(costs["final_com"])
-                P += P_
-                q += q_
-            if costs["effector_positions"] is not None:
-                P_, q_ = self.end_effectors_position_cost(costs["effector_positions"])
-                P += P_
-                q += q_
-            if costs["coms"] is not None:
-                P_, q_ = self.com_cost(costs["coms"])
-                P += P_
-                q += q_
-            if costs["posture"]:
-                P_, q_ = self.posture_cost()
-                P += P_
-                q += q_
-            if costs["step_size"] is not None:
-                P_, q_ = self.step_size_cost(costs["step_size"])
-                P += P_
-                q += q_
+            for key, val in [(k, v) for k, v in costs.items() if k in self.cost_dict]:
+                if key in self.cost_dict.keys():
+                    P_, q_ = self.cost_dict[key](*val[1:])
+                    P += P_ * val[0]
+                    q += q_ * val[0]
+                else:
+                    print("Unknown cost to add to the biped problem")
+
         return P, q
-    

@@ -5,8 +5,6 @@ from talos_rbprm.talos import Robot as Talos
 import sl1m.tools.plot_tools as plot
 import numpy as np
 
-COSTS = {"step_size": None, "final_com": None,
-         "effector_positions": None, "coms": None, "posture": None}
 GAIT = [0, 1]
 
 begin = np.array([[1.75, 1.65, 1.65, 1.75],
@@ -47,7 +45,7 @@ if __name__ == '__main__':
     pb = generate_problem(talos, R, surfaces, GAIT, initial_contacts, eq_as_ineq=False)
     t_3 = clock()
 
-    pb_data = solve_L1_combinatorial_biped(pb, surfaces, costs=None)
+    pb_data = solve_L1_combinatorial_biped(pb, surfaces)
     t_end = clock()
 
     print("Optimized number of steps:              ", pb["n_phases"])

@@ -15,7 +15,7 @@ except ImportError:
 ALPHA_THRESHOLD = 0.01
 
 
-def optimize_sparse_L1(planner, pb, QP_SOLVER=Solvers.GUROBI, costs=None):
+def optimize_sparse_L1(planner, pb, costs, QP_SOLVER):
     """
     This solver is called when the sparsity is fixed.
     It assumes the only contact surface for each phase is the one used for contact creation.
@@ -36,7 +36,7 @@ def optimize_sparse_L1(planner, pb, QP_SOLVER=Solvers.GUROBI, costs=None):
         return ProblemData(False, result.time)
 
 
-def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER=Solvers.GUROBI):
+def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     """
     Calls the sl1m solver. Tries to solve non fixed sparsity by handling the combinatorial.
     Ultimately calls solve which provides the approriate cost function
