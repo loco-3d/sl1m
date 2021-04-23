@@ -24,7 +24,7 @@ RF = 1
 # pb.phaseData[i].S =  surfaces of phase i
 
 
-class PhaseData:
+class TalosPhaseData:
     def __init__(self, i, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
         self.moving = moving_foot
         self.root_orientation = R[i]
@@ -81,7 +81,7 @@ class PhaseData:
         self.allRelativeK[LF] = [(RF, (ineLF.A, ineLF.b))]
         self.allRelativeK[RF] = [(LF, (ineRF.A, ineRF.b))]
 
-class Problem:
+class TalosProblem:
     def __init__(self):
         self.n_effectors = 2
 
@@ -112,5 +112,5 @@ class Problem:
         self.n_phases = len(surfaces)
         self.phaseData = []
         for i in range(self.n_phases):
-            self.phaseData.append(PhaseData(
+            self.phaseData.append(TalosPhaseData(
                 i, R, surfaces[i], gait[i % self.n_effectors], normal, self.n_effectors, self.com_objects, self.foot_objects))

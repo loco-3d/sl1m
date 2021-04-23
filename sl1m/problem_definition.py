@@ -14,6 +14,7 @@ import numpy as np
 # pb.phaseData[i].root_orientation =  root orientation for phase i
 # pb.phaseData[i].S =  surfaces of phase i
 
+
 class PhaseData:
     def __init__(self, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
         self.moving = moving_foot
@@ -44,7 +45,7 @@ class PhaseData:
         :param obj: foot relative constraints
         """
         self.allRelativeK = []
-        for foot in range(4):
+        for foot in range(n_effectors):
             foot_res = []
             for other in range(n_effectors):
                 if other != foot:
@@ -54,23 +55,32 @@ class PhaseData:
 
 
 class Problem:
-    
-    def __init__(self, Robot):
-        self.n_effectors = len(Robot.limbs_names)
+
+    def __init__(self, Robot, suffix_com="_effector_frame_quasi_static_reduced.obj", suffix_feet="_reduced.obj", limb_names=None):
+        if limb_names:
+            self.n_effectors = len(limb_names)
+        else:
+            self.n_effectors = len(Robot.limbs_names)
 
         self.com_objects = []
         self.foot_objects = []
         for foot in range(self.n_effectors):
-            foot_name = Robot.limbs_names[foot]
-            filekin = Robot.kinematic_constraints_path + "COM_constraints_in_" + \
-                foot_name + "_effector_frame_quasi_static_reduced.obj"
+            if limb_names != None:
+                foot_name = limb_names[foot]
+            else:
+                foot_name = Robot.limbs_names[foot]
+            filekin = Robot.kinematic_constraints_path + "COM_constraints_in_" + foot_name + suffix_com
             self.com_objects.append(as_inequalities(load_obj(filekin)))
 
             foot_object = []
-            for other in range(len(Robot.limbs_names)):
+            for other in range(self.n_effectors):
                 if other != foot:
-                    other_name = Robot.dict_limb_joint[Robot.limbs_names[other]]
-                    filekin = Robot.relative_feet_constraints_path + other_name + "_constraints_in_" + foot_name + "_reduced.obj"
+                    if limb_names != None:
+                        other_name = limb_names[other]
+                    else:
+                        other_name = Robot.dict_limb_joint[Robot.limbs_names[other]]
+                    filekin = Robot.relative_feet_constraints_path + \
+                        other_name + "_constraints_in_" + foot_name + suffix_feet
                     foot_object.append(as_inequalities(load_obj(filekin)))
                 else:
                     foot_object.append(None)
@@ -109,5 +119,3 @@ class Problem:
             string += "\n \t \t moving: " + str(self.phaseData[i].moving)
             string += "\n \t \t n_surfaces: " + str(self.phaseData[i].n_surfaces)
         return string
-        
-

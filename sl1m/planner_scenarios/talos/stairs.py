@@ -4,7 +4,7 @@ import sl1m.tools.plot_tools as plot
 from talos_rbprm.talos import Robot as Talos
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
 from sl1m.planner_scenarios.talos.problem_definition_talos import generate_problem
-from sl1m.generic_solver import solve_L1_combinatorial_biped, solve_MIP_cost_biped
+from sl1m.generic_solver import solve_L1_combinatorial_biped, solve_MIP_biped
 
 from time import perf_counter as clock
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     pb = generate_problem(talos, R, surfaces, GAIT, initial_contacts, eq_as_ineq=False)
     t_4 = clock()
 
-    result = solve_MIP_cost_biped(pb, surfaces, costs=None)
+    result = solve_MIP_biped(pb, surfaces, costs=None)
     t_end = clock()
 
     print("Optimized number of steps:              ", pb["n_phases"])

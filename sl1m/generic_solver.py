@@ -34,13 +34,15 @@ def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solv
 # ----------------------- MIP -----------------------------------------------------------------------
 
 
-def solve_MIP_cost(pb, surfaces, costs=None):
+def solve_MIP(pb, surfaces, costs=None, solver=Solvers.GUROBI):
     planner = Planner()
     G, h, C, d = planner.convert_pb_to_LP(pb)
-    P, q = planner.compute_costs(costs)
     slack_selection_vector = planner.alphas
-
-    result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
+    if costs != None:
+        P, q = planner.compute_costs(costs)
+        result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
+    else:
+        result = call_MIP_solver(slack_selection_vector, G, h, C, d, solver=solver)
 
     if result.success:
         alphas = planner.get_alphas(result.x)
@@ -48,28 +50,16 @@ def solve_MIP_cost(pb, surfaces, costs=None):
         return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, alphas)
     return ProblemData(False, result.time)
 
-def solve_MIP_cost_biped(pb, surfaces, costs=None):
+def solve_MIP_biped(pb, surfaces, costs=None, solver=Solvers.GUROBI):
     planner = BipedPlanner()
     G, h, C, d = planner.convert_pb_to_LP(pb)
-    P, q = planner.compute_costs(costs)
     slack_selection_vector = planner.alphas
 
-    result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
-
-    if result.success:
-        alphas = planner.get_alphas(result.x)
-        coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
-        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, alphas)
-    return ProblemData(False, result.time)
-
-
-
-def solve_MIP(pb, surfaces, solver=Solvers.GUROBI):
-    planner = Planner()
-    G, h, C, d = planner.convert_pb_to_LP(pb)
-    slack_selection_vector = planner.alphas
-
-    result = call_MIP_solver(slack_selection_vector, G, h, C, d, solver=solver)
+    if costs != None:
+        P, q = planner.compute_costs(costs)
+        result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
+    else:
+        result = call_MIP_solver(slack_selection_vector, G, h, C, d, solver=solver)
 
     if result.success:
         alphas = planner.get_alphas(result.x)
