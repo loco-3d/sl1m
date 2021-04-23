@@ -14,7 +14,6 @@ from numpy.linalg import norm
 from sl1m.planner import *
 
 
-from sl1m.plot_plytopes import *
 from sl1m.planner_l1 import *
 
 floor2  = [[-3., 0.4  , 0.  ], [-2.7 ,  0.4, 0. ], [-2.7 , 0.1, 0.  ], [-03., 0.1, 0.  ], ]

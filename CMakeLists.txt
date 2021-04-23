@@ -87,11 +87,9 @@ SET(${PROJECT_NAME}_TOOLS_SOURCES
   __init__.py
   geom_utils.py
   obj_to_constraints.py
-  plot_plytopes.py
   plot_utils.py
   plot_tools.py
   heightmap_tools.py
-  polytope_conversion_utils.py
   transformations.py
   )
 

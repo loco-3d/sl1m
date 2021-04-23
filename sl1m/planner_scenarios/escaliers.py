@@ -14,8 +14,6 @@ from numpy.linalg import norm
 from sl1m.planner import *
 
 
-from plot_plytopes import *
-
 floor = [ [0.16, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.16, -1., 0.]  ]
 
 step1 = [[0.3, 0.6, 0.15],[0.3, -0.16, 0.15],[0.6, -0.16, 0.15],[0.6, 0.6, 0.15]]

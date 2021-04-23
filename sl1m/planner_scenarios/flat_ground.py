@@ -14,9 +14,6 @@ from numpy.linalg import norm
 from sl1m.planner import *
 
 
-from sl1m.plot_plytopes import *
-
-
 all_surfaces = []
 
 left = [[-50.,0.04,0.], [50.,0.04,0.], [50.,40.,0.], [-50.,40.,0.]]
