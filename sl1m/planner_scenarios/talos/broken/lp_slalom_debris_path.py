@@ -38,7 +38,7 @@ vf = ViewerFactory(ps)
 afftool = AffordanceTool()
 afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.00005])
 afftool.loadObstacleModel("package://hpp_environments/urdf/multicontact/slalom_debris.urdf",
-                          "planning", vf, reduceSizes=[0.03, 0., 0.])
+                          "planning", vf, reduceSizes=[0.03, 0.03, 0.])
 v = vf.createViewer(displayArrows=True)
 afftool.visualiseAffordances('Support', v, [0.25, 0.5, 0.5])
 v.addLandmark(v.sceneName, 1)

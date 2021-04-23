@@ -1,13 +1,17 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import os
 
 from talos_rbprm.talos import Robot as Talos
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
-from sl1m.planner_scenarios.talos.lp_complex1_path import compute_path
-from sl1m.planner_scenarios.talos.problem_definition_talos import TalosProblem
+from sl1m.planner_scenarios.talos.lp_complex_path import compute_path
+
+from sl1m.stand_alone_scenarios.problem_definition_talos import Problem
 from sl1m.problem_definition import Problem
+
+from sl1m.generic_solver import *
+
 import sl1m.tools.plot_tools as plot
-from sl1m.generic_solver import solve_L1_combinatorial_biped, solve_L1_combinatorial, solve_MIP, solve_MIP_biped
 
 from time import perf_counter as clock
 
@@ -33,7 +37,7 @@ if __name__ == '__main__':
     t_3 = clock()
 
     if USE_BIPED_PLANNER:
-        pb = TalosProblem()
+        pb = Problem()
         pb.generate_problem(R, surfaces, GAIT, initial_contacts)
         t_4 = clock()
         if USE_MIP:
@@ -56,16 +60,20 @@ if __name__ == '__main__':
             result = solve_L1_combinatorial(pb, surfaces)
 
     t_end = clock()
+    
+    print(result)
 
     print("Optimized number of steps:              ", pb.n_phases)
     print("Total time is:                          ", 1000. * (t_end-t_init))
-    print("Computing the path takes                ", 1000. * (t_1 - t_init))
-    print("Computing the surfaces takes            ", 1000. * (t_2 - t_1))
-    print("Computing the initial contacts takes    ", 1000. * (t_3 - t_2))
-    print("Generating the problem dictionary takes ", 1000. * (t_4 - t_3))
-    print("Solving the problem takes               ", 1000. * (t_end - t_4))
+    print("Computing the surfaces takes            ", 1000. * (t_1 - t_init))
+    print("Computing the initial contacts takes    ", 1000. * (t_2 - t_1))
+    print("Generating the problem dictionary takes ", 1000. * (t_3 - t_2))
+    print("Solving the problem takes               ", 1000. * (t_end - t_3))
     print("The LP and QP optimizations take        ", result.time)
 
     ax = plot.draw_scene(surfaces, GAIT)
     plot.plot_initial_contacts(initial_contacts, ax=ax)
-    plot.plot_planner_result(result.coms, result.moving_foot_pos, result.all_feet_pos, ax, True)
+    if(result.success):
+        plot.plot_planner_result(result.coms, result.moving_foot_pos, result.all_feet_pos, ax, True)
+    else:
+        plt.show()

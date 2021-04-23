@@ -1,17 +1,4 @@
-from sl1m.constants_and_tools import default_transform_from_pos_normal, convert_surface_to_inequality
-from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
-import numpy as np
-import os
-import sl1m.stand_alone_scenarios
-
-LIMB_NAMES = ["LF", "RF"]
-DIR = os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"
-
-Z = np.array([0., 0., 1.])
-LF = 0
-RF = 1
-
-# General sl1m problem definition
+#  General sl1m problem definition
 #
 # pb.n_effectors = number of effectors
 # pb.p0 = initial feet positions
@@ -23,8 +10,19 @@ RF = 1
 # pb.phaseData[i].root_orientation =  root orientation for phase i
 # pb.phaseData[i].S =  surfaces of phase i
 
+from sl1m.constants_and_tools import default_transform_from_pos_normal, convert_surface_to_inequality
+from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
+import numpy as np
+import os
+import sl1m.stand_alone_scenarios
 
-class TalosPhaseData:
+LIMB_NAMES = ["LF", "RF"]
+Z = np.array([0., 0., 1.])
+LF = 0
+RF = 1
+DIR = os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"
+
+class PhaseData:
     def __init__(self, i, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
         self.moving = moving_foot
         self.root_orientation = R[i]
@@ -81,7 +79,7 @@ class TalosPhaseData:
         self.allRelativeK[LF] = [(RF, (ineLF.A, ineLF.b))]
         self.allRelativeK[RF] = [(LF, (ineRF.A, ineRF.b))]
 
-class TalosProblem:
+class Problem:
     def __init__(self):
         self.n_effectors = 2
 
@@ -112,5 +110,6 @@ class TalosProblem:
         self.n_phases = len(surfaces)
         self.phaseData = []
         for i in range(self.n_phases):
-            self.phaseData.append(TalosPhaseData(
+            self.phaseData.append(PhaseData(
                 i, R, surfaces[i], gait[i % self.n_effectors], normal, self.n_effectors, self.com_objects, self.foot_objects))
+

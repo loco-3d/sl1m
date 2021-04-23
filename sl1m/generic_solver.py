@@ -12,7 +12,7 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
     planner = Planner()
     sparsity_fixed, pb, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
-        pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver)
+        pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
     else:
         return ProblemData(False, t)
     pb_data.time += t
@@ -20,11 +20,11 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
 
 
 
-def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.QUADPROG, costs={}):
+def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
     planner = BipedPlanner()
     sparsity_fixed, pb, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
-        pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver)
+        pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
     else:
         return ProblemData(False, t)
     pb_data.time += t

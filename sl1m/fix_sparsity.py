@@ -15,7 +15,7 @@ except ImportError:
 ALPHA_THRESHOLD = 0.01
 
 
-def optimize_sparse_L1(planner, pb, costs, QP_SOLVER):
+def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
     """
     This solver is called when the sparsity is fixed.
     It assumes the only contact surface for each phase is the one used for contact creation.
@@ -25,8 +25,10 @@ def optimize_sparse_L1(planner, pb, costs, QP_SOLVER):
     """
     G, h, C, d = planner.convert_pb_to_LP(pb, False)
     P, q = planner.compute_costs(costs)
-
-    result = call_QP_solver(P, q, G, h, C, d, QP_SOLVER)
+    if costs != {}:
+        result = call_QP_solver(P, q, G, h, C, d, QP_SOLVER)
+    else:
+        result = call_LP_solver(q, G, h, C, d, LP_SOLVER)
 
     if result.success:
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
@@ -72,7 +74,7 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     sparsity_fixed = False
     i = 0
     for (fixed_pb, _, _) in pbs:
-        G, h, C, d = planner.convert_pb_to_LP(fixed_pb)
+        G, h, C, d = planner.convert_pb_to_LP(fixed_pb, False)
         q = 100. * planner.alphas
         result = call_LP_solver(q, G, h, C, d, LP_SOLVER)
         t += result.time
@@ -162,6 +164,7 @@ def generate_combinatorials(pb, indices, surfaces, surface_indices):
         fixed_pb = copy.deepcopy(pb)
         for i, idx in enumerate(indices):
             fixed_pb.phaseData[idx].S = surfaces[i][combination[i]]
+            fixed_pb.phaseData[idx].n_surfaces = 1
         pbs += [[fixed_pb, indices, sorted_combinations[j]]]
     return pbs
 

@@ -9,13 +9,13 @@ meshPackageName = 'hpp_environments'
 import time
 time.sleep(1)
 
-rbprmBuilder = Robot ()
-rbprmBuilder.setJointBounds ("root_joint", [-3.2,1.8,0.19,0.21, 0.95,1.7])
+rbprmBuilder = Robot()
+rbprmBuilder.setJointBounds ("root_joint", [-3.2,2.5,-0.8,0.3, 1.4,2.])
 # As this scenario only consider walking, we fix the DOF of the torso :
 rbprmBuilder.setJointBounds ('torso_1_joint', [0,0])
 rbprmBuilder.setJointBounds ('torso_2_joint', [0.,0.])
-vMax = 1.# linear velocity bound for the root
-aMax = 2. # linear acceleration bound for the root
+vMax = 0.3# linear velocity bound for the root
+aMax = 0.1 # linear acceleration bound for the root
 extraDof = 6
 mu=0.5# coefficient of friction
 rbprmBuilder.setFilter([Robot.rLegId,Robot.lLegId])
@@ -38,7 +38,7 @@ vf = ViewerFactory (ps)
 from hpp.corbaserver.affordance.affordance import AffordanceTool
 afftool = AffordanceTool ()
 afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.00005])
-afftool.loadObstacleModel ("package://hpp_environments/urdf/multicontact/bauzil_ramp_simplified.urdf", "planning", vf,reduceSizes=[0.,0.,0.])
+afftool.loadObstacleModel ("package://hpp_environments/urdf/multicontact/bauzil_ramp_up.urdf", "planning", vf,reduceSizes=[0,0.,0.])
 v = vf.createViewer(displayArrows = True)
 afftool.visualiseAffordances('Support', v, [0.25, 0.5, 0.5])
 v.addLandmark(v.sceneName,1)
@@ -57,78 +57,22 @@ ps.setParameter("DynamicPlanner/friction",mu)
 # sample only configuration with null velocity and acceleration :
 ps.setParameter("ConfigurationShooter/sampleExtraDOF",False)
 ps.setParameter("PathOptimization/RandomShortcut/NumberOfLoops",100)
+
 # Choosing RBPRM shooter and path validation methods.
 ps.selectConfigurationShooter("RbprmShooter")
 ps.addPathOptimizer ("RandomShortcutDynamic")
-ps.selectPathValidation("RbprmPathValidation",0.05)
+ps.selectPathValidation("RbprmDynamicPathValidation",0.05)
 # Choosing kinodynamic methods :
 ps.selectSteeringMethod("RBPRMKinodynamic")
 ps.selectDistance("Kinodynamic")
 ps.selectPathPlanner("DynamicPlanner")
 
-
-### BEGIN rubbles #####
-ps.setParameter("Kinodynamic/velocityBound",0.3)
-ps.setParameter("Kinodynamic/accelerationBound",1.)
-q_init = rbprmBuilder.getCurrentConfig ();
-q_init [0:3] =  [-3.1, 0.2,0.98] ; v(q_init) # before rubbles
-q_goal = q_init [::]
-q_goal [0:3] =  [-0.3, 0.2,0.98] ; v(q_goal) # between rubble and stairs
-q_goal[-6:-3] = [0.1,0,0]
-ps.setInitialConfig (q_init)
-q_init_0 = q_init[::]
-ps.addGoalConfig (q_goal)
-v(q_goal)
-q_init_0 = q_init[::]
-t = ps.solve ()
-print("done planning, optimize path ...")
-#v.solveAndDisplay('rm',2,0.005)
-
-for i in range(5):
-  ps.optimizePath(ps.numberPaths() -1)
-
-pathId = ps.numberPaths() -1
-#pId_rubbles = ps.numberPaths() -1
-### END rubbles #####
-#ps.resetGoalConfigs()
-#pathId = pId_rubbles
-
-"""
-
-### BEGIN climb the stairs #####
-ps.setParameter("Kinodynamic/velocityBound",0.3)
-ps.setParameter("Kinodynamic/accelerationBound",0.1)
-q_init = rbprmBuilder.getCurrentConfig ();
-q_init [0:3] =  [-0.3, 0.2,0.98] ; v(q_init) # between rubble and stairs
-#q_init = q_goal[::] ; v(q_init) # between rubble and stairs
-#q_init[-6:-3] = [0.15,0,0]
-q_goal = q_init [::]
-q_goal [0:3] = [1.7, 0.2, 1.58]; v (q_goal) #top of stairs
-q_goal[-6:-3] = [0,0,0]
-ps.setInitialConfig (q_init)
-q_init_0 = q_init[::]
-ps.addGoalConfig (q_goal)
-v(q_goal)
-
-
-t = ps.solve ()
-print "done planning, optimize path ..."
-#v.solveAndDisplay('rm',2,0.005)
-
-for i in range(5):
-  ps.optimizePath(ps.numberPaths() -1)
-
-pId_stairs = ps.numberPaths() -1
-### END climb the stairs #####
-rbprmBuilder.setJointBounds ("root_joint", [-3.2,2.5,-0.8,0.3, 1.4,2.])
-ps.resetGoalConfigs()
 ### BEGIN turn around on the platform #####
-ps.setParameter("Kinodynamic/velocityBound",0.2)
-ps.setParameter("Kinodynamic/accelerationBound",0.07)
 q_init = rbprmBuilder.getCurrentConfig ();
 #q_init [0:3] =  [-3.1, 0.2,0.98] ; v(q_init) # before rubblem
 #q_init [0:3] =  [-0.2, 0.2,0.98] ; v(q_init) # between rubble and stairs
-q_init = q_goal[::] ; v (q_init) #top of stairs
+q_init [0:3] = [1.7, 0.2, 1.58]; v (q_init) #top of stairs
+q_init_0 = q_init[::]
 #q_init [0:3] = [1.7, -0.6, 1.58]; v (q_init) #top of stairs
 #q_init[3:7] = [0,0,1,0]
 q_init[-6:-3] = [0.2,0,0]
@@ -143,7 +87,7 @@ ps.addGoalConfig (q_goal)
 v(q_goal)
 
 t = ps.solve ()
-print "done planning, optimize path ..."
+print("done planning, optimize path ...")
 #v.solveAndDisplay('rm',2,0.005)
 for i in range(5):
   ps.optimizePath(ps.numberPaths() -1)
@@ -152,8 +96,6 @@ pId_platform =  ps.numberPaths() -1
 ### END turn around on the platform #####
 ps.resetGoalConfigs()
 ### BEGIN bridge cross #####
-ps.setParameter("Kinodynamic/velocityBound",0.3)
-ps.setParameter("Kinodynamic/accelerationBound",0.2)
 q_init = rbprmBuilder.getCurrentConfig ();
 q_init = q_goal[::]; v (q_init) #top of stairs
 q_goal [0:3] = [-1.7, -0.6, 1.58]; v (q_goal) # after bridge
@@ -164,20 +106,16 @@ ps.addGoalConfig (q_goal)
 v(q_goal)
 
 t = ps.solve ()
-print "done planning, optimize path ..."
+print("done planning, optimize path ...")
 #v.solveAndDisplay('rm',2,0.005)
 for i in range(5):
   ps.optimizePath(ps.numberPaths() -1)
 
 pId_bridge =  ps.numberPaths() -1
 ### END bridge cross #####
-# merge all paths
-pathId = pId_stairs
-#ps.concatenatePath(pathId,pId_stairs)
-ps.concatenatePath(pathId,pId_platform)
-ps.concatenatePath(pathId,pId_bridge)
 
-"""
+ps.concatenatePath(pId_platform,pId_bridge)
+pathId = pId_platform
 
 print("done optimizing.")
 from hpp.gepetto import PathPlayer
