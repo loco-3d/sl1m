@@ -10,9 +10,10 @@ from sl1m.problem_data import ProblemData
 
 def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
     planner = Planner()
-    sparsity_fixed, pb, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
+    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
         pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
+        pb_data.surface_indices = surface_indices
     else:
         return ProblemData(False, t)
     pb_data.time += t
@@ -22,9 +23,10 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
 
 def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
     planner = BipedPlanner()
-    sparsity_fixed, pb, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
+    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
         pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
+        pb_data.surface_indices = surface_indices
     else:
         return ProblemData(False, t)
     pb_data.time += t
@@ -47,7 +49,8 @@ def solve_MIP(pb, surfaces, costs={}, solver=Solvers.GUROBI):
     if result.success:
         alphas = planner.get_alphas(result.x)
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
-        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, alphas)
+        surface_indices = planner.selected_surfaces(alphas)
+        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, surface_indices)
     return ProblemData(False, result.time)
 
 def solve_MIP_biped(pb, surfaces, costs={}, solver=Solvers.GUROBI):
@@ -64,5 +67,6 @@ def solve_MIP_biped(pb, surfaces, costs={}, solver=Solvers.GUROBI):
     if result.success:
         alphas = planner.get_alphas(result.x)
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
-        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, alphas)
+        surface_indices = planner.selected_surfaces(alphas)
+        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, surface_indices)
     return ProblemData(False, result.time)

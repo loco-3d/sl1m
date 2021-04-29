@@ -1,11 +1,11 @@
 class ProblemData:
-    def __init__(self, success, time, coms=None, moving_foot_pos=None, all_feet_pos=None, alphas=None):
+    def __init__(self, success, time, coms=None, moving_foot_pos=None, all_feet_pos=None, surface_indices=None):
         self.success = success
         self.time = time
         self.coms = coms
         self.moving_foot_pos = moving_foot_pos
         self.all_feet_pos = all_feet_pos
-        self.alphas = alphas
+        self.surface_indices = surface_indices
 
     def __str__(self):
         string = "ProblemData: "

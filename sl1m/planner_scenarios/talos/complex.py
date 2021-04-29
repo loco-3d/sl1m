@@ -6,7 +6,7 @@ from talos_rbprm.talos import Robot as Talos
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
 from sl1m.planner_scenarios.talos.lp_complex_path import compute_path
 
-from sl1m.stand_alone_scenarios.problem_definition_talos import Problem
+from sl1m.stand_alone_scenarios.problem_definition_talos import Problem as TalosProblem
 from sl1m.problem_definition import Problem
 
 from sl1m.generic_solver import *
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     t_3 = clock()
 
     if USE_BIPED_PLANNER:
-        pb = Problem()
+        pb = TalosProblem()
         pb.generate_problem(R, surfaces, GAIT, initial_contacts)
         t_4 = clock()
         if USE_MIP:

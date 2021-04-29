@@ -117,7 +117,7 @@ def plot_first_step(configs, coms, moving_foot_pos, gait, ax=None):
     plot_point(ax, moving_foot_pos[0], color=COLORS[gait[0]])
 
 
-def plot_selected_surfaces(surfaces, alphas, gait, ax=None):
+def plot_selected_surfaces(surfaces, surface_indices, gait, ax=None):
     """
     Plot the surface with the minimum alpha
     """
@@ -125,11 +125,7 @@ def plot_selected_surfaces(surfaces, alphas, gait, ax=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     for i, surfaces_phase in enumerate(surfaces):
-        if len(alphas[i]) >= 2:
-            index = np.argmin(alphas[i])
-            plot_surface(surfaces_phase[index], ax, gait[i % len(gait)])
-        else:
-            plot_surface(surfaces_phase[0], ax, gait[i % len(gait)])
+        plot_surface(surfaces_phase[surface_indices[i]], ax, gait[i % len(gait)])
     return ax
 
 

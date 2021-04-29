@@ -192,6 +192,20 @@ class Planner:
         C, d = normalize([C, d])
         return G, h, C, d
 
+    def selected_surfaces(self, alphas):
+        """
+        :param: alphas the list of slack variables found by the planner
+        Return the list of selected surfaces indices in the problem
+        """
+        indices = []
+        for id, phase in enumerate(self.pb.phaseData):
+            if phase.n_surfaces == 1:
+                index = 0
+            else:
+                index = np.argmin(alphas[id])
+            indices.append(index)
+        return indices
+
     def get_alphas(self, result):
         """
         Retrieve the alphas from the result

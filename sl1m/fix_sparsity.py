@@ -55,25 +55,25 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     t = result.time
     if not result.success:
         print("Initial LP solver fails in fix_sparsity_combinatorial")
-        return False, pb, t
+        return False, pb, [], t
 
     alphas = planner.get_alphas(result.x)
     if is_sparsity_fixed(pb, alphas):
-        surface_indices = selected_surfaces(pb, alphas)
+        surface_indices = planner.selected_surfaces(alphas)
         for i, phase in enumerate(pb.phaseData):
             phase.S = [phase.S[surface_indices[i]]]
             phase.n_surfaces = len(phase.S)
-        return True, pb, t
+        return True, pb, surface_indices, t
 
     pbs = generate_fixed_sparsity_problems(pb, alphas)
     if pbs == None:
         print("No combinatorial problems was found")
-        return False, pb, t
+        return False, pb, [], t
 
     # Handle the combinatorial
     sparsity_fixed = False
     i = 0
-    for (fixed_pb, _, _) in pbs:
+    for (fixed_pb, _, solution_indices) in pbs:
         G, h, C, d = planner.convert_pb_to_LP(fixed_pb, False)
         q = 100. * planner.alphas
         result = call_LP_solver(q, G, h, C, d, LP_SOLVER)
@@ -81,22 +81,27 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
         if result.success:
             alphas = planner.get_alphas(result.x)
             if is_sparsity_fixed(fixed_pb, alphas):
-                pb = fixed_pb
                 sparsity_fixed = True
                 break
         i += 1
 
     if not sparsity_fixed:
         print("Sparsity could not be fixed")
-        return False, pb, t
+        return False, fixed_pb, [], t
 
-    surface_indices = selected_surfaces(pb, alphas)
-    for i, phase in enumerate(pb.phaseData):
+    fixed_pb_surface_indices = planner.selected_surfaces(alphas)
+    j = 0
+    surface_indices = []
+    for i, phase in enumerate(fixed_pb.phaseData):
         if phase.n_surfaces > 1:
-            phase.S = [phase.S[surface_indices[i]]]
+            phase.S = [phase.S[fixed_pb_surface_indices[i]]]
             phase.n_surfaces = len(phase.S)
+            surface_indices.append(fixed_pb_surface_indices[i])
+        else:
+            surface_indices.append(solution_indices[j])
+            j += 1
 
-    return sparsity_fixed, pb, t
+    return sparsity_fixed, fixed_pb, surface_indices, t
 
 
 def get_undecided_surfaces(pb, alphas):
@@ -104,7 +109,7 @@ def get_undecided_surfaces(pb, alphas):
     Get the surfaces and indices of all the undecided surfaces
     :param: planner the planner
     :param: pb the problem data
-    Return the phase indices, sorted surface indices and sorted potential surfaces
+    Return the phase indices, sorted potential surfaces and sorted surface indices
     """
     indices = []
     surfaces = []
@@ -153,7 +158,7 @@ def generate_combinatorials(pb, indices, surfaces, surface_indices):
     Generate all the problems with only one potential surface per undecided phase
     :param: pb the problem data
     :param: alphas the list of slack variables found by the planner
-    Return the list of problems, the indices of the selected surfaces, and the phase in
+    Return the list of problems, the phase indices, and the indices of the selected surfaces
     """
     pbs = []
     sorted_combinations = [el for el in itertools.product(*surface_indices)]
@@ -169,17 +174,4 @@ def generate_combinatorials(pb, indices, surfaces, surface_indices):
     return pbs
 
 
-def selected_surfaces(pb, alphas):
-    """
-    :param: pb the problem data
-    :param: alphas the list of slack variables found by the planner
-    Return the list of selected surfaces indices in the problem
-    """
-    indices = []
-    for id, phase in enumerate(pb.phaseData):
-        if phase.n_surfaces == 1:
-            index = 0
-        else:
-            index = np.argmin(alphas[id])
-        indices.append(index)
-    return indices
+
