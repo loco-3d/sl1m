@@ -13,12 +13,7 @@ GAIT = [0, 1]
 
 if __name__ == '__main__':
     t_init = clock()
-
-
-
-    R = []
-    for i in range(len(surfaces)):
-        R.append(np.identity(3))
+    R = [np.identity(3)] * len(surfaces)
     t_1 = clock()
 
     initial_contacts = [np.array([1.7,  0.285,  0.6]), np.array([1.7,  0.115,  0.6])]

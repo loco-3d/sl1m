@@ -71,7 +71,7 @@ def getSurfacesFromGuideContinuous(rbprmBuilder, ps, afftool, pathId, viewer=Non
         from hpp.corbaserver.rbprm.tools.display_tools import displaySurfaceFromPoints
 
     window_size = 0.5  # smaller step at which we check the colliding surfaces
-    if pathId == None:
+    if pathId is None:
         pathId = ps.numberPaths() - 1
     pathLength = ps.pathLength(pathId)  # length of the path
 
@@ -136,7 +136,7 @@ def getSurfacesFromGuideContinuous(rbprmBuilder, ps, afftool, pathId, viewer=Non
 def getSurfacesFromGuide(rbprmBuilder, ps, afftool, pathId, viewer=None, step=0.6, useIntersection=False):
     if viewer:
         from hpp.corbaserver.rbprm.tools.display_tools import displaySurfaceFromPoints
-    if pathId == None:
+    if pathId is None:
         pathId = ps.numberPaths() - 1
     pathLength = ps.pathLength(pathId)  # length of the path
     configs = []

@@ -3,20 +3,21 @@ from sl1m.constants_and_tools import replace_surfaces_with_ineq_in_problem, norm
 from sl1m.constraints_biped import BipedConstraints
 
 
-# Implements an optimization problem to find the next surfaces to use for a biped robot
-#
-# The problem is a has these variables for each phase:
-# [ p_i_x, p_i_y, p_i_z, com_z, {alpha_i, beta_i}                        ]
-# [ 1    , 1    , 1    , 1    , 0 if n_surfaces == 1, else 2 * n_surfaces]
-#
-# Under the following constraints :
-# - fixed_foot_com: Ensures the COM is 'above' the fixed feet
-# - foot_relative_distance: Ensures the moving feet is close enough to the other feet
-# - surface: Each foot belongs to one surface
-# - slack_positivity: The slack variables are positive and beta is between -alpha and alpha
-
-
 class BipedPlanner:
+    """
+    Implements an optimization problem to find the next surfaces to use for a biped robot
+
+    The problem is a has these variables for each phase:
+    [ p_i_x, p_i_y, p_i_z, com_z, {alpha_i, beta_i}                        ]
+    [ 1    , 1    , 1    , 1    , 0 if n_surfaces == 1, else 2 * n_surfaces]
+
+    Under the following constraints :
+    - fixed_foot_com: Ensures the COM is 'above' the fixed feet
+    - foot_relative_distance: Ensures the moving feet is close enough to the other feet
+    - surface: Each foot belongs to one surface
+    - slack_positivity: The slack variables are positive and beta is between -alpha and alpha
+    """
+
     def __init__(self):
         self.default_n_variables = 4
         self.slack_scale = 10.
@@ -24,8 +25,8 @@ class BipedPlanner:
         self.n_slack_per_surface = 2
         self.n_ineq_per_surface = 2
 
-        self.foot = self.__expression_matrix(3, 0)
-        self.com = self.__expression_matrix(3, 0)
+        self.foot = self._expression_matrix(3, 0)
+        self.com = self._expression_matrix(3, 0)
         self.com[2, 2] = 0
         self.com[2, 3] = 1
         self.com_xy = self.com[:2, :]
@@ -37,27 +38,27 @@ class BipedPlanner:
                           "posture": self.posture_cost,
                           "step_size": self.step_size_cost}
 
-    def __expression_matrix(self, size, j):
+    def _expression_matrix(self, size, j):
         """
-        Generate a selection matrix for a given variable 
+        Generate a selection matrix for a given variable
         @param size number of rows of the variable
         @param x position of the variable in the phase variables
-        @return a (size, number of default variables (without slacks)) matrix with identity at column j
+        @return a(size, number of default variables(without slacks)) matrix with identity at column j
         """
         M = np.zeros((size, self.default_n_variables))
         M[:, j:j+size] = np.identity(size)
         return M
 
-    def __slack_selection_vector(self):
+    def _slack_selection_vector(self):
         """
         Get the selection matrix of the slack variables
         @return the selection matrix
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         selection_vector = np.zeros(n_variables)
         i = 0
         for phase in self.pb.phaseData:
-            phase_n_variables = self.__phase_n_variables(phase)
+            phase_n_variables = self._phase_n_variables(phase)
             n_slacks = phase_n_variables - self.default_n_variables
             i_start = i + self.default_n_variables
             for i_slack in range(0, n_slacks, self.n_slack_per_surface):
@@ -71,9 +72,9 @@ class BipedPlanner:
         @param pb new problem data
         """
         self.pb = pb
-        self.alphas = self.__slack_selection_vector()
+        self.alphas = self._slack_selection_vector()
 
-    def __phase_n_variables(self, phase):
+    def _phase_n_variables(self, phase):
         """
         Counts the number of variables in a phase
         @param phase concerned phase
@@ -85,14 +86,14 @@ class BipedPlanner:
             n_variables += n_surfaces * self.n_slack_per_surface
         return n_variables
 
-    def __total_n_variables(self):
+    def _total_n_variables(self):
         """
         Counts the number of variables, inequalities constraints in the problem
         @return the number of variables of the problem
         """
-        return sum([self.__phase_n_variables(phase) for phase in self.pb.phaseData])
+        return sum([self._phase_n_variables(phase) for phase in self.pb.phaseData])
 
-    def __phase_n_ineq(self, phase):
+    def _phase_n_ineq(self, phase):
         """
         Counts the dimension of the inequalities in a phase
         - COM Kinematic constraints: summation over all effectors, times 2 because there are 2 height possible for the transition
@@ -116,32 +117,32 @@ class BipedPlanner:
             n_ineq += n_surfaces * self.n_ineq_per_surface
         return n_ineq
 
-    def __total_n_ineq(self):
+    def _total_n_ineq(self):
         """
         Counts the number of inequality constraints
         @return the number of inequality constraints of the problem
         """
-        return sum([self.__phase_n_ineq(phase) for phase in self.pb.phaseData])
+        return sum([self._phase_n_ineq(phase) for phase in self.pb.phaseData])
 
-    def __phase_n_eq(self, phase):
+    def _phase_n_eq(self, phase):
         """
         Counts the dimension of the equality constraints of a phase
         @param phase concerned phase
         """
         return len(phase.S)
 
-    def __total_n_eq(self):
+    def _total_n_eq(self):
         """
         Counts the number of equality constraints
         @return the number of equality constraints of the problem
         """
-        return sum([self.__phase_n_eq(phase) for phase in self.pb.phaseData])
+        return sum([self._phase_n_eq(phase) for phase in self.pb.phaseData])
 
     def convert_pb_to_LP(self, pb, convert_surfaces=True):
         """
         Compute the constraints:
         G x <= h
-        C x  = d
+        C x = d
 
         @param pb problem data
         @return G, h, C, d
@@ -151,9 +152,9 @@ class BipedPlanner:
 
         self.set_problem(pb)
 
-        n_variables = self.__total_n_variables()
-        n_ineq = self.__total_n_ineq()
-        n_eq = self.__total_n_eq()
+        n_variables = self._total_n_variables()
+        n_ineq = self._total_n_ineq()
+        n_eq = self._total_n_eq()
 
         A = np.zeros((n_ineq, n_variables))
         b = np.zeros(n_ineq)
@@ -178,7 +179,7 @@ class BipedPlanner:
             i_start_eq = constraints.surface_equality(phase, E, e, j, i_start_eq)
 
             j_previous = j
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         A, b = normalize([A, b])
         E, e = normalize([E, e])
@@ -186,7 +187,7 @@ class BipedPlanner:
 
     def selected_surfaces(self, alphas):
         """
-        :param: alphas the list of slack variables found by the planner
+        : param: alphas the list of slack variables found by the planner
         Return the list of selected surfaces indices in the problem
         """
         indices = []
@@ -209,11 +210,11 @@ class BipedPlanner:
         j = 0
         for phase in self.pb.phaseData:
             phase_alphas = []
-            for j_slack in range(self.default_n_variables, self.__phase_n_variables(phase), self.n_slack_per_surface):
+            for j_slack in range(self.default_n_variables, self._phase_n_variables(phase), self.n_slack_per_surface):
                 phase_alphas.append(result[j + j_slack])
             alphas.append(phase_alphas)
 
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
         return alphas
 
     def get_result(self, result):
@@ -241,7 +242,7 @@ class BipedPlanner:
             all_feet_pos[moving_foot].append(moving_foot_pos[i])
             all_feet_pos[fixed_foot].append(all_feet_pos[fixed_foot][-1])
 
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         all_feet_pos[0].pop(0)
         all_feet_pos[1].pop(0)
@@ -254,7 +255,7 @@ class BipedPlanner:
         @param coms list of target positions for the com
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -267,17 +268,17 @@ class BipedPlanner:
             P += np.dot(A.T, A)
             q += -np.dot(A.T, b).reshape(A.shape[1])
 
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
     def end_com_cost(self, com):
         """
-        Compute a cost to keep the final CoM position close to a target one 
+        Compute a cost to keep the final CoM position close to a target one
         @param com Target final com position
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -291,17 +292,17 @@ class BipedPlanner:
 
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
     def end_effectors_position_cost(self, effector_positions):
         """
-        Compute a cost to keep the final end effectors positions closed to target ones 
+        Compute a cost to keep the final end effectors positions closed to target ones
         @param effector_positions list of each effector's final position
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -315,7 +316,7 @@ class BipedPlanner:
 
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
@@ -326,7 +327,7 @@ class BipedPlanner:
         """
         relative_positions = [self.pb.p0[1] - self.pb.p0[0]]
 
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -355,7 +356,7 @@ class BipedPlanner:
             q += -np.dot(A.T, b).reshape(A.shape[1])
 
             j_previous = j
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
@@ -365,7 +366,7 @@ class BipedPlanner:
         @param step_size desired size of the steps
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -385,17 +386,18 @@ class BipedPlanner:
             q += -np.dot(A.T, b).reshape(A.shape[1])
 
             j_previous = j
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
     def compute_costs(self, costs):
         """
         This function computes the P and q cost matrix and vector given a cost dictionary
+
         @param costs the cost dictionary. The keys should match keys from self.cost_dict
         @return P, q the cost matrix and vector of the QP problem
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
 
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)

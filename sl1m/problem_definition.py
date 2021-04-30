@@ -2,20 +2,17 @@ from sl1m.constants_and_tools import default_transform_from_pos_normal, convert_
 from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
 import numpy as np
 
-# General sl1m problem definition
-#
-# pb.n_effectors = number of effectors
-# pb.p0 = initial feet positions
-# pb.c0 = initial com positions
-# pb.nphases = number of phases
-# pb.phaseData[i].Moving =  moving effector in phase i
-# pb.phaseData[i].K =  Com constraints for phase i, for each limb and each surface
-# pb.phaseData[i].allRelativeK =  Relative constraints for phase i for each limb and each surface
-# pb.phaseData[i].root_orientation =  root orientation for phase i
-# pb.phaseData[i].S =  surfaces of phase i
-
 
 class PhaseData:
+    """
+    phaseData.moving =  moving feet in phase i
+    phaseData.root_orientation =  root orientation for phase i
+    phaseData.S =  surfaces of phase i
+    phaseData.n_surfaces =  number of surfaces
+    phaseData.K =  Com constraints for the phase, for each foot and each surface
+    phaseData.allRelativeK =  Relative constraints for the phase for each foot and each surface
+    """
+
     def __init__(self, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
         self.moving = moving_foot
         self.root_orientation = R
@@ -55,6 +52,15 @@ class PhaseData:
 
 
 class Problem:
+    """
+    General sl1m problem definition
+
+    pb.n_effectors = number of effectors
+    pb.p0 = initial feet positions
+    pb.c0 = initial com positions
+    pb.nphases = number of phases
+    pb.phaseData list of Phase data objects
+    """
 
     def __init__(self, Robot, suffix_com="_effector_frame_quasi_static_reduced.obj", suffix_feet="_reduced.obj", limb_names=None):
         if limb_names:

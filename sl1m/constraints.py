@@ -1,37 +1,39 @@
 import numpy as np
 
-# Implementation of the class constraints, which implements the constraints used by the generic planner
-#
-# The problem is a LP with these variables for each phase:
-#  [ com_x, com_y, com_z_1, com_z_2, p_i_x, p_i_y, p_i_z, {a_i}                                ]
-#  [ 1    , 1    , 1      , 1      , 3                  , 0 if n_surfaces == 1, else n_surfaces]
-#
-# Under the following constraints :
-# - fixed_foot_com: Ensures the COM is 'above' the fixed feet
-# - foot_relative_distance: Ensures the moving feet is close enough to the other feet
-# - surface: Each foot belongs to one surface
-# - slack_positivity: The slack variables are positive
-# - com_weighted_equality: Fix the horizontal position of the COm at the barycenter of the contact points (fixed feet)
-
 
 class Constraints:
+    """
+    Implementation of the class constraints, which implements the constraints used by the generic planner
+
+    The problem is a LP with these variables for each phase:
+    [ com_x, com_y, com_z_1, com_z_2, p_i_x, p_i_y, p_i_z, {a_i}                                ]
+    [ 1    , 1    , 1      , 1      , 3                  , 0 if n_surfaces == 1, else n_surfaces]
+
+    Under the following constraints :
+    - fixed_foot_com: Ensures the COM is 'above' the fixed feet
+    - foot_relative_distance: Ensures the moving feet is close enough to the other feet
+    - surface: Each foot belongs to one surface
+    - slack_positivity: The slack variables are positive
+    - com_weighted_equality: Fix the horizontal position of the COm at the barycenter of the contact points (fixed feet)
+    """
+
     def __init__(self, n_effectors):
         self.n_effectors = n_effectors
         self.default_n_variables = 7
 
-        self.WEIGHTS = [1./float(n_effectors - 1) for _ in range(n_effectors)]
-
-        self.com_xy = self.__expression_matrix(2, 0)
-        self.com_1 = self.__expression_matrix(3, 0)
-        self.com_2 = self.__expression_matrix(3, 0)
+        self.WEIGHTS = [1./float(n_effectors - 1)] * n_effectors
+        
+        self.com_xy = self._expression_matrix(2, 0)
+        self.com_1 = self._expression_matrix(3, 0)
+        self.com_2 = self._expression_matrix(3, 0)
         self.com_2[2, 2] = 0
         self.com_2[2, 3] = 1
-        self.com_1_z = self.__expression_matrix(1, 2)
-        self.com_2_z = self.__expression_matrix(1, 3)
-        self.foot = self.__expression_matrix(3, 4)
-        self.foot_xy = self.__expression_matrix(2, 4)
+        self.com_1_z = self._expression_matrix(1, 2)
+        self.com_2_z = self._expression_matrix(1, 3)
+        self.foot = self._expression_matrix(3, 4)
+        self.foot_xy = self._expression_matrix(2, 4)
 
-    def __expression_matrix(self, size, j):
+    def _expression_matrix(self, size, j):
         """
         Generate a selection matrix for a given variable 
         @param size number of rows of the variable
@@ -42,7 +44,7 @@ class Constraints:
         M[:, j:j+size] = np.identity(size)
         return M
 
-    def __fixed_foot_com_2_kinematic(self, pb, phase, G, h, i_start, js, feet_phase):
+    def _fixed_foot_com_2_kinematic(self, pb, phase, G, h, i_start, js, feet_phase):
         """
         The COM 2 must belong to a reachable polytope above each end-effector of the phase
         For each effector id , K_id (c2 - p_id) <= k_id
@@ -78,7 +80,7 @@ class Constraints:
                 i += l
         return i
 
-    def __fixed_foot_com_1_kinematic(self, pb, phase,  G, h, i_start, js, feet_phase):
+    def _fixed_foot_com_1_kinematic(self, pb, phase,  G, h, i_start, js, feet_phase):
         """
         The COM 1 must belong to a reachable polytope above each end-effector of the previous phase
         For each effector id , K_id (c1- p_id(t-1)) <= k_id
@@ -141,8 +143,8 @@ class Constraints:
         """
         i = i_start
         if phase_id != 0:
-            i = self.__fixed_foot_com_1_kinematic(pb, phase,  G, h, i_start, js, feet_phase)
-        return self.__fixed_foot_com_2_kinematic(pb, phase,  G, h, i, js, feet_phase)
+            i = self._fixed_foot_com_1_kinematic(pb, phase,  G, h, i_start, js, feet_phase)
+        return self._fixed_foot_com_2_kinematic(pb, phase,  G, h, i, js, feet_phase)
 
     def foot_relative_distance(self, pb, phase, G, h, i_start, js, feet_phase):
         """
@@ -206,7 +208,7 @@ class Constraints:
         i = i_start
         n_surfaces = phase.n_surfaces
         j_alpha = self.default_n_variables
-        for (S, s) in phase.S:
+        for S, s in phase.S:
             l = S.shape[0]
             G[i:i + l, j:j + self.default_n_variables] = S.dot(self.foot)
             h[i:i + l] = s
@@ -216,7 +218,7 @@ class Constraints:
             i += l
         return i
 
-    def __com_weighted_equality(self, pb, phase, C, d, i_start, js, feet_phase):
+    def _com_weighted_equality(self, pb, phase, C, d, i_start, js, feet_phase):
         """
         The 2D position of the com should be the baricenter of the fixed feet locations
         0 =  sum(fixed_foot i) WEIGHT * p_i_x_y - c_x_y
@@ -244,7 +246,7 @@ class Constraints:
         i += 2
         return i
 
-    def __com_equality_init(self, pb, C, d, i_start):
+    def _com_equality_init(self, pb, C, d, i_start):
         """
         The  initial com position is defined in the problem
         @param pb          The problem specific data
@@ -274,6 +276,6 @@ class Constraints:
         @return i_start + the number of rows used by the constraint
         """
         if phase_id != 0:
-            return self.__com_weighted_equality(pb, phase, C, d, i_start, js, feet_phase)
+            return self._com_weighted_equality(pb, phase, C, d, i_start, js, feet_phase)
         else:
-            return self.__com_equality_init(pb, C, d, i_start)
+            return self._com_equality_init(pb, C, d, i_start)

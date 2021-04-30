@@ -16,9 +16,7 @@ GAIT = [0, 1]
 
 if __name__ == '__main__':
     t_init = clock()
-    R = []
-    for i in range(len(quadruped_surfaces)):
-        R.append(np.identity(3))
+    R = [np.identity(3)] * len(quadruped_surfaces)s
     t_1 = clock()
 
     anymal = Anymal()
@@ -27,12 +25,15 @@ if __name__ == '__main__':
 
     q_floor = q_init.copy()
     q_floor[2] = 0.
-    initial_contacts = [(np.array(q_floor[:3]) + anymal.dict_limb_offset[foot]) for foot in anymal.limbs_names]
-    
+    initial_contacts = [(np.array(q_floor[:3]) + anymal.dict_limb_offset[foot])
+                        for foot in anymal.limbs_names]
+
     t_2 = clock()
 
-    anymal.kinematic_constraints_path = os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_"
-    anymal.relative_feet_constraints_path = os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/relative_effector_positions/anymal_"
+    anymal.kinematic_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
+        "/share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_"
+    anymal.relative_feet_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
+        "/share/anymal-rbprm/relative_effector_positions/anymal_"
 
     pb = Problem(anymal, suffix_com="_effector_frame_quasi_static_upscale.obj")
     pb.generate_problem(R, quadruped_surfaces, np.array([0, 3, 2, 1]), initial_contacts, q_init[:3])

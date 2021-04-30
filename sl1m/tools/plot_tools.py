@@ -149,24 +149,10 @@ def plot_heightmap(heightmap, alpha=1., ax=None):
     return ax
 
 
-def plot_result(initial_contacts, coms, moving_foot_pos, gait, ax=None):
-    if ax is None:
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection="3d")
-    ax.grid(False)
-
-    ax.set_autoscale_on(False)
-    ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
-
-    plot_initial_contacts(initial_contacts, ax=ax)
-
-    for i in range(len(coms)):
-        plot_point(ax, coms[i], color=COLORS[len(gait) + 2])
-        color = gait[i % len(gait)]
-        plot_point(ax, moving_foot_pos[i], color=COLORS[color])
-
-
 def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
+    """
+    Plot a list of points
+    """
     x = np.array(wps)[:, 0]
     y = np.array(wps)[:, 1]
     if(D3):
@@ -177,6 +163,9 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
 
 
 def plot_planner_result(coms, moving_foot_pos, all_feet_pos, ax=None, show=True):
+    """
+    Plot the feet positions and com positions
+    """
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")

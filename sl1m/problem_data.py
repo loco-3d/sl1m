@@ -1,4 +1,8 @@
 class ProblemData:
+    """
+    Class to store the result of the planning problem
+    """
+
     def __init__(self, success, time, coms=None, moving_foot_pos=None, all_feet_pos=None, surface_indices=None):
         self.success = success
         self.time = time

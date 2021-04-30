@@ -18,9 +18,7 @@ COSTS = {"posture": [1.0]}
 
 if __name__ == '__main__':
     t_init = clock()
-    R = []
-    for i in range(len(surfaces)):
-        R.append(np.identity(3))
+    R = [np.identity(3)] * len(surfaces)
     t_1 = clock()
 
     solo = Solo()

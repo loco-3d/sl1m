@@ -2,31 +2,33 @@ import numpy as np
 from sl1m.constants_and_tools import *
 from sl1m.constraints import Constraints
 
-# Implements an optimization problem to find the next surfaces to use
-#
-# The problem is a LP with these variables for each phase:
-# [ com_x, com_y, com_z_1, com_z_2, p_i_x, p_i_y, p_i_z, {a_i}                                ]
-# [ 1    , 1    , 1      , 1      , 1    , 1    , 1    , 0 if n_surfaces == 1, else n_surfaces]
-#
-# Under the following constraints :
-# - fixed_foot_com: Ensures the COM is 'above' the fixed feet
-# - foot_relative_distance: Ensures the moving feet is close enough to the other feet
-# - surface: Each foot belongs to one surface
-# - slack_positivity: The slack variables are positive
-# - com_weighted_equality: Fix the horizontal position of the CoM at the barycenter of the contact points (fixed feet)
-
 
 class Planner:
+    """
+    Implements an optimization problem to find the next surfaces to use
+
+    The problem is a LP with these variables for each phase:
+    [ com_x, com_y, com_z_1, com_z_2, p_i_x, p_i_y, p_i_z, {a_i}                                ]
+    [ 1    , 1    , 1      , 1      , 1    , 1    , 1    , 0 if n_surfaces == 1, else n_surfaces]
+
+    Under the following constraints :
+    - fixed_foot_com: Ensures the COM is 'above' the fixed feet
+    - foot_relative_distance: Ensures the moving feet is close enough to the other feet
+    - surface: Each foot belongs to one surface
+    - slack_positivity: The slack variables are positive
+    - com_weighted_equality: Fix the horizontal position of the CoM at the barycenter of the contact points (fixed feet)
+    """
+
     def __init__(self):
         self.default_n_variables = 7
         self.default_n_equality_constraints = 2
 
-        self.com_xy = self.__expression_matrix(2, 0)
-        self.com_2 = self.__expression_matrix(3, 0)
+        self.com_xy = self._expression_matrix(2, 0)
+        self.com_2 = self._expression_matrix(3, 0)
         self.com_2[2, 2] = 0
         self.com_2[2, 3] = 1
-        self.foot = self.__expression_matrix(3, 4)
-        self.foot_xy = self.__expression_matrix(2, 4)
+        self.foot = self._expression_matrix(3, 4)
+        self.foot_xy = self._expression_matrix(2, 4)
 
         self.cost_dict = {"final_com": self.end_com_cost,
                           "effector_positions": self.end_effectors_position_cost,
@@ -34,7 +36,7 @@ class Planner:
                           "posture": self.posture_cost,
                           "step_size": self.step_size_cost}
 
-    def __expression_matrix(self, size, j):
+    def _expression_matrix(self, size, j):
         """
         Generate a selection matrix for a given variable 
         @param size number of rows of the variable
@@ -45,16 +47,16 @@ class Planner:
         M[:, j:j+size] = np.identity(size)
         return M
 
-    def __slack_selection_vector(self):
+    def _slack_selection_vector(self):
         """
         Get the selection vector of the slack variables
         @return the selection vector
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         selection_vector = np.zeros(n_variables)
         i = 0
         for phase in self.pb.phaseData:
-            n_variables_phase = self.__phase_n_variables(phase)
+            n_variables_phase = self._phase_n_variables(phase)
             n_slacks = n_variables_phase - self.default_n_variables
             i_start = i + self.default_n_variables
             selection_vector[i_start:i_start + n_slacks] = 1
@@ -68,16 +70,16 @@ class Planner:
         """
         self.pb = pb
         self.n_effectors = pb.n_effectors
-        self.alphas = self.__slack_selection_vector()
+        self.alphas = self._slack_selection_vector()
 
-    def __feet_last_moving_phase(self, phase_id):
+    def _feet_last_moving_phase(self, phase_id):
         """
         Ids of the last phase each foot moved at a given phase
         @param phase_id id of the phase
         @return a list of n_effetors terms corresponding to the last phase the feet moved, -1 if it hasn't moved yet
         """
 
-        feet_last_moving_phase = [-1 for _ in range(self.n_effectors)]
+        feet_last_moving_phase = [-1] * self.n_effectors)
         for id, phase in enumerate(self.pb.phaseData):
             if id >= phase_id:
                 break
@@ -85,7 +87,7 @@ class Planner:
             feet_last_moving_phase[moving_foot] = id
         return feet_last_moving_phase
 
-    def __phase_n_variables(self, phase):
+    def _phase_n_variables(self, phase):
         """
         Counts the number of variables in a phase
         @param phase concerned phase
@@ -97,14 +99,14 @@ class Planner:
             n_variables += n_surfaces
         return n_variables
 
-    def __total_n_variables(self):
+    def _total_n_variables(self):
         """
         Counts the number of variables, inequalities constraints in the problem
         @return the number of variables of the problem
         """
-        return sum([self.__phase_n_variables(phase) for phase in self.pb.phaseData])
+        return sum([self._phase_n_variables(phase) for phase in self.pb.phaseData])
 
-    def __phase_n_ineq(self, id, phase):
+    def _phase_n_ineq(self, id, phase):
         """
         Counts the dimension of the inequalities in a phase
         - COM Kinematic constraints: summation over all effectors, times 2 because there are 2 height possible for the transition
@@ -133,14 +135,14 @@ class Planner:
             n_ineq += n_surfaces
         return n_ineq
 
-    def __total_n_ineq(self):
+    def _total_n_ineq(self):
         """
         Counts the number of inequality constraints
         @return the number of inequality constraints of the problem
         """
-        return sum([self.__phase_n_ineq(i, phase) for i, phase in enumerate(self.pb.phaseData)])
+        return sum([self._phase_n_ineq(i, phase) for i, phase in enumerate(self.pb.phaseData)])
 
-    def __total_n_eq(self):
+    def _total_n_eq(self):
         """
         Counts the number of equality constraints
         @return the number of equality constraints of the problem
@@ -161,9 +163,9 @@ class Planner:
 
         self.set_problem(pb)
 
-        n_variables = self.__total_n_variables()
-        n_ineq = self.__total_n_ineq()
-        n_eq = self.__total_n_eq()
+        n_variables = self._total_n_variables()
+        n_ineq = self._total_n_ineq()
+        n_eq = self._total_n_eq()
 
         G = np.zeros((n_ineq, n_variables))
         h = np.zeros(n_ineq)
@@ -176,8 +178,8 @@ class Planner:
         cons = Constraints(self.n_effectors)
         for id, phase in enumerate(self.pb.phaseData):
             # inequalities
-            j_next = js[-1] + self.__phase_n_variables(phase)
-            feet_phase = self.__feet_last_moving_phase(id)
+            j_next = js[-1] + self._phase_n_variables(phase)
+            feet_phase = self._feet_last_moving_phase(id)
             i_start = cons.fixed_foot_com(self.pb, phase, G, h, i_start, js, id, feet_phase)
             i_start = cons.foot_relative_distance(self.pb, phase, G, h, i_start, js, feet_phase)
             i_start = cons.surface_inequality(phase, G, h, i_start, js[-1])
@@ -215,8 +217,8 @@ class Planner:
         alphas = []
         j = 0
         for phase in self.pb.phaseData:
-            alphas.append(result[j + self.default_n_variables:j + self.__phase_n_variables(phase)])
-            j += self.__phase_n_variables(phase)
+            alphas.append(result[j + self.default_n_variables:j + self._phase_n_variables(phase)])
+            j += self._phase_n_variables(phase)
         return alphas
 
     def get_result(self, result):
@@ -240,7 +242,7 @@ class Planner:
                 else:
                     all_feet_pos[foot].append(all_feet_pos[foot][-1])
 
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         for foot in range(self.n_effectors):
             all_feet_pos[foot].pop(0)
@@ -253,7 +255,7 @@ class Planner:
         @param coms list of target positions for the com
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -266,7 +268,7 @@ class Planner:
             P += np.dot(A.T, A)
             q += -np.dot(A.T, b).reshape(A.shape[1])
 
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
@@ -276,7 +278,7 @@ class Planner:
         @param com Target final com position
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -290,7 +292,7 @@ class Planner:
 
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
@@ -300,7 +302,7 @@ class Planner:
         @param effector_positions list of each effector's final position
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
@@ -315,7 +317,7 @@ class Planner:
 
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
 
         return P, q
 
@@ -327,14 +329,14 @@ class Planner:
         relative_positions = [np.array(self.pb.p0[i] - self.pb.p0[0])
                               for i in range(1, self.n_effectors)]
 
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
         js = [0]
         j = 0
         for id, phase in enumerate(self.pb.phaseData):
-            feet_phase = self.__feet_last_moving_phase(id)
+            feet_phase = self._feet_last_moving_phase(id)
 
             A_0 = np.zeros((3, n_variables))
             b_0 = np.zeros(3)
@@ -360,7 +362,7 @@ class Planner:
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
 
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
             js.append(j)
 
         return P, q
@@ -371,14 +373,14 @@ class Planner:
         @param step_size desired size of the steps
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
         js = [0]
         j = 0
         for id, phase in enumerate(self.pb.phaseData):
-            feet_phase = self.__feet_last_moving_phase(id)
+            feet_phase = self._feet_last_moving_phase(id)
 
             foot = phase.moving
 
@@ -394,7 +396,7 @@ class Planner:
             P += np.dot(A.T, A)
             q += -np.dot(A.T, b).reshape(A.shape[1])
 
-            j += self.__phase_n_variables(phase)
+            j += self._phase_n_variables(phase)
             js.append(j)
 
         return P, q
@@ -405,7 +407,7 @@ class Planner:
         @param costs the cost dictionary. The keys should match keys from self.cost_dict
         @return P, q the cost matrix and vector of the QP problem
         """
-        n_variables = self.__total_n_variables()
+        n_variables = self._total_n_variables()
 
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)

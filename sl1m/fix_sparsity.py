@@ -20,8 +20,8 @@ def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
     This solver is called when the sparsity is fixed.
     It assumes the only contact surface for each phase is the one used for contact creation.
     Solve the problem with a specific solver
-    :param: P, q, G, h, C, d problem datalse
-    :return: None if wrong SOLVER, else ResultData
+    @param P, q, G, h, C, d problem datalse
+    @return None if wrong SOLVER, else ResultData
     """
     G, h, C, d = planner.convert_pb_to_LP(pb, False)
     P, q = planner.compute_costs(costs)
@@ -42,11 +42,11 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     """
     Calls the sl1m solver. Tries to solve non fixed sparsity by handling the combinatorial.
     Ultimately calls solve which provides the approriate cost function
-    :param: planner
-    :param: pb problem data
-    :param: surfaces potential surfaces
-    :param: SOLVER Solver choice
-    :return:
+    @param planner
+    @param pb problem data
+    @param surfaces potential surfaces
+    @param SOLVER Solver choice
+    @return true if the problem was solved, fixed surfaces problem, surface_indices and time
     """
     G, h, C, d = planner.convert_pb_to_LP(pb)
     q = 100. * planner.alphas
@@ -66,7 +66,7 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
         return True, pb, surface_indices, t
 
     pbs = generate_fixed_sparsity_problems(pb, alphas)
-    if pbs == None:
+    if pbs is None:
         print("No combinatorial problems was found")
         return False, pb, [], t
 
@@ -107,9 +107,9 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
 def get_undecided_surfaces(pb, alphas):
     """
     Get the surfaces and indices of all the undecided surfaces
-    :param: planner the planner
-    :param: pb the problem data
-    Return the phase indices, sorted potential surfaces and sorted surface indices
+    @param planner the planner
+    @param pb the problem data
+    @return the phase indices, sorted potential surfaces and sorted surface indices
     """
     indices = []
     surfaces = []
@@ -126,9 +126,9 @@ def get_undecided_surfaces(pb, alphas):
 
 def is_sparsity_fixed(pb, alphas):
     """
-    :param: pb the problem data
-    :param: alphas the list of slack variables found by the planner
-    Return true if the sparsity is fixed (ie there is one and only one alpha~0 per phase)
+    @param pb the problem data
+    @param alphas the list of slack variables found by the planner
+    @return true if the sparsity is fixed (ie there is one and only one alpha~0 per phase)
     """
     indices, _, _ = get_undecided_surfaces(pb, alphas)
     return len(indices) == 0
@@ -137,9 +137,9 @@ def is_sparsity_fixed(pb, alphas):
 def generate_fixed_sparsity_problems(pb, alphas):
     """
     Check if the combinatorial is not too big, if not return all the problems
-    :param: pb the problem data
-    :param: alphas the list of slack variables found by the planner
-    Return the list of problems
+    @param pb the problem data
+    @param alphas the list of slack variables found by the planner
+    @return the list of problems
     """
     indices, surfaces, surfaces_indices = get_undecided_surfaces(pb, alphas)
     all_len = [len(s) for s in surfaces]
@@ -156,9 +156,9 @@ def generate_fixed_sparsity_problems(pb, alphas):
 def generate_combinatorials(pb, indices, surfaces, surface_indices):
     """
     Generate all the problems with only one potential surface per undecided phase
-    :param: pb the problem data
-    :param: alphas the list of slack variables found by the planner
-    Return the list of problems, the phase indices, and the indices of the selected surfaces
+    @param pb the problem data
+    @param alphas the list of slack variables found by the planner
+    @return the list of problems, the phase indices, and the indices of the selected surfaces
     """
     pbs = []
     sorted_combinations = [el for el in itertools.product(*surface_indices)]
@@ -172,6 +172,3 @@ def generate_combinatorials(pb, indices, surfaces, surface_indices):
             fixed_pb.phaseData[idx].n_surfaces = 1
         pbs += [[fixed_pb, indices, sorted_combinations[j]]]
     return pbs
-
-
-

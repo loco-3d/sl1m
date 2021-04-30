@@ -1,22 +1,24 @@
 import numpy as np
 
-# Implementation of the class constraints, which implements the constraints used by the generic planner
-#
-# The problem is a has these variables for each phase:
-# [ p_i_x, p_i_y, p_i_z, com_z, {alpha_0_i, alpha_1_i}                   ]
-# [ 1    , 1    , 1    , 1    , 0 if n_surfaces == 1, else 2 * n_surfaces]
-
-# alpha_0_i, slack variable for inequality, alpha_1_i slack for equality constraint
-# Extra constraints are alpha_1_i - alpha_0_i <= 0 ; -alpha_1_i - alpha_0_i <=  0;  alpha_0_i >= 0 is implied by the first 2
-#
-# Under the following constraints :
-# - fixed_foot_com: Ensures the COM is 'above' the fixed feet
-# - foot_relative_distance: Ensures the moving feet is close enough to the other feet
-# - surface: Each foot belongs to one surface
-# - slack_positivity: Inequality constraints on the slack variables
-
 
 class BipedConstraints:
+    """
+    Implementation of the class constraints, which implements the constraints used by the generic planner
+
+    The problem is a has these variables for each phase:
+    [ p_i_x, p_i_y, p_i_z, com_z, {alpha_0_i, alpha_1_i}                   ]
+    [ 1    , 1    , 1    , 1    , 0 if n_surfaces == 1, else 2 * n_surfaces]
+
+    alpha_0_i, slack variable for inequality, alpha_1_i slack for equality constraint
+    Extra constraints are alpha_1_i - alpha_0_i <= 0 ; -alpha_1_i - alpha_0_i <=  0;  alpha_0_i >= 0 is implied by the first 2
+
+    Under the following constraints :
+    - fixed_foot_com: Ensures the COM is 'above' the fixed feet
+    - foot_relative_distance: Ensures the moving feet is close enough to the other feet
+    - surface: Each foot belongs to one surface
+    - slack_positivity: Inequality constraints on the slack variables
+    """
+
     def __init__(self):
         self.default_n_variables = 4
         self.slack_scale = 10.
@@ -24,14 +26,14 @@ class BipedConstraints:
         self.n_slack_per_surface = 2
         self.n_ineq_per_surface = 2
 
-        self.foot = self.__expression_matrix(3, 0)
+        self.foot = self.-expression_matrix(3, 0)
         self.foot_xy = self.foot[:2, :]
         self.foot_z = self.foot[2:, :]
-        self.com_z = self.__expression_matrix(1, 3)
-        self.com = self.__expression_matrix(3, 0)
+        self.com_z = self._expression_matrix(1, 3)
+        self.com = self._expression_matrix(3, 0)
         self.com[2, :] = self.com_z
 
-    def __fixed(self, moving_foot):
+    def _fixed(self, moving_foot):
         """
         Get the index of the fixed foot given the moving foot index
         @param moving_foot moving foot index
@@ -39,7 +41,7 @@ class BipedConstraints:
         """
         return (moving_foot + 1) % 2
 
-    def __expression_matrix(self, size, j):
+    def _expression_matrix(self, size, j):
         """
         Generate a selection matrix for a given variable
         @param size number of rows of the variable
@@ -63,7 +65,7 @@ class BipedConstraints:
         :param: js          List of j_startumn corresponding to the start of each phase
         return  i_start + the number of rows used by the constraint
         """
-        fixed_foot = self.__fixed(phase.moving)
+        fixed_foot = self._fixed(phase.moving)
         K, k = phase.K[fixed_foot]
         l = K.shape[0]
 
@@ -95,7 +97,7 @@ class BipedConstraints:
         return  i_start + the number of rows used by the constraint
         """
         moving_foot = phase.moving
-        fixed_foot = self.__fixed(moving_foot)
+        fixed_foot = self._fixed(moving_foot)
         K, k = phase.K[moving_foot]
         l = K.shape[0]
 
@@ -143,7 +145,6 @@ class BipedConstraints:
 
         return i + l
 
-
     def surface_inequality(self, phase, A, b, j, i_start):
         """
         The moving foot must belong to one surface
@@ -158,7 +159,7 @@ class BipedConstraints:
         n_surfaces = len(phase.S)
         j_slack = self.default_n_variables
         i = i_start
-        for (S, s) in phase.S:
+        for S, s in phase.S:
             l = S.shape[0]-1
             A[i:i + l, j:j + self.default_n_variables] = S[:-1, :].dot(self.foot)
             b[i:i + l] = s[:-1]
@@ -187,7 +188,7 @@ class BipedConstraints:
             return i + 1
         else:
             j_slack = self.default_n_variables + 1
-            for (S, s) in phase.S:
+            for S, s in phase.S:
                 E[i, j:j + self.default_n_variables] = S[-1, :].dot(self.foot)
                 E[i, j + j_slack] = -1 * self.slack_scale
                 e[i] = s[-1]
@@ -195,7 +196,6 @@ class BipedConstraints:
                 i += 1
             return i
 
-    
     def slack_positivity(self, phase, A, b, j_start, i_start):
         """
         The slack variables (alpha) should be positive

@@ -172,7 +172,7 @@ for i in range(0, 5):
 #~ raise ValueError
     
 #~ all_states = all_states[:-1]
-extraDof = [0 for _ in range(6)]
+extraDof = [0] * 6
 configs = [ st.q() + extraDof for st in all_states[:]]; i = 0
 
 print("SID ", [s.sId for s in all_states])
