@@ -8,7 +8,7 @@ from solo_rbprm.solo import Robot as Solo
 
 from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
 from sl1m.problem_definition import Problem
-from sl1m.stand_alone_scenarios.stair_surfaces import solo_surfaces as surfaces
+from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces as surfaces
 
 import sl1m.tools.plot_tools as plot
 

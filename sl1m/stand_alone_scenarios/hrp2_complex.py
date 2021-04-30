@@ -5,7 +5,7 @@ from time import perf_counter as clock
 
 from sl1m.generic_solver import solve_L1_combinatorial_biped, solve_MIP_biped
 from sl1m.stand_alone_scenarios.problem_definition_hrp2 import Problem
-from sl1m.stand_alone_scenarios.stair_surfaces import surfaces
+from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import surfaces
 
 import sl1m.tools.plot_tools as plot
 

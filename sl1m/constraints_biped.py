@@ -26,7 +26,7 @@ class BipedConstraints:
         self.n_slack_per_surface = 2
         self.n_ineq_per_surface = 2
 
-        self.foot = self.-expression_matrix(3, 0)
+        self.foot = self._expression_matrix(3, 0)
         self.foot_xy = self.foot[:2, :]
         self.foot_z = self.foot[2:, :]
         self.com_z = self._expression_matrix(1, 3)

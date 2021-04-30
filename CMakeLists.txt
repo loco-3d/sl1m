@@ -72,12 +72,15 @@ SET(${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES
   talos_rubble_stairs.py
   problem_definition_talos.py
   problem_definition_hrp2.py
-  surfaces/stair_surfaces.py
-  surfaces/complex_surfaces.py
-  surfaces/rubble_stair_surfaces.py
-  surfaces/ramp_surfaces.py
   )
 
+  SET(${PROJECT_NAME}_STANDALONE_SURFACES_SOURCES
+  __init__.py
+  stair_surfaces.py
+  complex_surfaces.py
+  rubble_stair_surfaces.py
+  ramp_surfaces.py
+  )
 SET(${PROJECT_NAME}_TOOLS_SOURCES
   __init__.py
   geom_utils.py
@@ -107,6 +110,10 @@ ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES)
 FOREACH(src ${${PROJECT_NAME}_RBPRM_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/rbprm ${src})
 ENDFOREACH(src ${PROJECT_NAME}_RBPRM_SOURCES)
+
+FOREACH(src ${${PROJECT_NAME}_STANDALONE_SURFACES_SOURCES})
+  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/stand_alone_scenarios/surfaces ${src})
+ENDFOREACH(src ${PROJECT_NAME}_STANDALONE_SURFACES_SOURCES)
 
 FOREACH(src ${${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/stand_alone_scenarios ${src})

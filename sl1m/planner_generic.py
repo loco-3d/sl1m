@@ -79,7 +79,7 @@ class Planner:
         @return a list of n_effetors terms corresponding to the last phase the feet moved, -1 if it hasn't moved yet
         """
 
-        feet_last_moving_phase = [-1] * self.n_effectors)
+        feet_last_moving_phase = [-1] * self.n_effectors
         for id, phase in enumerate(self.pb.phaseData):
             if id >= phase_id:
                 break
