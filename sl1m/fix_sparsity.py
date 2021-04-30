@@ -93,13 +93,17 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     j = 0
     surface_indices = []
     for i, phase in enumerate(fixed_pb.phaseData):
-        if phase.n_surfaces > 1:
+        if len(phase.S) > 1:
             phase.S = [phase.S[fixed_pb_surface_indices[i]]]
             phase.n_surfaces = len(phase.S)
             surface_indices.append(fixed_pb_surface_indices[i])
-        else:
+        elif len(surfaces[i]) > 1:
             surface_indices.append(solution_indices[j])
             j += 1
+        else:
+            surface_indices.append(0)
+
+
 
     return sparsity_fixed, fixed_pb, surface_indices, t
 
