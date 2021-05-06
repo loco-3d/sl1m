@@ -53,7 +53,7 @@ def draw_whole_scene(surface_dict, ax=None):
     return ax
 
 
-def draw_scene(surfaces, gait, ax=None, alpha=1.):
+def draw_scene(surfaces, gait=None, ax=None, alpha=1.):
     """
     Plot all the potential surfaces of the problem
     """
@@ -62,7 +62,10 @@ def draw_scene(surfaces, gait, ax=None, alpha=1.):
         ax = fig.add_subplot(111, projection="3d")
     for i, surfaces_phase in enumerate(surfaces):
         for surface in surfaces_phase:
-            plot_surface(surface, ax, gait[i % len(gait)], alpha=alpha)
+            if gait is None:
+                plot_surface(surface, ax, 0, alpha=alpha)
+            else:
+                plot_surface(surface, ax, gait[i % len(gait)], alpha=alpha)
     return ax
 
 

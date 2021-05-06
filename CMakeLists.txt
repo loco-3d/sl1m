@@ -81,6 +81,7 @@ SET(${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES
   __init__.py
   stair_surfaces.py
   complex_surfaces.py
+  flat_ground.py
   rubble_stair_surfaces.py
   ramp_surfaces.py
   )

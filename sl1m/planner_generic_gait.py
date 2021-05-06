@@ -234,7 +234,7 @@ class Planner:
 
             # inequalities
             # i_start = cons.fixed_foot_com(self.pb, phase, G, h, i_start, js, feet_phase)
-            # i_start = cons.foot_relative_distance(self.pb, phase, G, h, i_start, js, feet_phase)
+            i_start = cons.foot_relative_distance(self.pb, phase, G, h, i_start, js, feet_phase)
             i_start = cons.surface_inequality(phase, G, h, i_start, js[-1])
             i_start = cons.slack_positivity(phase, G, h, i_start, js[-1])
 

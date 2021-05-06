@@ -196,7 +196,7 @@ class Constraints:
 
     def foot_relative_distance(self, pb, phase, G, h, i_start, js, feet_phase):
         """
-        The distance between the moving effector and the other ones is limited
+        The distance between the moving effector and the other stance feet is limited
         For i in moving_foot, For j !=i, Ki (pj - pi) <= ki
         @param pb          The problem specific data
         @param phase       The phase specific data
@@ -213,17 +213,17 @@ class Constraints:
         for (foot, (K, k)) in constraints:
             if foot in phase.stance:
                 l = k.shape[0]
-                G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, 0))
+                G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, id=0))
+                h[i:i + l] = k
                 if foot in phase.moving:
                     G[i:i + l, j:j + self._default_n_variables(phase)] = K.dot(self.foot(phase, foot))
-                if feet_phase[foot] != -1:
+                elif feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
                     G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = K.dot(self.foot(phase_f, foot))
-                    h[i:i + l] = k
                 else:
                     foot_pose = pb.p0[foot]
-                    h[i:i + l] = k - K.dot(foot_pose)
+                    h[i:i + l] -= K.dot(foot_pose)
                 i += l
         return i
 
