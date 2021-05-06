@@ -19,11 +19,10 @@ USE_MIP = False
 if __name__ == '__main__':
     t_init = clock()
 
-    from sl1m.planner_scenarios.talos import lp_rubbles_path as tp
+    from sl1m.planner_scenarios.talos import lp_stairs_path as tp
     t_1 = clock()
 
-    R, surfaces = getSurfacesFromGuideContinuous(
-        tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 0.7, False)
+    R, surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 0.7, False)
     t_2 = clock()
 
     talos = Talos()
@@ -49,7 +48,7 @@ if __name__ == '__main__':
                      suffix_feet="_quasi_flat_REDUCED.obj", limb_names=LIMB_NAMES)
         pb.generate_problem(R, surfaces, GAIT, initial_contacts, tp.q_init[:3])
         t_4 = clock()
-
+        
         if USE_MIP:
             result = solve_MIP(pb, surfaces)
         else:
