@@ -91,7 +91,7 @@ def plot_initial_contacts(initial_feet_pose, ax=None):
         plot_point(ax, initial_feet_pose[i], color=COLORS[i])
 
 
-def plot_new_contact(moving_foot, moving_foot_pos, ax=None):
+def plot_new_contact(moving_feet, moving_feet_pos, ax=None):
     """
     Plot the initial feet positions
     """
@@ -100,7 +100,8 @@ def plot_new_contact(moving_foot, moving_foot_pos, ax=None):
         ax = fig.add_subplot(111, projection="3d")
     ax.grid(False)
 
-    plot_point(ax, moving_foot_pos, color=COLORS[moving_foot])
+    for i in range(len(moving_feet)):
+        plot_point(ax, moving_feet_pos[i], color=COLORS[moving_feet[i]])
 
 
 def plot_first_step(configs, coms, moving_foot_pos, gait, ax=None):
