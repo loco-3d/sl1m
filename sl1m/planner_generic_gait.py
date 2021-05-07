@@ -24,20 +24,22 @@ class Planner:
         self.com = com
         
         self.default_n_equality_constraints = 2 * int(self.com)
+        self.default_n_variables = 4 * int(self.com)
 
         self.cost_dict = {"final_com": self.end_com_cost,
                           "effector_positions": self.end_effectors_position_cost,
                           "coms": self.com_cost,
                           "posture": self.posture_cost,
                           "step_size": self.step_size_cost}
+                          
+        self.com_costs = ["final_com", "coms"]
 
     def _default_n_variables(self, phase):
         """
         @param phase phase concerned
         @return the number of non slack variables in phase
         """
-
-        return 4 * int(self.com) + 3 * len(phase.moving)
+        return self.default_n_variables + 3 * len(phase.moving)
 
     def _expression_matrix(self, size, _default_n_variables, j):
         """
@@ -90,7 +92,7 @@ class Planner:
             id = np.argmax(phase.moving == foot)
         elif id is None:
             print("Error in foot selection matrix: you must specify either foot or id")
-        j = 4 * int(self.com) + 3 * id
+        j = self.default_n_variables + 3 * id
         return self._expression_matrix(3, self._default_n_variables(phase), j)
 
     def foot_xy(self, phase, foot=None, id=None):
@@ -105,7 +107,7 @@ class Planner:
             id = np.argmax(phase.moving == foot)
         elif id is None:
             print("Error in foot selection matrix: you must specify either foot or id")
-        j = 4 * int(self.com) + 3 * id
+        j = self.default_n_variables + 3 * id
         return self._expression_matrix(2, self._default_n_variables(phase), j)
 
     def _slack_selection_vector(self):
@@ -175,19 +177,19 @@ class Planner:
         @param phase concerned phase
         """
         n_ineq = 0
-        COM kinematic constraints
+        # COM kinematic constraints
         if self.com:
             for foot, (K, _) in enumerate(phase.K):
                 if foot in phase.stance:
                     n_ineq += K.shape[0]
                 if phase.id == 0:
                     n_ineq += K.shape[0]
-                elif foot in pb.phaseData[phase.id -1].stance:
+                elif foot in self.pb.phaseData[phase.id -1].stance:
                     n_ineq += K.shape[0]
 
         # Foot relative distance
         for (foot, Ks) in phase.allRelativeK[phase.moving[0]]:
-            if foot in phase.moving:
+            if foot in phase.stance:
                 n_ineq += Ks[0].shape[0]
 
         # Surfaces
@@ -197,6 +199,7 @@ class Planner:
         for n_surface in phase.n_surfaces:
             if n_surface > 1:
                 n_ineq += n_surface
+
         return n_ineq
 
     def _total_n_ineq(self):
@@ -211,7 +214,7 @@ class Planner:
         Counts the number of equality constraints
         @return the number of equality constraints of the problem
         """
-        n_eq = self.default_n_equality_constraints
+        n_eq = self.default_n_equality_constraints * self.pb.n_phases
         if self.mip:
             for phase in self.pb.phaseData:
                 for n_surface in phase.n_surfaces:
@@ -245,13 +248,14 @@ class Planner:
         i_start = 0
         i_start_eq = 0
         js = [0]
-        cons = Constraints(self.n_effectors)
+        cons = Constraints(self.n_effectors, self.com)
         for phase in self.pb.phaseData:
             feet_phase = self._feet_last_moving_phase(phase.id)
 
             i_start = cons.foot_relative_distance(self.pb, phase, G, h, i_start, js, feet_phase)
             i_start = cons.surface_inequality(phase, G, h, i_start, js[-1])
             i_start = cons.slack_positivity(phase, G, h, i_start, js[-1])
+
             if self.com:
                 i_start = cons.fixed_foot_com(self.pb, phase, G, h, i_start, js, feet_phase)
                 i_start_eq = cons.com(self.pb, phase, C, d, i_start_eq, js, feet_phase)
@@ -307,31 +311,37 @@ class Planner:
         @param result vector of variables
         @return com positions, moving foot positions and all feet positions
         """
-        coms = []
-        moving_foot_pos = []
+        if self.com:
+            coms = []
+        else:
+            coms = None
+        moving_feet_pos = []
         all_feet_pos = [[self.pb.p0[i]] for i in range(self.n_effectors)]
 
         j = 0
         for i, phase in enumerate(self.pb.phaseData):
-            coms.append(self.com_2(phase).dot(result[j:j + self._default_n_variables(phase)]))
+            if self.com:
+                coms.append(self.com_2(phase).dot(result[j:j + self._default_n_variables(phase)]))
             phase_moving_feet = []
             for foot in phase.moving:
                 phase_moving_feet.append(self.foot(phase, foot).dot(result[j:j + self._default_n_variables(phase)]))
-            moving_foot_pos.append(phase_moving_feet)
+            moving_feet_pos.append(phase_moving_feet)
 
             for foot in range(self.n_effectors):
                 if foot in phase.moving:
                     id = np.argmax(phase.moving == foot)
-                    all_feet_pos[foot].append(moving_foot_pos[i][id])
-                else:
+                    all_feet_pos[foot].append(moving_feet_pos[i][id])
+                elif foot in phase.stance:
                     all_feet_pos[foot].append(all_feet_pos[foot][-1])
+                else:
+                    all_feet_pos[foot].append(None)
 
             j += self._phase_n_variables(phase)
 
-        for foot in range(self.n_effectors):
-            all_feet_pos[foot].pop(0)
+        # for foot in range(self.n_effectors):
+        #     all_feet_pos[foot].pop(0)
 
-        return coms, moving_foot_pos, all_feet_pos
+        return coms, moving_feet_pos, all_feet_pos
 
     def com_cost(self, coms):
         """
@@ -428,7 +438,7 @@ class Planner:
                 A_0[:, j:j + self._default_n_variables(phase)] = -self.foot(phase, 0)
             elif feet_phase[0] != -1:
                 j0 = js[feet_phase[0]]
-                phase_f = self.pb.phaseData(feet_phase[0])
+                phase_f = self.pb.phaseData[feet_phase[0]]
                 A_0[:, j0:j0 + self._default_n_variables(phase_f)] = -self.foot(phase_f, 0)
             else:
                 b_0 = self.pb.p0[0]
@@ -440,7 +450,7 @@ class Planner:
                     A[:, j:j + self._default_n_variables(phase)] = self.foot(phase, foot)
                 elif feet_phase[foot] != -1:
                     jf = js[feet_phase[foot]]
-                    phase_f = self.pb.phaseData(feet_phase[foot])
+                    phase_f = self.pb.phaseData[feet_phase[foot]]
                     A[:, jf:jf + self._default_n_variables(phase_f)] = self.foot(phase_f, foot)
                 else:
                     b += -self.pb.p0[foot]
@@ -503,7 +513,9 @@ class Planner:
             P += np.identity(n_variables)
         else:
             for key, val in [(k, v) for k, v in costs.items() if k in self.cost_dict]:
-                if key in self.cost_dict.keys():
+                if not self.com and key in self.com_costs:
+                    print("COM cost given, but no COM variable in planner. The cost is ignored")
+                elif key in self.cost_dict.keys():
                     P_, q_ = self.cost_dict[key](*val[1:])
                     P += P_ * val[0]
                     q += q_ * val[0]

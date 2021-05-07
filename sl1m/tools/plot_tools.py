@@ -166,7 +166,7 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
 
-def plot_planner_result(coms, moving_foot_pos, all_feet_pos, ax=None, show=True):
+def plot_planner_result(coms, all_feet_pos, ax=None, show=True):
     """
     Plot the feet positions and com positions
     """
@@ -176,18 +176,20 @@ def plot_planner_result(coms, moving_foot_pos, all_feet_pos, ax=None, show=True)
     ax.grid(False)
     ax.view_init(elev=8.776933438381377, azim=-99.32358055821186)
 
-    for foot in range(len(all_feet_pos)):
-        plot_point_list(ax, all_feet_pos[foot], color=COLORS[foot])
-        px = [c[0] for c in all_feet_pos[foot]]
-        py = [c[1] for c in all_feet_pos[foot]]
-        pz = [c[2] for c in all_feet_pos[foot]]
+    for foot, foot_pose in enumerate(all_feet_pos):
+        px = [c[0] for c in foot_pose if c is not None]
+        py = [c[1] for c in foot_pose if c is not None]
+        pz = [c[2] for c in foot_pose if c is not None]
+        ax.scatter(px, py, pz, color=COLORS[foot], marker='o', linewidth=5)
         ax.plot(px, py, pz, color=COLORS[foot])
 
-    plot_point_list(ax, coms, color=COLORS[len(all_feet_pos)+1])
-    cx = [c[0] for c in coms]
-    cy = [c[1] for c in coms]
-    cz = [c[2] for c in coms]
-    ax.plot(cx, cy, cz, color=COLORS[len(all_feet_pos)+1])
+    if coms is not None:
+        plot_point_list(ax, coms, color=COLORS[len(all_feet_pos)+1])
+        cx = [c[0] for c in coms]
+        cy = [c[1] for c in coms]
+        cz = [c[2] for c in coms]
+        ax.plot(cx, cy, cz, color=COLORS[len(all_feet_pos)+1])
+
     if show:
         plt.draw()
         plt.show()

@@ -17,17 +17,19 @@ class Constraints:
     - com_weighted_equality: Fix the horizontal position of the COm at the barycenter of the contact points (fixed feet)
     """
 
-    def __init__(self, n_effectors):
+    def __init__(self, n_effectors, com=True):
         self.n_effectors = n_effectors
 
-        self.WEIGHTS = [1./float(n_effectors - 2)] * n_effectors
+        self.default_n_variables = 4 * int(com)
+
+        self.M = 100
 
     def _default_n_variables(self, phase):
         """
         @param phase phase concerned
         @return the number of non slack variables in phase
         """
-        return 4 + 3 * len(phase.moving)
+        return self.default_n_variables + 3 * len(phase.moving)
 
     def _expression_matrix(self, size, _default_n_variables, j):
         """
@@ -96,7 +98,8 @@ class Constraints:
             id = np.argmax(phase.moving == foot)
         elif id is None:
             print("Error in foot selection matrix: you must specify either foot or id")
-        return self._expression_matrix(3, self._default_n_variables(phase), 4 + 3 * id)
+        j = self.default_n_variables + 3 * id
+        return self._expression_matrix(3, self._default_n_variables(phase), j)
 
     def foot_xy(self, phase, foot=None, id=None):
         """
@@ -110,7 +113,8 @@ class Constraints:
             id = np.argmax(phase.moving == foot)
         elif id is None:
             print("Error in foot selection matrix: you must specify either foot or id")
-        return self._expression_matrix(2, self._default_n_variables(phase), 4 + 3 * id)
+        j = self.default_n_variables + 3 * id
+        return self._expression_matrix(2, self._default_n_variables(phase), j)
 
     def _fixed_foot_com_2_kinematic(self, pb, phase, G, h, i_start, js, feet_phase):
         """
@@ -127,6 +131,7 @@ class Constraints:
         """
         i = i_start
         j = js[-1]
+
         for foot, (K, k) in enumerate(phase.K):
             if foot in phase.stance:
                 l = k.shape[0]
@@ -137,7 +142,7 @@ class Constraints:
                 elif feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
-                    G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] =- K.dot(self.foot(phase_f, foot))
+                    G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = -K.dot(self.foot(phase_f, foot))
                 else:
                     foot_pose = pb.p0[foot]
                     h[i:i + l] += K.dot(foot_pose)
@@ -272,7 +277,7 @@ class Constraints:
                 G[i:i + l, j:j + self._default_n_variables(phase)] = S.dot(self.foot(phase, id=id))
                 h[i:i + l] = s
                 if phase.n_surfaces[id] > 1:
-                    G[i:i + l, j + j_alpha] = -np.ones(l)
+                    G[i:i + l, j + j_alpha] = -self.M * np.ones(l)
                     j_alpha += 1
                 i += l
         return i
@@ -313,15 +318,18 @@ class Constraints:
         """
         i = i_start
         j = js[-1]
+
+        weight = 1./len(phase.stance)
+
         for foot in range(self.n_effectors):
             if foot in phase.stance:
                 if feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
-                    C[i:i + 2, j_f:j_f + self._default_n_variables(phase_f)] = self.WEIGHTS[foot] * self.foot_xy(phase_f, foot)
+                    C[i:i + 2, j_f:j_f + self._default_n_variables(phase_f)] = weight * self.foot_xy(phase_f, foot)
                 else:
                     foot_pose = pb.p0[foot]
-                    d[i:i + 2] -= self.WEIGHTS[foot] * foot_pose[:2]
+                    d[i:i + 2] -= weight * foot_pose[:2]
         C[i:i + 2, j:j + self._default_n_variables(phase)] = -self.com_xy(phase)
         i += 2
         return i

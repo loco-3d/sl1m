@@ -8,8 +8,6 @@ from solo_rbprm.solo import Robot as Solo
 
 from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
 from sl1m.problem_definition_gait import Problem
-from sl1m.stand_alone_scenarios.surfaces.flat_ground import surfaces
-# from sl1m.stand_alone_scenarios.surfaces.flat_ground import walk_surfaces as surfaces
 from sl1m.stand_alone_scenarios.surfaces.flat_ground import scene
 
 import sl1m.tools.plot_tools as plot
@@ -18,10 +16,15 @@ USE_SL1M = False
 
 WALK = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
 TROT = [np.array([1, 0, 1, 0]), np.array([0, 1, 0, 1])]
-GAIT = TROT
+GAIT = WALK
 
-STEP_LENGTH = [1., 0.0]
-COSTS = {"step_size": [1.0, STEP_LENGTH]}
+if GAIT == WALK:
+    from sl1m.stand_alone_scenarios.surfaces.flat_ground import walk_surfaces as surfaces
+else:
+    from sl1m.stand_alone_scenarios.surfaces.flat_ground import surfaces
+
+STEP_LENGTH = [0.01, 0.0]
+COSTS = {"step_size": [1.0, STEP_LENGTH], "posture": [1.0]}
 
 if __name__ == '__main__':
     t_init = clock()
@@ -36,7 +39,7 @@ if __name__ == '__main__':
                         solo.dict_ref_effector_from_root[limb_name] +
                         solo.dict_offset[solo.dict_limb_joint[limb_name]].translation
                         for limb_name in solo.limbs_names]
-    
+
     t_2 = clock()
 
     solo.kinematic_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
@@ -51,7 +54,7 @@ if __name__ == '__main__':
     if USE_SL1M:
         result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS)
     else:
-        result = solve_MIP_gait(pb, surfaces, costs=COSTS)
+        result = solve_MIP_gait(pb, surfaces, costs=COSTS, com=True)
     t_end = clock()
 
     print(result)
@@ -67,6 +70,6 @@ if __name__ == '__main__':
     ax = plot.draw_scene(scene)
     plot.plot_initial_contacts(initial_contacts, ax=ax)
     if(result.success):
-        plot.plot_planner_result(result.coms, result.moving_foot_pos, result.all_feet_pos, ax, True)
+        plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
     else:
         plt.show()

@@ -104,7 +104,7 @@ def solve_MIP(pb, surfaces, costs={}, solver=Solvers.GUROBI):
         return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, surface_indices)
     return ProblemData(False, result.time)
 
-def solve_MIP_gait(pb, surfaces, costs={}, solver=Solvers.GUROBI):
+def solve_MIP_gait(pb, surfaces, costs={}, solver=Solvers.GUROBI, com=False):
     """
     Solve the problem with a MIP solver
     @param pb problem to solve
@@ -113,7 +113,7 @@ def solve_MIP_gait(pb, surfaces, costs={}, solver=Solvers.GUROBI):
     @solver MIP solver to use
     @return ProblemData storing the result
     """
-    planner = GaitPlanner()
+    planner = GaitPlanner(mip=True, com=com)
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas
     if costs != None:
