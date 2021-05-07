@@ -114,13 +114,13 @@ class Constraints:
             elif feet_phase[foot] != -1:
                 l = k.shape[0]
                 j_foot = js[feet_phase[foot]]
-                G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_2)
+                G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_1)
                 G[i:i + l, j_foot:j_foot + self.default_n_variables] = -K.dot(self.foot)
                 h[i:i + l] = k
                 i += l
             else:
                 l = k.shape[0]
-                G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_2)
+                G[i:i + l, j:j + self.default_n_variables] = K.dot(self.com_1)
                 foot_pose = pb.p0[foot]
                 h[i:i + l] = k + K.dot(foot_pose)
                 i += l
@@ -213,7 +213,7 @@ class Constraints:
             G[i:i + l, j:j + self.default_n_variables] = S.dot(self.foot)
             h[i:i + l] = s
             if n_surfaces > 1:
-                G[i:i + l, j + j_alpha] = -np.ones(l)
+                G[i:i + l, j + j_alpha] = -50 * np.ones(l)
                 j_alpha += 1
             i += l
         return i

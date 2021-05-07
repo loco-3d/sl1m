@@ -13,7 +13,8 @@ class PhaseData:
     phaseData.allRelativeK =  Relative constraints for the phase for each foot and each surface
     """
 
-    def __init__(self, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
+    def __init__(self, i, R, surfaces, moving_foot, normal,  n_effectors, com_obj, foot_obj):
+        self.id = i
         self.moving = moving_foot
         self.root_orientation = R
         self.S = [convert_surface_to_inequality(s, True) for s in surfaces]
@@ -111,7 +112,7 @@ class Problem:
         self.n_phases = len(surfaces)
         self.phaseData = []
         for i in range(self.n_phases):
-            self.phaseData.append(PhaseData(
+            self.phaseData.append(PhaseData(i, 
                 R[i], surfaces[i], gait[i % self.n_effectors], normal, self.n_effectors, self.com_objects, self.foot_objects))
 
     def __str__(self):
