@@ -20,7 +20,7 @@ class Constraints:
     def __init__(self, n_effectors):
         self.n_effectors = n_effectors
 
-        self.WEIGHTS = [1./float(n_effectors - 1)] * n_effectors
+        self.WEIGHTS = [1./float(n_effectors - 2)] * n_effectors
 
     def _default_n_variables(self, phase):
         """
@@ -137,7 +137,7 @@ class Constraints:
                 elif feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
-                    G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = - K.dot(self.foot(phase_f, foot))
+                    G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] =- K.dot(self.foot(phase_f, foot))
                 else:
                     foot_pose = pb.p0[foot]
                     h[i:i + l] += K.dot(foot_pose)
@@ -147,7 +147,7 @@ class Constraints:
     def _fixed_foot_com_1_kinematic(self, pb, phase, G, h, i_start, js, feet_phase):
         """
         The COM 1 must belong to a reachable polytope above each stance foot of the previous phase
-        For each effector id , K_id (c1- p_id(t-1)) <= k_id
+        For each effector id in stance phase, K_id (c1- p_id(t-1)) <= k_id
         This constraint should not be added at the first phase.
         @param pb          The problem specific data
         @param phase       The phase specific data
@@ -161,14 +161,20 @@ class Constraints:
         i = i_start
         j = js[-1]
         for foot, (K, k) in enumerate(phase.K):
-            if foot in pb.phaseData[phase.id -1].stance:
+            if phase.id == 0:
+                l = k.shape[0]
+                foot_pose = pb.p0[foot]
+                G[i:i + l, j:j + self._default_n_variables(phase)] = K.dot(self.com_1(phase))
+                h[i:i + l] = k +  K.dot(foot_pose)
+                i += l
+            elif foot in pb.phaseData[phase.id -1].stance:
                 l = k.shape[0]
                 G[i:i + l, j:j + self._default_n_variables(phase)] = K.dot(self.com_1(phase))
                 h[i:i + l] = k
                 if feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
-                    G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = - K.dot(self.foot(phase_f, foot))
+                    G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] -= K.dot(self.foot(phase_f, foot))
                 else:
                     foot_pose = pb.p0[foot]
                     h[i:i + l] += K.dot(foot_pose)
@@ -216,7 +222,7 @@ class Constraints:
                 G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, id=0))
                 h[i:i + l] = k
                 if foot in phase.moving:
-                    G[i:i + l, j:j + self._default_n_variables(phase)] = K.dot(self.foot(phase, foot))
+                    G[i:i + l, j:j + self._default_n_variables(phase)] += K.dot(self.foot(phase, foot))
                 elif feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
@@ -271,6 +277,27 @@ class Constraints:
                 i += l
         return i
 
+    def slack_equality(self, phase, C, d, i_start, j):
+        """
+        The slack variables (alpha) sum should be equal to the number of surfaces -1 
+        Sl for each moving foot, sum(alpha_s) = n_surfaces - 1
+        @param phase       The phase specific data
+        @param C           The equality constraint matrix
+        @param d           The equality constraint vector
+        @param i_start     Initial row to use
+        @param j           Column corresponding to this phase variables
+        @return i_start + the number of rows used by the constraint
+        """
+        i = i_start
+        j_alpha = j + self._default_n_variables(phase)
+        for n_surface in phase.n_surfaces:
+            if n_surface > 1:
+                C[i, j_alpha:j_alpha + n_surface] = np.ones(n_surface)
+                d[i] = n_surface - 1
+                j_alpha += n_surface
+                i += 1
+        return i
+
     def _com_weighted_equality(self, pb, phase, C, d, i_start, js, feet_phase):
         """
         The 2D position of the com should be the baricenter of the fixed feet locations
@@ -291,8 +318,7 @@ class Constraints:
                 if feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
-                    C[i:i + 2, j_f:j_f + self._default_n_variables(phase_f)
-                    ] = self.WEIGHTS[foot] * self.foot_xy(phase_f, foot)
+                    C[i:i + 2, j_f:j_f + self._default_n_variables(phase_f)] = self.WEIGHTS[foot] * self.foot_xy(phase_f, foot)
                 else:
                     foot_pose = pb.p0[foot]
                     d[i:i + 2] -= self.WEIGHTS[foot] * foot_pose[:2]

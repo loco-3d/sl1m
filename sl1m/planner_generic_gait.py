@@ -19,8 +19,11 @@ class Planner:
     - com_weighted_equality: Fix the horizontal position of the CoM at the barycenter of the contact points (fixed feet)
     """
 
-    def __init__(self):
-        self.default_n_equality_constraints = 2
+    def __init__(self, mip=False, com=False):
+        self.mip = mip
+        self.com = com
+        
+        self.default_n_equality_constraints = 2 * int(self.com)
 
         self.cost_dict = {"final_com": self.end_com_cost,
                           "effector_positions": self.end_effectors_position_cost,
@@ -33,7 +36,8 @@ class Planner:
         @param phase phase concerned
         @return the number of non slack variables in phase
         """
-        return 4 + 3 * len(phase.moving)
+
+        return 4 * int(self.com) + 3 * len(phase.moving)
 
     def _expression_matrix(self, size, _default_n_variables, j):
         """
@@ -86,7 +90,8 @@ class Planner:
             id = np.argmax(phase.moving == foot)
         elif id is None:
             print("Error in foot selection matrix: you must specify either foot or id")
-        return self._expression_matrix(3, self._default_n_variables(phase), 4 + 3 * id)
+        j = 4 * int(self.com) + 3 * id
+        return self._expression_matrix(3, self._default_n_variables(phase), j)
 
     def foot_xy(self, phase, foot=None, id=None):
         """
@@ -100,7 +105,8 @@ class Planner:
             id = np.argmax(phase.moving == foot)
         elif id is None:
             print("Error in foot selection matrix: you must specify either foot or id")
-        return self._expression_matrix(2, self._default_n_variables(phase), 4 + 3 * id)
+        j = 4 * int(self.com) + 3 * id
+        return self._expression_matrix(2, self._default_n_variables(phase), j)
 
     def _slack_selection_vector(self):
         """
@@ -169,18 +175,23 @@ class Planner:
         @param phase concerned phase
         """
         n_ineq = 0
-        # COM kinematic constraints
-        for _, (K, _) in enumerate(phase.K):
-            n_ineq += K.shape[0]
-        if phase.id > 0:
-            n_ineq *= 2
+        COM kinematic constraints
+        if self.com:
+            for foot, (K, _) in enumerate(phase.K):
+                if foot in phase.stance:
+                    n_ineq += K.shape[0]
+                if phase.id == 0:
+                    n_ineq += K.shape[0]
+                elif foot in pb.phaseData[phase.id -1].stance:
+                    n_ineq += K.shape[0]
 
         # Foot relative distance
-        for (_, Ks) in phase.allRelativeK[phase.moving[0]]:
-            n_ineq += Ks[0].shape[0]
+        for (foot, Ks) in phase.allRelativeK[phase.moving[0]]:
+            if foot in phase.moving:
+                n_ineq += Ks[0].shape[0]
 
         # Surfaces
-        n_ineq += sum([sum([S[1].shape[0] for S in surfaces]) for surfaces in phase.S])
+        n_ineq += sum([sum([S[1].shape[0] for S in foot_surfaces]) for foot_surfaces in phase.S])
 
         # Slack positivity
         for n_surface in phase.n_surfaces:
@@ -200,7 +211,13 @@ class Planner:
         Counts the number of equality constraints
         @return the number of equality constraints of the problem
         """
-        return self.default_n_equality_constraints * self.pb.n_phases
+        n_eq = self.default_n_equality_constraints
+        if self.mip:
+            for phase in self.pb.phaseData:
+                for n_surface in phase.n_surfaces:
+                    if n_surface > 1:
+                        n_eq += 1
+        return n_eq
 
     def convert_pb_to_LP(self, pb, convert_surfaces=False):
         """
@@ -232,14 +249,15 @@ class Planner:
         for phase in self.pb.phaseData:
             feet_phase = self._feet_last_moving_phase(phase.id)
 
-            # inequalities
-            # i_start = cons.fixed_foot_com(self.pb, phase, G, h, i_start, js, feet_phase)
             i_start = cons.foot_relative_distance(self.pb, phase, G, h, i_start, js, feet_phase)
             i_start = cons.surface_inequality(phase, G, h, i_start, js[-1])
             i_start = cons.slack_positivity(phase, G, h, i_start, js[-1])
+            if self.com:
+                i_start = cons.fixed_foot_com(self.pb, phase, G, h, i_start, js, feet_phase)
+                i_start_eq = cons.com(self.pb, phase, C, d, i_start_eq, js, feet_phase)
 
-            # equalities
-            # i_start_eq = cons.com(self.pb, phase, C, d, i_start_eq, js, feet_phase)
+            if self.mip:
+                i_start_eq = cons.slack_equality(phase, C, d, i_start_eq, js[-1])
 
             js.append(js[-1] + self._phase_n_variables(phase))
 

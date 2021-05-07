@@ -481,23 +481,6 @@ def solve_MIP_gurobi_cost(slack_selection_vector, P, q, G=None, h=None, C=None, 
             model.addConstr(expr, grb.GRB.EQUAL, d[i])
     model.update()
 
-   # equality slack sum
-    variables = []
-    previousL = 0
-    for i, el in enumerate(slack_indices):
-        if i != 0 and el - previousL > 2.:
-            assert len(variables) > 0
-            expr = grb.LinExpr(np.ones(len(variables)), variables)
-            model.addConstr(expr, grb.GRB.EQUAL, len(variables) - 1)
-            variables = [x[el]]
-        elif el != 0:
-            variables += [x[el]]
-        previousL = el
-    if len(variables) > 1:
-        expr = grb.LinExpr(np.ones(len(variables)), variables)
-        model.addConstr(expr, grb.GRB.EQUAL, len(variables) - 1)
-    model.update()
-
     obj = grb.QuadExpr()
     rows, cols = P.nonzero()
     for i, j in zip(rows, cols):

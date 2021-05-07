@@ -20,7 +20,7 @@ WALK = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), 
 TROT = [np.array([1, 0, 1, 0]), np.array([0, 1, 0, 1])]
 GAIT = TROT
 
-STEP_LENGTH = [0.5, 0.0]
+STEP_LENGTH = [1., 0.0]
 COSTS = {"step_size": [1.0, STEP_LENGTH]}
 
 if __name__ == '__main__':
