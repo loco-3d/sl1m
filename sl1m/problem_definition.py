@@ -62,32 +62,39 @@ class Problem:
     pb.nphases = number of phases
     pb.phaseData list of Phase data objects
     """
-
-    def __init__(self, Robot, suffix_com="_effector_frame_quasi_static_reduced.obj", suffix_feet="_reduced.obj", limb_names=None):
-        if limb_names:
-            self.n_effectors = len(limb_names)
-        else:
-            self.n_effectors = len(Robot.limbs_names)
-
+    def __init__(self, rbprm_robot=None, suffix_com="_effector_frame_quasi_static_reduced.obj", suffix_feet="_reduced.obj", limb_names=None, constraint_path=None):
+        effectors = None
+        kinematic_constraints_path     = None
+        relative_feet_constraints_path = None
+        
+        if rbprm_robot is not None:
+            effectors = rbprm_robot.limbs_names
+            kinematic_constraints_path = rbprm_robot.kinematic_constraints_path
+            relative_feet_constraints_path = rbprm_robot.relative_feet_constraints_path
+            
+        if limb_names is not None:
+            effectors = limb_names[:]
+            
+        if constraint_path is not None:
+            kinematic_constraints_path     = constraint_path
+            relative_feet_constraints_path = constraint_path
+        
+        self.n_effectors = len(effectors)
         self.com_objects = []
         self.foot_objects = []
-        for foot in range(self.n_effectors):
-            if limb_names != None:
-                foot_name = limb_names[foot]
-            else:
-                foot_name = Robot.limbs_names[foot]
-            filekin = Robot.kinematic_constraints_path + "COM_constraints_in_" + foot_name + suffix_com
+        for foot, foot_name in enumerate(effectors):
+            filekin = kinematic_constraints_path + "COM_constraints_in_" + foot_name + suffix_com
             self.com_objects.append(as_inequalities(load_obj(filekin)))
 
             foot_object = []
-            for other in range(self.n_effectors):
-                if other != foot:
-                    if limb_names != None:
-                        other_name = limb_names[other]
+            for other, other_name in enumerate(effectors):
+                if other != foot:                    
+                    if limb_names is not None:
+                        o_name = other_name
                     else:
-                        other_name = Robot.dict_limb_joint[Robot.limbs_names[other]]
-                    filekin = Robot.relative_feet_constraints_path + \
-                        other_name + "_constraints_in_" + foot_name + suffix_feet
+                        o_name = rbprm_robot.dict_limb_joint[rbprm_robot.limbs_names[other]]
+                    filekin = relative_feet_constraints_path + \
+                        o_name + "_constraints_in_" + foot_name + suffix_feet
                     foot_object.append(as_inequalities(load_obj(filekin)))
                 else:
                     foot_object.append(None)
