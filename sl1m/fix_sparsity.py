@@ -61,8 +61,9 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     if is_sparsity_fixed(pb, alphas):
         surface_indices = planner.selected_surfaces(alphas)
         for i, phase in enumerate(pb.phaseData):
-            phase.S = [phase.S[surface_indices[i]]]
-            phase.n_surfaces = len(phase.S)
+            for j, surfaces in enumerate(phase.S):
+                surfaces = [surfaces[surface_indices[i][j]]]
+                phase.n_surfaces[j] = len(surfaces)
         return True, pb, surface_indices, t
 
     pbs = generate_fixed_sparsity_problems(pb, alphas)
@@ -119,12 +120,13 @@ def get_undecided_surfaces(pb, alphas):
     surfaces = []
     surfaces_indices = []
     for i, phase in enumerate(pb.phaseData):
-        if phase.n_surfaces > 1:
-            if np.array(alphas[i]).min() > ALPHA_THRESHOLD:
-                indices.append(i)
-                sorted_surfaces = np.argsort(alphas[i])
-                surfaces_indices += [sorted_surfaces]
-                surfaces += [[[phase.S[idx]] for idx in sorted_surfaces]]
+        for j, n_surface in enumerate(phase.n_surfaces):
+            if n_surface > 1:
+                if np.array(alphas[i][j]).min() > ALPHA_THRESHOLD:
+                    indices.append((i, j))
+                    sorted_surfaces = np.argsort(alphas[i][j])
+                    surfaces_indices += [sorted_surfaces]
+                    surfaces += [[[phase.S[j][idx]] for idx in sorted_surfaces]]
     return indices, surfaces, surfaces_indices
 
 

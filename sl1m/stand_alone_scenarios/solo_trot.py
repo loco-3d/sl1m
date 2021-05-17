@@ -16,7 +16,7 @@ USE_SL1M = False
 
 WALK = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
 TROT = [np.array([1, 0, 1, 0]), np.array([0, 1, 0, 1])]
-GAIT = WALK
+GAIT = TROT
 
 if GAIT == WALK:
     from sl1m.stand_alone_scenarios.surfaces.flat_ground import walk_surfaces as surfaces
@@ -24,7 +24,7 @@ else:
     from sl1m.stand_alone_scenarios.surfaces.flat_ground import surfaces
 
 STEP_LENGTH = [0.01, 0.0]
-COSTS = {"step_size": [1.0, STEP_LENGTH], "posture": [1.0]}
+COSTS = {"step_size": [10.0, STEP_LENGTH], "posture": [1.0]}
 
 if __name__ == '__main__':
     t_init = clock()
@@ -35,10 +35,12 @@ if __name__ == '__main__':
     q_init = solo.referenceConfig.copy()
     q_init[:2] = [1., 0.]
 
-    initial_contacts = [np.array(q_init[:3]) +
-                        solo.dict_ref_effector_from_root[limb_name] +
-                        solo.dict_offset[solo.dict_limb_joint[limb_name]].translation
-                        for limb_name in solo.limbs_names]
+    initial_contacts = []
+    for limb_name in solo.limbs_names:
+        contact = np.array(q_init[:3]) + solo.dict_ref_effector_from_root[limb_name] + \
+            solo.dict_offset[solo.dict_limb_joint[limb_name]].translation
+        contact[2] = 0.
+        initial_contacts.append(contact)
 
     t_2 = clock()
 
@@ -52,9 +54,9 @@ if __name__ == '__main__':
     t_3 = clock()
 
     if USE_SL1M:
-        result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS)
+        result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=False)
     else:
-        result = solve_MIP_gait(pb, surfaces, costs=COSTS, com=True)
+        result = solve_MIP_gait(pb, surfaces, costs=COSTS, com=False)
     t_end = clock()
 
     print(result)
@@ -68,7 +70,6 @@ if __name__ == '__main__':
     print("The LP and QP optimizations take        ", result.time)
 
     ax = plot.draw_scene(scene)
-    plot.plot_initial_contacts(initial_contacts, ax=ax)
     if(result.success):
         plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
     else:

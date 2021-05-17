@@ -32,7 +32,7 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
     pb_data.time += t
     return pb_data
 
-def solve_L1_combinatorial_gait(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
+def solve_L1_combinatorial_gait(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}, com=True):
     """
     Solve the problem by first chosing the surfaces with a L1 norm minimization problem handling the
     combinatorial if necesary, and then optimizing the feet positions with a QP
@@ -43,7 +43,7 @@ def solve_L1_combinatorial_gait(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solve
     @costs cost dictionary specifying the cost functions to use and their parameters
     @return ProblemData storing the result
     """
-    planner = GaitPlanner()
+    planner = GaitPlanner(mip=False, com=com)
     sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
         pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
