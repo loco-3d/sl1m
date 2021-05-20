@@ -170,9 +170,9 @@ class Constraints:
                 l = k.shape[0]
                 foot_pose = pb.p0[foot]
                 G[i:i + l, j:j + self._default_n_variables(phase)] = K.dot(self.com_1(phase))
-                h[i:i + l] = k +  K.dot(foot_pose)
+                h[i:i + l] = k + K.dot(foot_pose)
                 i += l
-            elif foot in pb.phaseData[phase.id -1].stance:
+            elif foot in pb.phaseData[phase.id - 1].stance:
                 l = k.shape[0]
                 G[i:i + l, j:j + self._default_n_variables(phase)] = K.dot(self.com_1(phase))
                 h[i:i + l] = k
@@ -239,27 +239,23 @@ class Constraints:
                         foot_pose = pb.p0[other]
                         h[i:i + l] -= K.dot(foot_pose)
                     i += l
-                elif phase.id > 0:
-                    previous_phase = pb.phaseData[phase.id-1]
-                    if other in previous_phase.stance:
-                        l = k.shape[0]
-                        G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
-                        h[i:i + l] = k
-                        if other in previous_phase.moving:
-                            G[i:i + l, j:j + self._default_n_variables(phase)] += K.dot(self.foot(phase, other))
-                        elif feet_phase[other] != -1:
-                            j_f = js[feet_phase[other]]
-                            phase_f = pb.phaseData[feet_phase[other]]
-                            G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = K.dot(self.foot(phase_f, other))
-                        else:
-                            foot_pose = pb.p0[other]
-                            h[i:i + l] -= K.dot(foot_pose)
-                        i += l
-                else:
+                elif phase.id == 0:
                     l = k.shape[0]
                     G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
                     h[i:i + l] = k
                     h[i:i + l] -= K.dot(pb.p0[other])
+                    i += l
+                elif other in pb.phaseData[phase.id - 1].stance:
+                    l = k.shape[0]
+                    G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
+                    h[i:i + l] = k
+                    if feet_phase[other] != -1:
+                        j_f = js[feet_phase[other]]
+                        phase_f = pb.phaseData[feet_phase[other]]
+                        G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = K.dot(self.foot(phase_f, other))
+                    else:
+                        foot_pose = pb.p0[other]
+                        h[i:i + l] -= K.dot(foot_pose)
                     i += l
         return i
 

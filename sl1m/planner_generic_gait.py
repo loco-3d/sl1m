@@ -192,10 +192,9 @@ class Planner:
             for (other, Ks) in phase.allRelativeK[foot]:
                 if other in phase.stance:
                     n_ineq += Ks[0].shape[0]
-                elif phase.id > 0:
-                    if other in self.pb.phaseData[phase.id -1].stance:
-                        n_ineq += Ks[0].shape[0]
-                else:
+                elif phase.id == 0:
+                    n_ineq += Ks[0].shape[0]
+                elif other in self.pb.phaseData[phase.id -1].stance:
                     n_ineq += Ks[0].shape[0]
 
         # Surfaces
@@ -270,6 +269,7 @@ class Planner:
                 i_start_eq = cons.slack_equality(phase, C, d, i_start_eq, js[-1])
 
             js.append(js[-1] + self._phase_n_variables(phase))
+
         G, h = normalize([G, h])
         C, d = normalize([C, d])
         return G, h, C, d

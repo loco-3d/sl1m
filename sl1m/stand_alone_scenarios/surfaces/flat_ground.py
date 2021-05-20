@@ -8,6 +8,6 @@ aend = np.array(end).T
 
 scene = [[astart], [aend]]
 jumping_trot_surfaces = [[[astart], [astart]], [], [[astart, aend], [astart, aend]], [], [[astart, aend], [astart, aend]], [],  [[astart, aend], [astart, aend]], [],  [[aend], [aend]]]
-trot_surfaces = [[[astart], [astart]], [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]],  [[aend], [aend]]]
+trot_surfaces = [[[astart], [astart]], [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]], [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]], [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]],  [[astart, aend], [astart, aend]],  [[aend], [aend]]]
 walk_surfaces = [[[astart]], [[astart]], [[astart, aend]], [[astart, aend]], [[astart, aend]], [[astart, aend]], [[astart, aend]], [[astart, aend]], [
     [astart, aend]], [[astart, aend]], [[astart, aend]], [[astart, aend]],  [[astart, aend]], [[astart, aend]], [[astart, aend]], [[aend]], [[aend]]]
