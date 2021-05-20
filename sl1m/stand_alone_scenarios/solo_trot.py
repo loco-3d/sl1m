@@ -61,7 +61,7 @@ if __name__ == '__main__':
     if USE_SL1M:
         result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=False)
     else:
-        result = solve_MIP_gait(pb, surfaces, costs=COSTS, com=False)
+        result = solve_MIP_gait(pb, costs=COSTS, com=False)
     t_end = clock()
 
     print(result)

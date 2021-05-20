@@ -12,9 +12,10 @@ from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces as 
 
 import sl1m.tools.plot_tools as plot
 
+# GAITS["walk"] = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
+
 GAIT = np.array([3, 1, 2, 0])
 COSTS = {"posture": [1.0]}
-
 
 if __name__ == '__main__':
     t_init = clock()
@@ -42,6 +43,7 @@ if __name__ == '__main__':
     t_3 = clock()
 
     result = solve_L1_combinatorial(pb, surfaces, costs=COSTS)
+    # result = solve_MIP(pb, costs=COSTS)
     t_end = clock()
 
     print(result)

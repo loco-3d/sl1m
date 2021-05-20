@@ -38,6 +38,74 @@ def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
         return ProblemData(False, result.time)
 
 
+def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
+    """
+    Calls the sl1m solver. Tries to solve non fixed sparsity by handling the combinatorial.
+    Ultimately calls solve which provides the approriate cost function
+    @param planner
+    @param pb problem data
+    @param surfaces potential surfaces
+    @param SOLVER Solver choice
+    @return true if the problem was solved, fixed surfaces problem, surface_indices and time
+    """
+    G, h, C, d = planner.convert_pb_to_LP(pb)
+    q = 100. * planner.alphas
+
+    result = call_LP_solver(q, G, h, C, d, LP_SOLVER)
+    t = result.time
+    if not result.success:
+        print("Initial LP solver fails in fix_sparsity_combinatorial")
+        return False, pb, [], t
+
+    alphas = planner.get_alphas(result.x)
+    if is_sparsity_fixed_gait(pb, alphas):
+        surface_indices = planner.selected_surfaces(alphas)
+        for i, phase in enumerate(pb.phaseData):
+            for j, surfaces in enumerate(phase.S):
+                surfaces = [surfaces[surface_indices[i][j]]]
+                phase.n_surfaces[j] = len(surfaces)
+        return True, pb, surface_indices, t
+
+    pbs = generate_fixed_sparsity_problems_gait(pb, alphas)
+    if pbs is None:
+        print("No combinatorial problems was found")
+        return False, pb, [], t
+
+    # Handle the combinatorial
+    sparsity_fixed = False
+    i = 0
+    for (fixed_pb, _, solution_indices) in pbs:
+        G, h, C, d = planner.convert_pb_to_LP(fixed_pb, False)
+        q = 100. * planner.alphas
+        result = call_LP_solver(q, G, h, C, d, LP_SOLVER)
+        t += result.time
+        if result.success:
+            alphas = planner.get_alphas(result.x)
+            if is_sparsity_fixed_gait(fixed_pb, alphas):
+                sparsity_fixed = True
+                break
+        i += 1
+
+    if not sparsity_fixed:
+        print("Sparsity could not be fixed")
+        return False, fixed_pb, [], t
+
+    fixed_pb_surface_indices = planner.selected_surfaces(alphas)
+    j = 0
+    surface_indices = []
+    for i, phase in enumerate(fixed_pb.phaseData):
+        if len(phase.S) > 1:
+            phase.S = [phase.S[fixed_pb_surface_indices[i]]]
+            phase.n_surfaces = len(phase.S)
+            surface_indices.append(fixed_pb_surface_indices[i])
+        elif len(surfaces[i]) > 1:
+            surface_indices.append(solution_indices[j])
+            j += 1
+        else:
+            surface_indices.append(0)
+
+    return sparsity_fixed, fixed_pb, surface_indices, t
+
 def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     """
     Calls the sl1m solver. Tries to solve non fixed sparsity by handling the combinatorial.
@@ -61,9 +129,8 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     if is_sparsity_fixed(pb, alphas):
         surface_indices = planner.selected_surfaces(alphas)
         for i, phase in enumerate(pb.phaseData):
-            for j, surfaces in enumerate(phase.S):
-                surfaces = [surfaces[surface_indices[i][j]]]
-                phase.n_surfaces[j] = len(surfaces)
+            phase.S = [phase.S[surface_indices[i]]]
+            phase.n_surfaces = len(phase.S)
         return True, pb, surface_indices, t
 
     pbs = generate_fixed_sparsity_problems(pb, alphas)
@@ -81,20 +148,21 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
         t += result.time
         if result.success:
             alphas = planner.get_alphas(result.x)
-            if is_sparsity_fixed(fixed_pb, alphas):
+            if is_sparsity_fixed(pb, alphas):
                 sparsity_fixed = True
+                pb = fixed_pb
                 break
         i += 1
 
     if not sparsity_fixed:
         print("Sparsity could not be fixed")
-        return False, fixed_pb, [], t
+        return False, pb, [], t
 
     fixed_pb_surface_indices = planner.selected_surfaces(alphas)
     j = 0
     surface_indices = []
-    for i, phase in enumerate(fixed_pb.phaseData):
-        if len(phase.S) > 1:
+    for i, phase in enumerate(pb.phaseData):
+        if phase.n_surfaces > 1:
             phase.S = [phase.S[fixed_pb_surface_indices[i]]]
             phase.n_surfaces = len(phase.S)
             surface_indices.append(fixed_pb_surface_indices[i])
@@ -104,12 +172,12 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
         else:
             surface_indices.append(0)
 
-
+    print(surface_indices)
 
     return sparsity_fixed, fixed_pb, surface_indices, t
 
 
-def get_undecided_surfaces(pb, alphas):
+def get_undecided_surfaces_gait(pb, alphas):
     """
     Get the surfaces and indices of all the undecided surfaces
     @param planner the planner
@@ -129,6 +197,33 @@ def get_undecided_surfaces(pb, alphas):
                     surfaces += [[[phase.S[j][idx]] for idx in sorted_surfaces]]
     return indices, surfaces, surfaces_indices
 
+def get_undecided_surfaces(pb, alphas):
+    """
+    Get the surfaces and indices of all the undecided surfaces
+    @param planner the planner
+    @param pb the problem data
+    @return the phase indices, sorted potential surfaces and sorted surface indices
+    """
+    indices = []
+    surfaces = []
+    surfaces_indices = []
+    for i, phase in enumerate(pb.phaseData):
+        if phase.n_surfaces > 1:
+            if np.array(alphas[i]).min() > ALPHA_THRESHOLD:
+                indices.append(i)
+                sorted_surfaces = np.argsort(alphas[i])
+                surfaces_indices += [sorted_surfaces]
+                surfaces += [[[phase.S[idx]] for idx in sorted_surfaces]]
+    return indices, surfaces, surfaces_indices
+
+def is_sparsity_fixed_gait(pb, alphas):
+    """
+    @param pb the problem data
+    @param alphas the list of slack variables found by the planner
+    @return true if the sparsity is fixed (ie there is one and only one alpha~0 per phase)
+    """
+    indices, _, _ = get_undecided_surfaces_gait(pb, alphas)
+    return len(indices) == 0
 
 def is_sparsity_fixed(pb, alphas):
     """
@@ -138,6 +233,24 @@ def is_sparsity_fixed(pb, alphas):
     """
     indices, _, _ = get_undecided_surfaces(pb, alphas)
     return len(indices) == 0
+
+def generate_fixed_sparsity_problems_gait(pb, alphas):
+    """
+    Check if the combinatorial is not too big, if not return all the problems
+    @param pb the problem data
+    @param alphas the list of slack variables found by the planner
+    @return the list of problems
+    """
+    indices, surfaces, surfaces_indices = get_undecided_surfaces_gait(pb, alphas)
+    all_len = [len(s) for s in surfaces]
+    n_pbs = 1
+    for l in all_len:
+        n_pbs *= l
+    if n_pbs > 2000:
+        print("Problem probably too big to handle combinatorial", n_pbs)
+        return None
+    print("Handling combinatorial: ", n_pbs)
+    return generate_combinatorials(pb, indices, surfaces, surfaces_indices)
 
 
 def generate_fixed_sparsity_problems(pb, alphas):
