@@ -13,18 +13,23 @@ from sl1m.stand_alone_scenarios.surfaces.flat_ground import scene
 import sl1m.tools.plot_tools as plot
 
 USE_SL1M = False
+gait = "jumping_trot"
 
-WALK = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
-TROT = [np.array([1, 0, 1, 0]), np.array([0, 1, 0, 1])]
-GAIT = TROT
+GAITS = {}
+GAITS["walk"] = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
+GAITS["trot"] = [np.array([1, 0, 1, 0]), np.array([0, 1, 0, 1])]
+GAITS["jumping_trot"] = [np.array([1, 0, 1, 0]), np.zeros(4), np.array([0, 1, 0, 1]), np.zeros(4)]
+GAIT = GAITS[gait]
 
-if GAIT == WALK:
-    from sl1m.stand_alone_scenarios.surfaces.flat_ground import walk_surfaces as surfaces
+if gait == "jumping_trot":
+    from sl1m.stand_alone_scenarios.surfaces.flat_ground import jumping_trot_surfaces as surfaces
+elif gait == "trot":
+    from sl1m.stand_alone_scenarios.surfaces.flat_ground import trot_surfaces as surfaces
 else:
-    from sl1m.stand_alone_scenarios.surfaces.flat_ground import surfaces
+    from sl1m.stand_alone_scenarios.surfaces.flat_ground import walk_surfaces as surfaces
 
-STEP_LENGTH = [0.01, 0.0]
-COSTS = {"step_size": [10.0, STEP_LENGTH], "posture": [1.0]}
+STEP_LENGTH = [0.9, 0.0]
+COSTS = {"step_size": [10.0, STEP_LENGTH], "posture": [0.0]}
 
 if __name__ == '__main__':
     t_init = clock()

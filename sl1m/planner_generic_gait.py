@@ -188,9 +188,15 @@ class Planner:
                     n_ineq += K.shape[0]
 
         # Foot relative distance
-        for (foot, Ks) in phase.allRelativeK[phase.moving[0]]:
-            if foot in phase.stance:
-                n_ineq += Ks[0].shape[0]
+        for foot in phase.moving:
+            for (other, Ks) in phase.allRelativeK[foot]:
+                if other in phase.stance:
+                    n_ineq += Ks[0].shape[0]
+                elif phase.id > 0:
+                    if other in self.pb.phaseData[phase.id -1].stance:
+                        n_ineq += Ks[0].shape[0]
+                else:
+                    n_ineq += Ks[0].shape[0]
 
         # Surfaces
         n_ineq += sum([sum([S[1].shape[0] for S in foot_surfaces]) for foot_surfaces in phase.S])
@@ -264,7 +270,6 @@ class Planner:
                 i_start_eq = cons.slack_equality(phase, C, d, i_start_eq, js[-1])
 
             js.append(js[-1] + self._phase_n_variables(phase))
-
         G, h = normalize([G, h])
         C, d = normalize([C, d])
         return G, h, C, d
@@ -337,10 +342,7 @@ class Planner:
                     all_feet_pos[foot].append(None)
 
             j += self._phase_n_variables(phase)
-
-        # for foot in range(self.n_effectors):
-        #     all_feet_pos[foot].pop(0)
-
+        
         return coms, moving_feet_pos, all_feet_pos
 
     def com_cost(self, coms):
@@ -399,7 +401,6 @@ class Planner:
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
-        first_phase = max(self.pb.n_phases - self.pb.n_effectors, 0)
         j = 0
         feet_phase = self._feet_last_moving_phase(self.pb.n_phases - 1)
         for phase in self.pb.phaseData:

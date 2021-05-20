@@ -209,6 +209,8 @@ class Constraints:
         """
         The distance between the moving effector and the other stance feet is limited
         For i in moving_foot, For j !=i, Ki (pj - pi) <= ki
+        The distane between the moving effector and the previous phase stance feet (or initial 
+        contacts for the fist phase) is also limited
         @param pb          The problem specific data
         @param phase       The phase specific data
         @param G           The inequality constraint matrix
@@ -220,22 +222,45 @@ class Constraints:
         """
         i = i_start
         j = js[-1]
-        constraints = phase.allRelativeK[phase.moving[0]]
-        for (foot, (K, k)) in constraints:
-            if foot in phase.stance:
-                l = k.shape[0]
-                G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, id=0))
-                h[i:i + l] = k
-                if foot in phase.moving:
-                    G[i:i + l, j:j + self._default_n_variables(phase)] += K.dot(self.foot(phase, foot))
-                elif feet_phase[foot] != -1:
-                    j_f = js[feet_phase[foot]]
-                    phase_f = pb.phaseData[feet_phase[foot]]
-                    G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = K.dot(self.foot(phase_f, foot))
+        for foot in phase.moving:
+            constraints = phase.allRelativeK[foot]
+            for (other, (K, k)) in constraints:
+                if other in phase.stance:
+                    l = k.shape[0]
+                    G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
+                    h[i:i + l] = k
+                    if other in phase.moving:
+                        G[i:i + l, j:j + self._default_n_variables(phase)] += K.dot(self.foot(phase, other))
+                    elif feet_phase[other] != -1:
+                        j_f = js[feet_phase[other]]
+                        phase_f = pb.phaseData[feet_phase[other]]
+                        G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = K.dot(self.foot(phase_f, other))
+                    else:
+                        foot_pose = pb.p0[other]
+                        h[i:i + l] -= K.dot(foot_pose)
+                    i += l
+                elif phase.id > 0:
+                    previous_phase = pb.phaseData[phase.id-1]
+                    if other in previous_phase.stance:
+                        l = k.shape[0]
+                        G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
+                        h[i:i + l] = k
+                        if other in previous_phase.moving:
+                            G[i:i + l, j:j + self._default_n_variables(phase)] += K.dot(self.foot(phase, other))
+                        elif feet_phase[other] != -1:
+                            j_f = js[feet_phase[other]]
+                            phase_f = pb.phaseData[feet_phase[other]]
+                            G[i:i + l, j_f:j_f + self._default_n_variables(phase_f)] = K.dot(self.foot(phase_f, other))
+                        else:
+                            foot_pose = pb.p0[other]
+                            h[i:i + l] -= K.dot(foot_pose)
+                        i += l
                 else:
-                    foot_pose = pb.p0[foot]
-                    h[i:i + l] -= K.dot(foot_pose)
-                i += l
+                    l = k.shape[0]
+                    G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
+                    h[i:i + l] = k
+                    h[i:i + l] -= K.dot(pb.p0[other])
+                    i += l
         return i
 
     def slack_positivity(self, phase, G, h, i_start, j):
