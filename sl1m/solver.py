@@ -500,10 +500,10 @@ def solve_MIP_gurobi_cost(slack_selection_vector, P, q, G=None, h=None, C=None, 
         return ResultData(False, ms(t_end-t_init))
 
 
-def solve_MIP_cvxpy(slack_selection_vector, c, G=None, h=None, C=None, d=None):
+def solve_MIP_cvxpy(slack_selection_vector, G=None, h=None, C=None, d=None):
     """
     Solve the Mixed-Integer problem using CVXPY
-    min c' x
+    find x
     subject to  G x <= h
     subject to  C x  = d
     """
@@ -521,7 +521,7 @@ def solve_MIP_cvxpy(slack_selection_vector, c, G=None, h=None, C=None, d=None):
     boolvars = cvxpy.Variable(n_slack_variables, boolean=True)
     obj = cvxpy.Minimize(slack_selection_vector * variables)
 
-    constraints = constraints + [variables[el] <= 100. * boolvars[i]
+    constraints = constraints + [variables[el] <= boolvars[i]
                                  for i, el in enumerate(slack_indices)]
 
     currentSum = []
@@ -538,7 +538,7 @@ def solve_MIP_cvxpy(slack_selection_vector, c, G=None, h=None, C=None, d=None):
         constraints = constraints + [sum(currentSum) == len(currentSum) - 1]
     obj = cvxpy.Minimize(np.ones(n_slack_variables) * boolvars)
     prob = cvxpy.Problem(obj, constraints)
-    prob.solve(solver=cvxpy.GUROBI, verbose=False)
+    prob.solve(solver=cvxpy.CBC, verbose=False)
     t_end = clock()
     if prob.status not in ["infeasible", "unbounded"]:
         res = np.array([v.value for v in variables])

@@ -6,9 +6,11 @@ import os
 
 from solo_rbprm.solo import Robot as Solo
 
+from sl1m.solver import Solvers
 from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
 from sl1m.problem_definition_gait import Problem
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait as surfaces
+from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait_small as surfaces
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_scene as scene
 
 import sl1m.tools.plot_tools as plot
@@ -16,8 +18,9 @@ import sl1m.tools.plot_tools as plot
 GAIT = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
 COSTS = {"posture": [1.0]}
 
-USE_SL1M = True
+USE_SL1M = False
 USE_COM = True
+TEST_CBC = True
 
 if __name__ == '__main__':
     t_init = clock()
@@ -47,7 +50,10 @@ if __name__ == '__main__':
     if USE_SL1M:
         result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=USE_COM)
     else:
-        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
+        if TEST_CBC:
+            result = solve_MIP_gait(pb, costs=None, com=USE_COM)
+        else:
+            result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
 
     print(result)
@@ -64,4 +70,22 @@ if __name__ == '__main__':
     if(result.success):
         plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
     else:
-        plt.show()
+        plt.show(block=False)
+        
+    if TEST_CBC:
+        print ("CBC results")
+        t_3 = clock()
+        result = solve_MIP_gait(pb, costs=None, com=USE_COM, solver=Solvers.CVXPY)
+        t_end = clock()
+        
+        print(result)
+
+        print("Optimized number of steps:              ", pb.n_phases)
+        print("Solving the problem takes               ", 1000. * (t_end - t_3))
+        print("The LP and QP optimizations take        ", result.time)
+        
+        ax = plot.draw_scene(scene)
+        if(result.success):
+            plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
+        else:
+            plt.show(block=False)
