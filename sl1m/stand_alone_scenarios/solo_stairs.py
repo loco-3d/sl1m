@@ -51,7 +51,7 @@ if __name__ == '__main__':
         result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=USE_COM)
     else:
         if TEST_CBC:
-            result = solve_MIP_gait(pb, costs=None, com=USE_COM)
+            result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
         else:
             result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     if TEST_CBC:
         print ("CBC results")
         t_3 = clock()
-        result = solve_MIP_gait(pb, costs=None, com=USE_COM, solver=Solvers.CVXPY)
+        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM, solver=Solvers.CVXPY)
         t_end = clock()
         
         print(result)

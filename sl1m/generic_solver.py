@@ -91,11 +91,10 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
     planner = Planner(mip=True, com=com)
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas
+    P = None; q = None
     if costs != None:
         P, q = planner.compute_costs(costs)
-        result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
-    else:
-        result = call_MIP_solver(slack_selection_vector, G, h, C, d, solver=solver)
+    result = call_MIP_solver(slack_selection_vector, P,q, G, h, C, d, solver=solver)
 
     if result.success:
         alphas = planner.get_alphas(result.x)
@@ -116,11 +115,10 @@ def solve_MIP_gait(pb, costs={}, solver=Solvers.GUROBI, com=False):
     planner = GaitPlanner(mip=True, com=com)
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas
+    P = None; q=None 
     if costs != None:
         P, q = planner.compute_costs(costs)
-        result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
-    else:
-        result = call_MIP_solver(slack_selection_vector, G, h, C, d, solver=solver)
+    result = call_MIP_solver(slack_selection_vector, P,q, G, h, C, d, solver=solver)
 
     if result.success:
         alphas = planner.get_alphas(result.x)
