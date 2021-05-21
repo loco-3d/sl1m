@@ -6,16 +6,18 @@ import os
 
 from solo_rbprm.solo import Robot as Solo
 
-from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
-from sl1m.problem_definition import Problem
-from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces as surfaces
+from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
+from sl1m.problem_definition_gait import Problem
+from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait as surfaces
+from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_scene as scene
 
 import sl1m.tools.plot_tools as plot
 
-# GAITS["walk"] = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
-
-GAIT = np.array([3, 1, 2, 0])
+GAIT = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
 COSTS = {"posture": [1.0]}
+
+USE_SL1M = True
+USE_COM = True
 
 if __name__ == '__main__':
     t_init = clock()
@@ -42,7 +44,10 @@ if __name__ == '__main__':
     pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3])
     t_3 = clock()
 
-    result = solve_L1_combinatorial(pb, surfaces, costs=COSTS)
+    if USE_SL1M:
+        result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=USE_COM)
+    else:
+        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
 
     print(result)
@@ -55,9 +60,8 @@ if __name__ == '__main__':
     print("Solving the problem takes               ", 1000. * (t_end - t_3))
     print("The LP and QP optimizations take        ", result.time)
 
-    ax = plot.draw_scene(surfaces, GAIT)
-    plot.plot_initial_contacts(initial_contacts, ax=ax)
+    ax = plot.draw_scene(scene)
     if(result.success):
-        plot.plot_planner_result(result.coms, result.moving_foot_pos, result.all_feet_pos, ax, True)
+        plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
     else:
         plt.show()

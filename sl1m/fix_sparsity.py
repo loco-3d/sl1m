@@ -6,7 +6,7 @@ from sl1m.solver import call_QP_solver, call_LP_solver
 
 from sl1m.problem_data import ProblemData
 
-ALPHA_THRESHOLD = 0.000001
+ALPHA_THRESHOLD = 0.001
 
 
 def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
@@ -265,14 +265,14 @@ def generate_combinatorials(pb, undecided_surfaces):
     @return the list of problems, the phase indices, and the indices of the selected surfaces
     """
     pbs = []
-    sorted_combinations = [el for el in itertools.product(*[s[-1] for s in undecided_surfaces])]
+    sorted_combinations = list(itertools.product(*[s[-1] for s in undecided_surfaces]))
     for combination in sorted_combinations:
         fixed_pb = copy.deepcopy(pb)
         for i, undecided_surface in enumerate(undecided_surfaces):
             phase = fixed_pb.phaseData[undecided_surface[0]]
             phase.S = [phase.S[combination[i]]]
             phase.n_surfaces = 1
-        pbs.append([fixed_pb, undecided_surfaces, combination])
+        pbs.append([fixed_pb, combination])
     return pbs
 
 
@@ -284,7 +284,7 @@ def generate_combinatorials_gait(pb, undecided_surfaces):
     @return the list of fixed problems with the indices of the selected surfaces
     """
     pbs = []
-    sorted_combinations = [el for el in itertools.product(*[s[-1] for s in undecided_surfaces])]
+    sorted_combinations = list(itertools.product(*[s[-1] for s in undecided_surfaces]))
     for combination in sorted_combinations:
         fixed_pb = copy.deepcopy(pb)
         for i, undecided_surface in enumerate(undecided_surfaces):

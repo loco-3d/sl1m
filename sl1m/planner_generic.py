@@ -244,9 +244,6 @@ class Planner:
 
             j += self._phase_n_variables(phase)
 
-        for foot in range(self.n_effectors):
-            all_feet_pos[foot].pop(0)
-
         return coms, moving_foot_pos, all_feet_pos
 
     def com_cost(self, coms):
