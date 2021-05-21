@@ -43,7 +43,6 @@ if __name__ == '__main__':
     t_3 = clock()
 
     result = solve_L1_combinatorial(pb, surfaces, costs=COSTS)
-    # result = solve_MIP(pb, costs=COSTS)
     t_end = clock()
 
     print(result)

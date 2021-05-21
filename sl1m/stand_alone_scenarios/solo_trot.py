@@ -12,7 +12,7 @@ from sl1m.stand_alone_scenarios.surfaces.flat_ground import scene
 
 import sl1m.tools.plot_tools as plot
 
-USE_SL1M = False
+USE_SL1M = True
 gait = "walk"
 
 GAITS = {}

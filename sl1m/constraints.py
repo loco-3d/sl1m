@@ -33,6 +33,8 @@ class Constraints:
         self.foot = self._expression_matrix(3, 4)
         self.foot_xy = self._expression_matrix(2, 4)
 
+        self.M = 10.
+
     def _expression_matrix(self, size, j):
         """
         Generate a selection matrix for a given variable 
@@ -213,7 +215,7 @@ class Constraints:
             G[i:i + l, j:j + self.default_n_variables] = S.dot(self.foot)
             h[i:i + l] = s
             if n_surfaces > 1:
-                G[i:i + l, j + j_alpha] = -50 * np.ones(l)
+                G[i:i + l, j + j_alpha] = -self.M * np.ones(l)
                 j_alpha += 1
             i += l
         return i
