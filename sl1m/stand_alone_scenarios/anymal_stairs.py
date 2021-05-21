@@ -6,13 +6,16 @@ import os
 
 from anymal_rbprm.anymal import Robot as Anymal
 
-from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
-from sl1m.problem_definition import Problem
-from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import quadruped_surfaces as surfaces
+from sl1m.generic_solver import solve_MIP_gait
+from sl1m.problem_definition_gait import Problem
+from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import quadruped_surfaces_gait as surfaces
+from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import scene
 
 import sl1m.tools.plot_tools as plot
 
-GAIT = [0, 1]
+GAIT = [np.array([1, 1, 1, 0]), np.array([1, 1, 0, 1]), np.array([1, 0, 1, 1]), np.array([0, 1, 1, 1])]
+
+USE_COM = True
 
 if __name__ == '__main__':
     t_init = clock()
@@ -36,10 +39,10 @@ if __name__ == '__main__':
         "/share/anymal-rbprm/relative_effector_positions/anymal_"
 
     pb = Problem(anymal, suffix_com="_effector_frame_quasi_static_upscale.obj")
-    pb.generate_problem(R, surfaces, np.array([0, 3, 2, 1]), initial_contacts, q_init[:3])
+    pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3])
     t_3 = clock()
 
-    result = solve_L1_combinatorial(pb, surfaces)
+    result = solve_MIP_gait(pb, com=USE_COM)
     t_end = clock()
 
     print(result)
@@ -52,9 +55,8 @@ if __name__ == '__main__':
     print("Solving the problem takes               ", 1000. * (t_end - t_3))
     print("The LP and QP optimizations take        ", result.time)
 
-    ax = plot.draw_scene(surfaces, GAIT)
-    plot.plot_initial_contacts(initial_contacts, ax=ax)
+    ax = plot.draw_scene(scene)
     if(result.success):
-        plot.plot_planner_result(result.coms, result.moving_foot_pos, result.all_feet_pos, ax, True)
+        plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
     else:
         plt.show()

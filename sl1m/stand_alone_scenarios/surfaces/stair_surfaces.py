@@ -42,6 +42,31 @@ quadruped_surfaces = [[afloor],
                       [astep4],
                       [astep4]]
 
+quadruped_surfaces_gait = [[[afloor]],
+                           [[afloor, astep1, astep2]],
+                           [[afloor, astep1, astep2]],
+                           [[afloor, astep1, astep2]],
+                           [[afloor, astep1, astep2]],
+                           [[afloor, astep1, astep2]],
+                           [[astep1, astep2, astep3]],
+                           [[astep1, astep2, astep3]],
+                           [[astep1, astep2, astep3]],
+                           [[astep1, astep2, astep3]],
+                           [[astep1, astep2, astep3]],
+                           [[astep1, astep2, astep3]],
+                           [[astep1, astep2, astep3, astep4]],
+                           [[astep1, astep2, astep3, astep4]],
+                           [[astep1, astep2, astep3, astep4]],
+                           [[astep1, astep2, astep3, astep4]],
+                           [[astep3, astep4]],
+                           [[astep3, astep4]],
+                           [[astep3, astep4]],
+                           [[astep3, astep4]],
+                           [[astep4]],
+                           [[astep4]],
+                           [[astep4]],
+                           [[astep4]]]
+
 
 floor_small = [[0.29, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.29, -1., 0.]]
 step1_small = [[0.3, 0.6, 0.05], [0.3, -0.16, 0.05], [0.59, -0.16, 0.05], [0.59, 0.6, 0.05]]

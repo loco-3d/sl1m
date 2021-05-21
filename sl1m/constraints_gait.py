@@ -22,7 +22,7 @@ class Constraints:
 
         self.default_n_variables = 4 * int(com)
 
-        self.M = 100
+        self.M = 1.
 
     def _default_n_variables(self, phase):
         """

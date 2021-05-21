@@ -6,8 +6,7 @@ from sl1m.solver import call_QP_solver, call_LP_solver
 
 from sl1m.problem_data import ProblemData
 
-ALPHA_THRESHOLD = 0.001
-
+ALPHA_THRESHOLD = 0.01
 
 def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
     """

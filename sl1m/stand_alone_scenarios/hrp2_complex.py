@@ -11,6 +11,11 @@ import sl1m.tools.plot_tools as plot
 
 GAIT = [0, 1]
 
+# GAIT = [np.array([1, 0]), np.array([0, 1])]
+
+USE_SL1M = True
+USE_COM = True
+
 if __name__ == '__main__':
     t_init = clock()
     R = [np.identity(3)] * len(surfaces)

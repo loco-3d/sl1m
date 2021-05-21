@@ -33,7 +33,7 @@ class Constraints:
         self.foot = self._expression_matrix(3, 4)
         self.foot_xy = self._expression_matrix(2, 4)
 
-        self.M = 10.
+        self.M = 1.
 
     def _expression_matrix(self, size, j):
         """
