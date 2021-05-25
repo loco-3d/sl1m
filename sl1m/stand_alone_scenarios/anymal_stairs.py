@@ -15,7 +15,7 @@ import sl1m.tools.plot_tools as plot
 
 GAIT = [np.array([1, 1, 1, 0]), np.array([1, 1, 0, 1]), np.array([1, 0, 1, 1]), np.array([0, 1, 1, 1])]
 
-USE_COM = True
+USE_COM = False
 
 if __name__ == '__main__':
     t_init = clock()

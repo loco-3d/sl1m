@@ -10,7 +10,7 @@ from sl1m.problem_data import ProblemData
 
 # ----------------------- L1 -----------------------------------------------------------------------
 
-def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
+def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}, com=True):
     """
     Solve the problem by first chosing the surfaces with a L1 norm minimization problem handling the
     combinatorial if necesary, and then optimizing the feet positions with a QP
@@ -21,7 +21,7 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
     @costs cost dictionary specifying the cost functions to use and their parameters
     @return ProblemData storing the result
     """
-    planner = Planner()
+    planner = Planner(mip=False, com=com)
     sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(
         planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
@@ -79,7 +79,7 @@ def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solv
 
 # ----------------------- MIP -----------------------------------------------------------------------
 
-def solve_MIP(pb, costs={}, solver=Solvers.GUROBI):
+def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
     """
     Solve the problem with a MIP solver
     @param pb problem to solve
@@ -88,7 +88,7 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI):
     @solver MIP solver to use
     @return ProblemData storing the result
     """
-    planner = Planner()
+    planner = Planner(mip=True, com=com)
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas
     if costs != None:

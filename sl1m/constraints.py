@@ -17,23 +17,25 @@ class Constraints:
     - com_weighted_equality: Fix the horizontal position of the COm at the barycenter of the contact points (fixed feet)
     """
 
-    def __init__(self, n_effectors):
+    def __init__(self, n_effectors, com=True):
         self.n_effectors = n_effectors
-        self.default_n_variables = 7
+
+        self.default_n_variables = 4 * int(com) + 3
+
+        self.M = 1.
 
         self.WEIGHTS = [1./float(n_effectors - 1)] * n_effectors
         
-        self.com_xy = self._expression_matrix(2, 0)
-        self.com_1 = self._expression_matrix(3, 0)
-        self.com_2 = self._expression_matrix(3, 0)
-        self.com_2[2, 2] = 0
-        self.com_2[2, 3] = 1
-        self.com_1_z = self._expression_matrix(1, 2)
-        self.com_2_z = self._expression_matrix(1, 3)
-        self.foot = self._expression_matrix(3, 4)
-        self.foot_xy = self._expression_matrix(2, 4)
-
-        self.M = 1.
+        if com:
+            self.com_xy = self._expression_matrix(2, 0)
+            self.com_1 = self._expression_matrix(3, 0)
+            self.com_2 = self._expression_matrix(3, 0)
+            self.com_2[2, 2] = 0
+            self.com_2[2, 3] = 1
+            self.com_1_z = self._expression_matrix(1, 2)
+            self.com_2_z = self._expression_matrix(1, 3)
+        self.foot = self._expression_matrix(3, 4 * int(com))
+        self.foot_xy = self._expression_matrix(2, 4 * int(com))
 
     def _expression_matrix(self, size, j):
         """
@@ -128,7 +130,7 @@ class Constraints:
                 i += l
         return i
 
-    def fixed_foot_com(self, pb, phase,  G, h, i_start, js, phase_id, feet_phase):
+    def fixed_foot_com(self, pb, phase,  G, h, i_start, js, feet_phase):
         """
         The COM must belong to a reachable polytope above each end-effector
         For each effector id , K_id (c(t) - p_id(t-1)) <= k_id
@@ -144,7 +146,7 @@ class Constraints:
         @return  i_start + the number of rows used by the constraint
         """
         i = i_start
-        if phase_id != 0:
+        if phase.id != 0:
             i = self._fixed_foot_com_1_kinematic(pb, phase,  G, h, i_start, js, feet_phase)
         return self._fixed_foot_com_2_kinematic(pb, phase,  G, h, i, js, feet_phase)
 
@@ -220,6 +222,26 @@ class Constraints:
             i += l
         return i
 
+    def slack_equality(self, phase, C, d, i_start, j):
+        """
+        The slack variables (alpha) sum should be equal to the number of surfaces -1 
+        Sl for each moving foot, sum(alpha_s) = n_surfaces - 1
+        @param phase       The phase specific data
+        @param C           The equality constraint matrix
+        @param d           The equality constraint vector
+        @param i_start     Initial row to use
+        @param j           Column corresponding to this phase variables
+        @return i_start + the number of rows used by the constraint
+        """
+        i = i_start
+        j_alpha = j + self.default_n_variables
+        if phase.n_surfaces > 1:
+            C[i, j_alpha:j_alpha + phase.n_surfaces] = np.ones(phase.n_surfaces)
+            d[i] = phase.n_surfaces - 1
+            j_alpha += phase.n_surfaces
+            i += 1
+        return i
+
     def _com_weighted_equality(self, pb, phase, C, d, i_start, js, feet_phase):
         """
         The 2D position of the com should be the baricenter of the fixed feet locations
@@ -264,7 +286,7 @@ class Constraints:
         i += 2
         return i
 
-    def com(self, pb, phase, C, d, i_start, js, phase_id, feet_phase):
+    def com(self, pb, phase, C, d, i_start, js, feet_phase):
         """
         The com position is defined
         @param pb          The problem specific data
@@ -277,7 +299,7 @@ class Constraints:
         @param feet_phase List of the feet las moving phase, -1 if they haven't moved
         @return i_start + the number of rows used by the constraint
         """
-        if phase_id != 0:
-            return self._com_weighted_equality(pb, phase, C, d, i_start, js, feet_phase)
-        else:
+        if phase.id == 0 and pb.c0 is not None:
             return self._com_equality_init(pb, C, d, i_start)
+        else:
+            return self._com_weighted_equality(pb, phase, C, d, i_start, js, feet_phase)

@@ -94,7 +94,7 @@ class Problem:
 
             self.foot_objects.append(foot_object)
 
-    def generate_problem(self, R, surfaces, gait, p0, c0):
+    def generate_problem(self, R, surfaces, gait, p0, c0=None):
         """
         Build a SL1M problem for the Mixed Integer formulation,
         with all the kinematics and foot relative position constraints required
