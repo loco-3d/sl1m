@@ -94,7 +94,7 @@ def call_QP_solver(P, q, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
     return result
 
 
-def call_MIP_solver(slack_selection_vector, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
+def call_MIP_solver(slack_selection_vector, P=None, q=None, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
     """
     Solve the MIP problem with a specific solver
     :param: q, G, h, C, d problem data
@@ -102,14 +102,25 @@ def call_MIP_solver(slack_selection_vector, G=None, h=None, C=None, d=None, solv
     :param: slack_selection_vector Slack variables selection matrice of the problem
     :return: None if wrong SOLVER, else ResultData
     """
-    if solver == Solvers.GUROBI:
-        result = solve_MIP_gurobi(slack_selection_vector, G, h, C, d)
+    hasCost = not(P is None or q is None)
+    result = None
+    if hasCost:
+        if solver == Solvers.GUROBI:
+            result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
+        elif solver == Solvers.CVXPY:
+            result = solve_MIP_cvxpy_cost (slack_selection_vector, P, q, G, h, C, d)
+        else:
+            print('Unknown MIP solver asked : ', solver)
+            return    
+    else:        
+        if solver == Solvers.GUROBI:
+            result = solve_MIP_gurobi(slack_selection_vector, G, h, C, d)
 
-    elif solver == Solvers.CVXPY:
-        result = solve_MIP_cvxpy(slack_selection_vector, G, h, C, d)
-    else:
-        print('Unknown MIP solver asked : ', solver)
-        return
+        elif solver == Solvers.CVXPY:
+            result = solve_MIP_cvxpy(slack_selection_vector, G, h, C, d)
+        else:
+            print('Unknown MIP solver asked : ', solver)
+            return
     return result
 
 
@@ -500,10 +511,10 @@ def solve_MIP_gurobi_cost(slack_selection_vector, P, q, G=None, h=None, C=None, 
         return ResultData(False, ms(t_end-t_init))
 
 
-def solve_MIP_cvxpy(slack_selection_vector, c, G=None, h=None, C=None, d=None):
+def solve_MIP_cvxpy(slack_selection_vector, G=None, h=None, C=None, d=None):
     """
     Solve the Mixed-Integer problem using CVXPY
-    min c' x
+    find x
     subject to  G x <= h
     subject to  C x  = d
     """
@@ -521,7 +532,7 @@ def solve_MIP_cvxpy(slack_selection_vector, c, G=None, h=None, C=None, d=None):
     boolvars = cvxpy.Variable(n_slack_variables, boolean=True)
     obj = cvxpy.Minimize(slack_selection_vector * variables)
 
-    constraints = constraints + [variables[el] <= 100. * boolvars[i]
+    constraints = constraints + [variables[el] <= boolvars[i]
                                  for i, el in enumerate(slack_indices)]
 
     currentSum = []
@@ -536,7 +547,56 @@ def solve_MIP_cvxpy(slack_selection_vector, c, G=None, h=None, C=None, d=None):
         previousL = el
     if len(currentSum) > 1:
         constraints = constraints + [sum(currentSum) == len(currentSum) - 1]
-    obj = cvxpy.Minimize(np.ones(n_slack_variables) * boolvars)
+    obj = cvxpy.Minimize(0.)
+    prob = cvxpy.Problem(obj, constraints)
+    prob.solve(solver=cvxpy.CBC, verbose=False)
+    t_end = clock()
+    if prob.status not in ["infeasible", "unbounded"]:
+        res = np.array([v.value for v in variables])
+        return ResultData(True, ms(t_end-t_init), res)
+    else:
+        return ResultData(False, ms(t_end-t_init))
+
+
+def solve_MIP_cvxpy_cost(slack_selection_vector, P, q, G=None, h=None, C=None, d=None):
+    """
+    Solve the Mixed-Integer problem using CVXPY
+    find x
+    subject to  G x <= h
+    subject to  C x  = d
+    """
+    print ("WARNING: CVXPY with a quadratic cost will only work with GUROBI, you may want to call GUROBI directly")
+    t_init = clock()
+    n_variables = G.shape[1]
+    variables = cvxpy.Variable(n_variables)
+    constraints = []
+    ineq_constraints = G * variables <= h
+    eq_constraints = C * variables == d
+
+    constraints = [ineq_constraints, eq_constraints]
+
+    slack_indices = [i for i, el in enumerate(slack_selection_vector) if el > 0]
+    n_slack_variables = len([el for el in slack_selection_vector if el > 0])
+    boolvars = cvxpy.Variable(n_slack_variables, boolean=True)
+    obj = cvxpy.Minimize(slack_selection_vector * variables)
+
+    constraints = constraints + [variables[el] <= boolvars[i]
+                                 for i, el in enumerate(slack_indices)]
+
+    currentSum = []
+    previousL = 0
+    for i, el in enumerate(slack_indices):
+        if i != 0 and el - previousL > 2.:
+            assert len(currentSum) > 0
+            constraints = constraints + [sum(currentSum) == len(currentSum) - 1]
+            currentSum = [boolvars[i]]
+        elif el != 0:
+            currentSum = currentSum + [boolvars[i]]
+        previousL = el
+    if len(currentSum) > 1:
+        constraints = constraints + [sum(currentSum) == len(currentSum) - 1]
+    obj = cvxpy.Minimize((1/2)*cvxpy.quad_form(variables, P) + q.T * variables)
+    # ~ obj = cvxpy.Minimize(0.)
     prob = cvxpy.Problem(obj, constraints)
     prob.solve(solver=cvxpy.GUROBI, verbose=False)
     t_end = clock()
@@ -545,6 +605,5 @@ def solve_MIP_cvxpy(slack_selection_vector, c, G=None, h=None, C=None, d=None):
         return ResultData(True, ms(t_end-t_init), res)
     else:
         return ResultData(False, ms(t_end-t_init))
-
 
 # -------------------------- L1-Norm minimisation --------------------------------------------------

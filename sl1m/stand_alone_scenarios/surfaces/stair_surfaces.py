@@ -17,6 +17,12 @@ scene = [[afloor], [astep1], [astep2], [astep3], [astep4]]
 
 surfaces = [[afloor], [afloor], [astep1, astep2, astep3], [astep2, astep3, astep1],
             [astep3, astep2, astep1, astep4], [astep3, astep4], [astep4], [astep4]]
+            
+# ~ scene = [[astart], [aend]]
+            
+            
+walk_surfaces = [[[afloor]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]],  [[astep1, astep2, astep3, astep4]], [[astep1, astep2, astep3, astep4]], [[astep1, astep2, astep3, astep4]], [[astep1, astep2, astep3, astep4]], [[astep3, astep4]], [[astep3, astep4]], [[astep3, astep4]], [[astep3, astep4]],[[astep4]],[[astep4]],[[astep4]],[[astep4]]]
+            
 quadruped_surfaces = [[afloor],
                       [afloor, astep1, astep2],
                       [afloor, astep1, astep2],
@@ -186,3 +192,22 @@ solo_surfaces_gait = [[[afloor_small]],
                      [[astep4_small]],
                      [[astep4_small]],
                      [[astep4_small]]]
+                     
+solo_surfaces_gait_small = [[[afloor_small]],
+                     [[afloor_small]],
+                     [[afloor_small]],
+                     [[afloor_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[astep1_small, astep2_small, astep3_small]],
+                     [[afloor_small, astep1_small, astep2_small]],
+                     [[astep1_small, astep2_small, astep3_small]],
+                     [[astep1_small, astep2_small, astep3_small]],
+                     [[astep1_small, astep2_small, astep3_small]],]
