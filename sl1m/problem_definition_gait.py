@@ -65,7 +65,7 @@ class Problem:
     pb.phaseData list of Phase data objects
     """
 
-    def __init__(self, rbprm_robot=None, suffix_com="_effector_frame_quasi_static_reduced.obj", suffix_feet="_reduced.obj", limb_names=None, constraint_path=None):
+    def __init__(self, rbprm_robot=None, suffix_com="_effector_frame_quasi_static_reduced.obj", suffix_feet="_reduced.obj", limb_names=None, other_names=None, constraint_paths=None):
         effectors = None
         kinematic_constraints_path     = None
         relative_feet_constraints_path = None
@@ -78,9 +78,9 @@ class Problem:
         if limb_names is not None:
             effectors = limb_names[:]
             
-        if constraint_path is not None:
-            kinematic_constraints_path     = constraint_path
-            relative_feet_constraints_path = constraint_path
+        if constraint_paths is not None:
+            kinematic_constraints_path     = constraint_paths[0]
+            relative_feet_constraints_path = constraint_paths[1]
         
         self.n_effectors = len(effectors)
         self.com_objects = []
@@ -91,8 +91,10 @@ class Problem:
 
             foot_object = []
             for other, other_name in enumerate(effectors):
-                if other != foot:                    
-                    if limb_names is not None:
+                if other != foot:  
+                    if other_names is not None:
+                        o_name = other_names[other]                  
+                    elif limb_names is not None:
                         o_name = other_name
                     else:
                         o_name = rbprm_robot.dict_limb_joint[rbprm_robot.limbs_names[other]]
