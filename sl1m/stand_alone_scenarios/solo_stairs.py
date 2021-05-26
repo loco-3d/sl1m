@@ -10,7 +10,6 @@ from sl1m.solver import Solvers
 from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
 from sl1m.problem_definition_gait import Problem
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait as surfaces
-# from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait_small as surfaces
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_scene as scene
 
 import sl1m.tools.plot_tools as plot
@@ -18,46 +17,37 @@ import sl1m.tools.plot_tools as plot
 GAIT = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
 COSTS = {"posture": [1.0]}
 
-USE_SL1M = False
+USE_SL1M = True
 USE_COM = True
-TEST_CBC = True
+TEST_CBC = False
+
+paths = [os.environ["INSTALL_HPP_DIR"] + "/share/solo-rbprm/com_inequalities/feet_quasi_flat/",
+         os.environ["INSTALL_HPP_DIR"] + "/share/solo-rbprm/relative_effector_positions/"]
+others = ['HR_FOOT', 'HL_FOOT', 'FL_FOOT', 'FR_FOOT']
+limbs = ['HRleg', 'HLleg', 'FLleg', 'FRleg']
+offsets = {'FRleg':  [0.1946, -0.0875, -0.241], 'FLleg': [0.1946, 0.0875, -0.241],
+           'HRleg': [-0.1946, -0.0875, -0.241], 'HLleg': [-0.1946, 0.0875, -0.241]}
 
 if __name__ == '__main__':
     t_init = clock()
     R = [np.identity(3)] * len(surfaces)
     t_1 = clock()
 
-    solo = Solo()
-    q_init = solo.referenceConfig.copy()
-    q_init[:2] = [-0.25, 0.1]
-
-    initial_contacts = [np.array(q_init[:3]) +
-                        solo.dict_ref_effector_from_root[limb_name] +
-                        solo.dict_offset[solo.dict_limb_joint[limb_name]].translation
-                        for limb_name in solo.limbs_names]
-
+    q_init = [-0.25, 0.1, 0.241]
+    initial_contacts = [np.array(q_init) + offsets[limb] for limb in limbs]
     t_2 = clock()
 
-    solo.kinematic_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
-        "/share/solo-rbprm/com_inequalities/feet_quasi_flat/"
-    solo.relative_feet_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
-        "/share/solo-rbprm/relative_effector_positions/"
-
-    pb = Problem(solo)
+    pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths)
     pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3])
     t_3 = clock()
 
     if USE_SL1M:
         result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=USE_COM)
     else:
-        if TEST_CBC:
-            result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
-        else:
-            result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
+        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
 
     print(result)
-
     print("Optimized number of steps:              ", pb.n_phases)
     print("Total time is:                          ", 1000. * (t_end-t_init))
     print("Computing the surfaces takes            ", 1000. * (t_1 - t_init))
