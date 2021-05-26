@@ -1,64 +1,61 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import os
+import sl1m.tools.plot_tools as plot
+import matplotlib.pyplot as plt
 
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
-
-from sl1m.stand_alone_scenarios.problem_definition_talos import Problem as TalosProblem
-from sl1m.problem_definition import Problem
-
+from sl1m.stand_alone_scenarios.problem_definition_hrp2 import Problem as HRP2Problem
+from sl1m.problem_definition_gait import Problem
 from sl1m.generic_solver import *
-
-import sl1m.tools.plot_tools as plot
 
 from time import perf_counter as clock
 
-GAIT = [0, 1]
-LIMB_NAMES = ["LF", "RF"]
+import sl1m.stand_alone_scenarios
 
-USE_BIPED_PLANNER = True
-USE_MIP = False
+GAIT = [np.array([1, 0]), np.array([0, 1])]
+
+USE_BIPED_PLANNER = False
+USE_MIP = True
+USE_COM = True
+
+paths = [os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/",
+         os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"]
+limbs = ["LF", "RF"]
 
 if __name__ == '__main__':
     t_init = clock()
 
-    import sl1m.planner_scenarios.hrp2.lp_complex_path as tp
+    from sl1m.planner_scenarios.hrp2 import lp_complex_path as tp
     t_1 = clock()
 
-    R, surfaces = getSurfacesFromGuideContinuous(talos_abstract, ps, afftool, pathId, v, 0.5, False)
+    R, surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 0.7, False)
     t_2 = clock()
 
-    talos = Talos()
-    lf_0 = np.array(q_init[:3]) + np.array([0, 0.085, -0.98])
-    rf_0 = np.array(q_init[:3]) + np.array([0, -0.085, -0.98])
-    initial_contacts = [lf_0, rf_0]
+    p0 = [np.array(tp.q_init[:3]) + [0, 0.095, -0.5], np.array(tp.q_init[:3]) + [0, -0.095, -0.5]]
     t_3 = clock()
 
     if USE_BIPED_PLANNER:
-        pb = TalosProblem()
-        pb.generate_problem(R, surfaces, GAIT, initial_contacts)
+        pb = HRP2Problem()
+        pb.generate_problem(R, surfaces, [0, 1], p0)
         t_4 = clock()
         if USE_MIP:
             result = solve_MIP_biped(pb, surfaces)
         else:
             result = solve_L1_combinatorial_biped(pb, surfaces)
     else:
-        talos.kinematic_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
-            "/share/talos-rbprm/com_inequalities/feet_quasi_flat/talos_"
-        talos.relative_feet_constraints_path = os.environ["INSTALL_HPP_DIR"] + \
-            "/share/talos-rbprm/relative_effector_positions/talos_"
-        pb = Problem(talos, suffix_com="_effector_frame_REDUCED.obj",
-                     suffix_feet="_quasi_flat_REDUCED.obj", limb_names=LIMB_NAMES)
-        pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3])
+        surfaces_gait = [[surface] for surface in surfaces]
+
+        pb = Problem(limb_names=limbs, constraint_paths=paths)
+        pb.generate_problem(R, surfaces_gait, GAIT, p0, tp.q_init[:3])
         t_4 = clock()
-        
+
         if USE_MIP:
-            result = solve_MIP(pb, surfaces)
+            result = solve_MIP_gait(pb, com=USE_COM)
         else:
-            result = solve_L1_combinatorial(pb, surfaces)
+            result = solve_L1_combinatorial_gait(pb, surfaces_gait, com=USE_COM)
 
     t_end = clock()
-    
+
     print(result)
 
     print("Optimized number of steps:              ", pb.n_phases)
@@ -69,9 +66,8 @@ if __name__ == '__main__':
     print("Solving the problem takes               ", 1000. * (t_end - t_3))
     print("The LP and QP optimizations take        ", result.time)
 
-    ax = plot.draw_scene(surfaces, GAIT)
-    plot.plot_initial_contacts(initial_contacts, ax=ax)
+    ax = plot.draw_scene(surfaces)
     if(result.success):
-        plot.plot_planner_result(result.coms, result.moving_foot_pos, result.all_feet_pos, ax, True)
+        plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
     else:
         plt.show()

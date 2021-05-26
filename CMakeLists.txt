@@ -42,7 +42,6 @@ SET(${PROJECT_NAME}_PLANNER_SCENARIOS_SOURCES
 
 SET(${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES
   __init__.py
-  problem_definition_hrp2.py
   complex.py
   path_files/lp_complex_path.py
   path_files/lp_stair_bauzil_hrp2_path.py
