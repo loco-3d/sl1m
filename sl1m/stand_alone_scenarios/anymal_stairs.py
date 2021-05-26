@@ -1,4 +1,3 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 from time import perf_counter as clock
@@ -11,25 +10,24 @@ from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import scene
 
 import sl1m.tools.plot_tools as plot
 
+USE_COM = True
 GAIT = [np.array([1, 1, 1, 0]), np.array([1, 1, 0, 1]), np.array([1, 0, 1, 1]), np.array([0, 1, 1, 1])]
 
-USE_COM = True
+paths = [os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_",
+         os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/relative_effector_positions/anymal_"]
+limbs = ['RHleg', 'RFleg', 'LHleg', 'LFleg']
+others = ['RH_ADAPTER_TO_FOOT', 'RF_ADAPTER_TO_FOOT', 'LH_ADAPTER_TO_FOOT', 'LF_ADAPTER_TO_FOOT']
+suffix = "_effector_frame_quasi_static_upscale.obj"
+offsets = {'RFleg': [0.373, -0.264, -0.47], 'LFleg': [0.373, 0.264, -0.47],
+           'RHleg': [-0.373, -0.264, -0.47], 'LHleg': [-0.373, 0.264, -0.47]}
 
 if __name__ == '__main__':
-    paths = [os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_",
-             os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/relative_effector_positions/anymal_"]
-    limbs = ['RHleg', 'RFleg', 'LHleg', 'LFleg']
-    others = ['RH_ADAPTER_TO_FOOT', 'RF_ADAPTER_TO_FOOT', 'LH_ADAPTER_TO_FOOT', 'LF_ADAPTER_TO_FOOT']
-    suffix="_effector_frame_quasi_static_upscale.obj"
-
     t_init = clock()
     R = [np.identity(3)] * len(surfaces)
     t_1 = clock()
 
     q_init = [-0.5, 0., 0.47]
 
-    offsets = {'RFleg': [0.373, -0.264, -0.47], 'LFleg': [0.373, 0.264, -0.47],
-               'RHleg': [-0.373, -0.264, -0.47], 'LHleg': [-0.373, 0.264, -0.47]}
     initial_contacts = [np.array(q_init) + offsets[limb] for limb in limbs]
     t_2 = clock()
 

@@ -123,6 +123,7 @@ def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
         return False, pb, [], t
 
     alphas = planner.get_alphas(result.x)
+    print(alphas)
     if is_sparsity_fixed(pb, alphas):
         surface_indices = planner.selected_surfaces(alphas)
         for i, phase in enumerate(pb.phaseData):

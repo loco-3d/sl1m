@@ -82,7 +82,6 @@ SET(${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES
   stair_surfaces.py
   complex_surfaces.py
   flat_ground.py
-  rubble_stair_surfaces.py
   ramp_surfaces.py
   )
 SET(${PROJECT_NAME}_TOOLS_SOURCES

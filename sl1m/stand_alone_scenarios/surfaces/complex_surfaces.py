@@ -60,3 +60,7 @@ end = [astep6, astep7, abridge, aplatfo]
 surfaces = [[arub1, arub2], [arub1, arub2], [arub1, arub2], [arub1, arub3, arub2], [arub4], [arub5], [arub6], [arub7], [arub75], allrub, [arub7, arub8, arub9], [arub7, arub8, arub9], [afloor], [afloor, astep1], [afloor, astep1], [astep1, astep2, astep3], [astep4, astep2, astep3], [astep4, astep2, astep3], [astep4, astep2, astep5], [
     astep6, astep2, astep5], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6, astep7], [astep7], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [aplatfo]]
 surfaces_gait = [[surface] for surface in surfaces]
+
+rubble_stairs = [[arub1, arub2, arub3], [arub1, arub2, arub3], [arub1, arub2, arub3], [arub3, arub2], [arub4, arub3, arub5], [arub5, arub4, arub3, arub6], [arub6], [arub7], [arub75], [
+    arub9, afloor], [arub9, afloor], [afloor, arub9], [astep1], [astep2], [astep3], [astep4], [astep5], [astep6], [astep6]]
+rubble_stairs_gait = [[surface] for surface in rubble_stairs]

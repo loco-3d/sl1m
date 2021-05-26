@@ -71,19 +71,19 @@ if __name__ == '__main__':
         plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
     else:
         plt.show(block=False)
-        
+
     if TEST_CBC:
-        print ("CBC results")
+        print("CBC results")
         t_3 = clock()
         result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM, solver=Solvers.CVXPY)
         t_end = clock()
-        
+
         print(result)
 
         print("Optimized number of steps:              ", pb.n_phases)
         print("Solving the problem takes               ", 1000. * (t_end - t_3))
         print("The LP and QP optimizations take        ", result.time)
-        
+
         ax = plot.draw_scene(scene)
         if(result.success):
             plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
