@@ -385,5 +385,7 @@ class Constraints:
         """
         if phase.id == 0 and pb.c0 != None:
             return self._com_equality_init(pb, phase, C, d, i_start)
-        else:
+        elif len(phase.stance) > 0:
             return self._com_weighted_equality(pb, phase, C, d, i_start, js, feet_phase)
+        else:
+            return i_start

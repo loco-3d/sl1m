@@ -13,7 +13,8 @@ from sl1m.stand_alone_scenarios.surfaces.flat_ground import scene
 import sl1m.tools.plot_tools as plot
 
 USE_SL1M = True
-gait = "walk"
+USE_COM = False
+gait = "trot"
 
 GAITS = {}
 GAITS["walk"] = [np.array([1, 0, 1, 1]), np.array([1, 1, 0, 1]), np.array([0, 1, 1, 1]), np.array([1, 1, 1, 0])]
@@ -29,7 +30,7 @@ else:
     from sl1m.stand_alone_scenarios.surfaces.flat_ground import walk_surfaces as surfaces
 
 STEP_LENGTH = [0.9, 0.0]
-COSTS = {"step_size": [10.0, STEP_LENGTH], "posture": [0.0]}
+COSTS = {"step_size": [10.0, STEP_LENGTH], "posture": [1.0]}
 
 if __name__ == '__main__':
     t_init = clock()
@@ -59,9 +60,9 @@ if __name__ == '__main__':
     t_3 = clock()
 
     if USE_SL1M:
-        result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=True)
+        result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=USE_COM)
     else:
-        result = solve_MIP_gait(pb, costs=COSTS, com=False)
+        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
 
     print(result)
