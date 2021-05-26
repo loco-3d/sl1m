@@ -13,7 +13,7 @@ class PhaseData:
     phaseData.allRelativeK =  Relative constraints for the phase for each foot and each surface
     """
 
-    def __init__(self, i, R, surfaces, gait, normal,  n_effectors, com_obj, foot_obj):
+    def __init__(self, i, R, surfaces, gait, normal,  n_effectors, com_obj, foot_obj, com):
         self.id = i
         previous_swing_feet = np.nonzero(gait[(i-1) % len(gait)] == 0)[0]
         self.stance = np.nonzero(gait[i % len(gait)] == 1)[0]
@@ -22,7 +22,8 @@ class PhaseData:
         self.S = [[convert_surface_to_inequality(s, True) for s in foot_surfaces] for foot_surfaces in surfaces]
         self.n_surfaces = [len(s) for s in self.S]
         self.transform = default_transform_from_pos_normal(np.zeros(3), normal, R)
-        self.generate_K(n_effectors, com_obj)
+        if com:
+            self.generate_K(n_effectors, com_obj)
         self.generate_relative_K(n_effectors, foot_obj)
 
     def generate_K(self, n_effectors, obj):
@@ -106,7 +107,7 @@ class Problem:
 
             self.foot_objects.append(foot_object)
 
-    def generate_problem(self, R, surfaces, gait, p0, c0=None):
+    def generate_problem(self, R, surfaces, gait, p0, c0=None, com=True):
         """
         Build a SL1M problem for the Mixed Integer formulation,
         with all the kinematics and foot relative position constraints required
@@ -125,7 +126,7 @@ class Problem:
         self.phaseData = []
         for i in range(self.n_phases):
             self.phaseData.append(PhaseData(i, R[i], surfaces[i], gait, normal,
-                                            self.n_effectors, self.com_objects, self.foot_objects))
+                                            self.n_effectors, self.com_objects, self.foot_objects, com))
 
     def __str__(self):
         string = "Problem: "

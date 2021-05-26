@@ -37,7 +37,7 @@ if __name__ == '__main__':
     initial_contacts = [np.array(q_init) + offsets[limb] for limb in limbs]
     t_2 = clock()
 
-    pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths)
+    pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths, com=USE_COM)
     pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3])
     t_3 = clock()
 
