@@ -25,9 +25,6 @@ rub9 = [[-0.35, -0.15, 0.025], [-0.86, -0.15, 0.025], [-0.86, 0.52, 0.025], [-0.
 rub8 = [[-0.89, -0.15, 0.05], [-1.02, -0.15, 0.05],  [-1.02, 0.18, 0.05], [-0.89, 0.18, 0.05], ]
 rub9 = [[-0.35, -0.15, 0.05], [-0.86, -0.15, 0.05], [-0.86, 0.52, 0.05], [-0.35, 0.52, 0.05], ]
 
-all_surfaces = [start, floor, step1, step2, step3, step4, step5, step6, step7,
-                bridge, platfo, rub8, rub9, rub7, rub75, rub6, rub5, rub4, rub3, rub2]
-
 arub9 = np.array(rub9).T
 arub8 = np.array(rub8).T
 arub75 = np.array(rub75).T
@@ -51,6 +48,8 @@ abridge = np.array(bridge).T
 aplatfo = np.array(platfo).T
 aslope = np.array(slope).T
 
+scene = [[astart], [afloor], [astep1], [astep2], [astep3], [astep4], [astep5], [astep6], [astep7], [
+    abridge], [aplatfo], [arub8], [arub9], [arub7], [arub75], [arub6], [arub5], [arub4], [arub3], [arub2], [arub1]]
 
 allrub = [arub2, arub3, arub5, arub4, arub6, arub7, arub75, arub9]
 allsteps = [astep2, astep1, astep3, astep4, astep5, astep6, astep7]
@@ -58,5 +57,6 @@ allstepsandfloor = allsteps + [arub9, afloor]
 allrubfloorsteps = allrub + allsteps + [afloor]
 end = [astep6, astep7, abridge, aplatfo]
 
-surfaces = [[arub1, arub2], [arub1, arub2], [arub1, arub2], [arub1, arub3, arub2], [arub4], [arub5], [arub6], [arub7], [arub75], allrub, [afloor], [afloor, astep1], [afloor, astep1], [astep1, astep2, astep3], [astep4, astep2, astep3], [astep4, astep2, astep3], [
-    astep4, astep2, astep5], [astep6, astep2, astep5], [astep6], [astep7], end, end, [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [aplatfo]]
+surfaces = [[arub1, arub2], [arub1, arub2], [arub1, arub2], [arub1, arub3, arub2], [arub4], [arub5], [arub6], [arub7], [arub75], allrub, [arub7, arub8, arub9], [arub7, arub8, arub9], [afloor], [afloor, astep1], [afloor, astep1], [astep1, astep2, astep3], [astep4, astep2, astep3], [astep4, astep2, astep3], [astep4, astep2, astep5], [
+    astep6, astep2, astep5], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6], [astep6, astep7], [astep7], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [abridge], [aplatfo]]
+surfaces_gait = [[surface] for surface in surfaces]

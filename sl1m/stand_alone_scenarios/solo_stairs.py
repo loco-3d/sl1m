@@ -10,7 +10,7 @@ from sl1m.solver import Solvers
 from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
 from sl1m.problem_definition_gait import Problem
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait as surfaces
-from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait_small as surfaces
+# from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait_small as surfaces
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_scene as scene
 
 import sl1m.tools.plot_tools as plot
