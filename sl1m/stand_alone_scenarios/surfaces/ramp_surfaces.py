@@ -18,12 +18,10 @@ end = np.array([[-1.5, -2.0, -2.0, -1.5],
 
 scene = [[begin], [platform], [bridge], [end]]
 
-surfaces_gait = []
 surfaces = []
 surfaces += [[begin]]+[[begin]]
-surfaces_gait += [[[begin]]]+[[[begin]]]
 for i in range(20):
     surfaces += [[platform, bridge]]
-    surfaces_gait += [[[platform, bridge]]]
 surfaces += [[end]]+[[end]]
-surfaces_gait += [[[end]]]+[[[end]]]
+
+surfaces_gait = [[surface] for surface in surfaces]

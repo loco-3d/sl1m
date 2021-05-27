@@ -4,10 +4,8 @@ import matplotlib.pyplot as plt
 from time import perf_counter as clock
 import os
 
-from solo_rbprm.solo import Robot as Solo
-
-from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
-from sl1m.problem_definition_gait import Problem
+from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
+from sl1m.problem_definition import Problem
 from sl1m.stand_alone_scenarios.surfaces.flat_ground import scene
 
 import sl1m.tools.plot_tools as plot
@@ -52,9 +50,9 @@ if __name__ == '__main__':
     t_2 = clock()
 
     if USE_SL1M:
-        result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=USE_COM)
+        result = solve_L1_combinatorial(pb, surfaces, costs=COSTS, com=USE_COM)
     else:
-        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
+        result = solve_MIP(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
 
     print(result)

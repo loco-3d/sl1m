@@ -26,18 +26,11 @@ SET(${PROJECT_NAME}_SOURCES
   generic_solver.py
   fix_sparsity.py
   problem_data.py
-  constraints_gait.py
   constraints.py
   constraints_biped.py
-  planner_generic_gait.py
   planner_generic.py
   planner_biped.py
   problem_definition.py
-  problem_definition_gait.py
-  )
-
-SET(${PROJECT_NAME}_PLANNER_SCENARIOS_SOURCES
-  __init__.py
   )
 
 SET(${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES

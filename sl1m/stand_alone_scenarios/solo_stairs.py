@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 from time import perf_counter as clock
 import os
 
-from solo_rbprm.solo import Robot as Solo
-
 from sl1m.solver import Solvers
-from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
-from sl1m.problem_definition_gait import Problem
+from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
+from sl1m.problem_definition import Problem
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_surfaces_gait as surfaces
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import solo_scene as scene
 
@@ -37,14 +35,14 @@ if __name__ == '__main__':
     initial_contacts = [np.array(q_init) + offsets[limb] for limb in limbs]
     t_2 = clock()
 
-    pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths, com=USE_COM)
-    pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3])
+    pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths)
+    pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3], com=USE_COM)
     t_3 = clock()
 
     if USE_SL1M:
-        result = solve_L1_combinatorial_gait(pb, surfaces, costs=COSTS, com=USE_COM)
+        result = solve_L1_combinatorial(pb, surfaces, costs=COSTS, com=USE_COM)
     else:
-        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM)
+        result = solve_MIP(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
 
     print(result)
@@ -65,7 +63,7 @@ if __name__ == '__main__':
     if TEST_CBC:
         print("CBC results")
         t_3 = clock()
-        result = solve_MIP_gait(pb, costs=COSTS, com=USE_COM, solver=Solvers.CVXPY)
+        result = solve_MIP(pb, costs=COSTS, com=USE_COM, solver=Solvers.CVXPY)
         t_end = clock()
 
         print(result)

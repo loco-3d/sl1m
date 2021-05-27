@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
 from sl1m.stand_alone_scenarios.problem_definition_hrp2 import Problem as HRP2Problem
-from sl1m.problem_definition_gait import Problem
+from sl1m.problem_definition import Problem
 from sl1m.generic_solver import *
 
 from time import perf_counter as clock
@@ -50,9 +50,9 @@ if __name__ == '__main__':
         t_4 = clock()
 
         if USE_MIP:
-            result = solve_MIP_gait(pb, com=USE_COM)
+            result = solve_MIP(pb, com=USE_COM)
         else:
-            result = solve_L1_combinatorial_gait(pb, surfaces_gait, com=USE_COM)
+            result = solve_L1_combinatorial(pb, surfaces_gait, com=USE_COM)
 
     t_end = clock()
 

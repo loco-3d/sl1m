@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from time import perf_counter as clock
 
 import sl1m.stand_alone_scenarios
-from sl1m.generic_solver import solve_L1_combinatorial_gait, solve_MIP_gait
-from sl1m.problem_definition_gait import Problem
+from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
+from sl1m.problem_definition import Problem
 from sl1m.stand_alone_scenarios.surfaces.complex_surfaces import surfaces_gait as surfaces
 from sl1m.stand_alone_scenarios.surfaces.complex_surfaces import scene
 
@@ -31,8 +31,8 @@ if __name__ == '__main__':
     pb.generate_problem(R, surfaces, GAIT, initial_contacts)
     t_3 = clock()
 
-    # result = solve_MIP_gait(pb, com=USE_COM)
-    result = solve_L1_combinatorial_gait(pb, surfaces, com=USE_COM)
+    # result = solve_MIP(pb, com=USE_COM)
+    result = solve_L1_combinatorial(pb, surfaces, com=USE_COM)
     t_end = clock()
 
     print(result)

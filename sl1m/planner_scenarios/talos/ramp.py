@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
 from sl1m.stand_alone_scenarios.problem_definition_talos import Problem as TalosProblem
-from sl1m.problem_definition_gait import Problem
+from sl1m.problem_definition import Problem
 from sl1m.generic_solver import *
 
 from time import perf_counter as clock
@@ -50,9 +50,9 @@ if __name__ == '__main__':
         pb.generate_problem(R, surfaces_gait, GAIT, p0, tp.q_init[:3])
 
         if USE_MIP:
-            result = solve_MIP_gait(pb, com=USE_COM)
+            result = solve_MIP(pb, com=USE_COM)
         else:
-            result = solve_L1_combinatorial_gait(pb, surfaces, com=USE_COM)
+            result = solve_L1_combinatorial(pb, surfaces_gait, com=USE_COM)
 
     t_end = clock()
 
