@@ -70,6 +70,8 @@ def call_LP_solver(q, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
         result = solve_lp_glpk(q, G, h, C, d)
     elif solver == Solvers.LINPROG:
         result = solve_lp_linprog(q, G, h, C, d)
+    elif solver == Solvers.CVXPY:
+        result = solve_qp_lp_cvxpy(None, None, G, h, C, d)
     else:
         print('Unknown LP solver asked : ', solver)
         return
@@ -88,6 +90,8 @@ def call_QP_solver(P, q, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
 
     elif solver == Solvers.QUADPROG:
         result = solve_qp_quaprog(P, q, G, h, C, d)
+    elif solver == Solvers.CVXPY:
+        result = solve_qp_lp_cvxpy(P, q, G, h, C, d)
     else:
         print('Unknown QP solver asked : ', solver)
         return
@@ -107,8 +111,8 @@ def call_MIP_solver(slack_selection_vector, P=None, q=None, G=None, h=None, C=No
     if hasCost:
         if solver == Solvers.GUROBI:
             result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
-        elif solver == Solvers.CVXPY:
-            result = solve_MIP_cvxpy_cost (slack_selection_vector, P, q, G, h, C, d)
+        elif solver == Solvers.CVXPY:            
+            result = solve_MIP_cvxpy(slack_selection_vector, G, h, C, d)
         else:
             print('Unknown MIP solver asked : ', solver)
             return    
@@ -323,6 +327,46 @@ def solve_qp_quaprog(P, q, G=None, h=None, C=None, d=None):
         t_end = clock()
         return ResultData(False, ms(t_end-t_init))
 
+def solve_qp_lp_cvxpy(P, q, G=None, h=None, C=None, d=None):
+    """
+    Solve the Mixed-Integer problem using CVXPY
+    find x
+    min x'P'x + q' x
+    subject to  G x <= h
+    subject to  C x  = d
+    """
+    
+    t_init = clock()
+    if G is not None:    
+        n_variables = G.shape[1]
+    elif C is not none:
+        n_variables = C.shape[1]
+       
+    
+    variables = cvxpy.Variable(n_variables)
+    obj = 0.
+    if P is not None:    
+        n_variables = P.shape[1]
+        obj = cvxpy.Minimize(cvxpy.quad_form(variables, P) + q.T * variables)
+        
+    constraints = []
+    if G.shape[0] > 0:
+        ineq_constraints = G * variables <= h
+        constraints.append(ineq_constraints)
+        
+    if C.shape[0] > 0:
+        eq_constraints = C * variables == d
+        constraints.append(eq_constraints)
+    
+    
+    prob = cvxpy.Problem(obj, constraints)
+    prob.solve(verbose=False)
+    t_end = clock()
+    if prob.status not in ["infeasible", "unbounded"]:
+        res = np.array([v.value for v in variables])
+        return ResultData(True, ms(t_end-t_init), res)
+    else:
+        return ResultData(False, ms(t_end-t_init))
 
 def solve_qp_gurobi(P, q, G=None, h=None, C=None, d=None, verbose=False):
     """
@@ -522,18 +566,22 @@ def solve_MIP_cvxpy(slack_selection_vector, G=None, h=None, C=None, d=None):
     n_variables = G.shape[1]
     variables = cvxpy.Variable(n_variables)
     constraints = []
-    ineq_constraints = G * variables <= h
-    eq_constraints = C * variables == d
-
-    constraints = [ineq_constraints, eq_constraints]
+    if G.shape[0] > 0:
+        ineq_constraints = G * variables <= h
+        constraints.append(ineq_constraints)
+        
+    if C.shape[0] > 0:
+        eq_constraints = C * variables == d
+        constraints.append(eq_constraints)
 
     slack_indices = [i for i, el in enumerate(slack_selection_vector) if el > 0]
     n_slack_variables = len([el for el in slack_selection_vector if el > 0])
-    boolvars = cvxpy.Variable(n_slack_variables, boolean=True)
     obj = cvxpy.Minimize(slack_selection_vector * variables)
 
-    constraints = constraints + [variables[el] <= boolvars[i]
-                                 for i, el in enumerate(slack_indices)]
+    if n_slack_variables > 0:
+        boolvars = cvxpy.Variable(n_slack_variables, boolean=True)
+        constraints = constraints + [variables[el] <= boolvars[i]
+                                     for i, el in enumerate(slack_indices)]
 
     currentSum = []
     previousL = 0
@@ -550,55 +598,6 @@ def solve_MIP_cvxpy(slack_selection_vector, G=None, h=None, C=None, d=None):
     obj = cvxpy.Minimize(0.)
     prob = cvxpy.Problem(obj, constraints)
     prob.solve(solver=cvxpy.CBC, verbose=False)
-    t_end = clock()
-    if prob.status not in ["infeasible", "unbounded"]:
-        res = np.array([v.value for v in variables])
-        return ResultData(True, ms(t_end-t_init), res)
-    else:
-        return ResultData(False, ms(t_end-t_init))
-
-
-def solve_MIP_cvxpy_cost(slack_selection_vector, P, q, G=None, h=None, C=None, d=None):
-    """
-    Solve the Mixed-Integer problem using CVXPY
-    find x
-    subject to  G x <= h
-    subject to  C x  = d
-    """
-    print ("WARNING: CVXPY with a quadratic cost will only work with GUROBI, you may want to call GUROBI directly")
-    t_init = clock()
-    n_variables = G.shape[1]
-    variables = cvxpy.Variable(n_variables)
-    constraints = []
-    ineq_constraints = G * variables <= h
-    eq_constraints = C * variables == d
-
-    constraints = [ineq_constraints, eq_constraints]
-
-    slack_indices = [i for i, el in enumerate(slack_selection_vector) if el > 0]
-    n_slack_variables = len([el for el in slack_selection_vector if el > 0])
-    boolvars = cvxpy.Variable(n_slack_variables, boolean=True)
-    obj = cvxpy.Minimize(slack_selection_vector * variables)
-
-    constraints = constraints + [variables[el] <= boolvars[i]
-                                 for i, el in enumerate(slack_indices)]
-
-    currentSum = []
-    previousL = 0
-    for i, el in enumerate(slack_indices):
-        if i != 0 and el - previousL > 2.:
-            assert len(currentSum) > 0
-            constraints = constraints + [sum(currentSum) == len(currentSum) - 1]
-            currentSum = [boolvars[i]]
-        elif el != 0:
-            currentSum = currentSum + [boolvars[i]]
-        previousL = el
-    if len(currentSum) > 1:
-        constraints = constraints + [sum(currentSum) == len(currentSum) - 1]
-    obj = cvxpy.Minimize((1/2)*cvxpy.quad_form(variables, P) + q.T * variables)
-    # ~ obj = cvxpy.Minimize(0.)
-    prob = cvxpy.Problem(obj, constraints)
-    prob.solve(solver=cvxpy.GUROBI, verbose=False)
     t_end = clock()
     if prob.status not in ["infeasible", "unbounded"]:
         res = np.array([v.value for v in variables])
