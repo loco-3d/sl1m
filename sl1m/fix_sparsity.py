@@ -19,7 +19,6 @@ def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
     G, h, C, d = planner.convert_pb_to_LP(pb, False)
     P, q = planner.compute_costs(costs)
     if costs != {}:
-        print ("QP ")
         result = call_QP_solver(P, q, G, h, C, d, QP_SOLVER)
     else:
         result = call_LP_solver(q, G, h, C, d, LP_SOLVER)

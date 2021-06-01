@@ -397,23 +397,36 @@ class Planner:
         @param effector_positions list of each effector's final position
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
+        
         n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
 
-        j = 0
-        feet_phase = self._feet_last_moving_phase(self.pb.n_phases - 1)
+        js = [0]
         for phase in self.pb.phaseData:
-            moving_feet = np.nonzero(feet_phase == phase)
-            for foot in moving_feet:
+            if phase.id < self.pb.n_phases - 1:
+                js.append(js[-1] + self._phase_n_variables(phase))
+
+        feet_phase = self._feet_last_moving_phase(self.pb.n_phases - 1)
+        for foot in range(self.n_effectors):
+            phase = self.pb.phaseData[-1]
+            if foot in phase.moving:                
+                j = js[phase.id]
                 A = np.zeros((3, n_variables))
                 A[:, j: j + self._default_n_variables(phase)] = self.foot(phase, foot)
                 b = effector_positions[foot][:3]
-
+                
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
-            j += self._phase_n_variables(phase)
-
+            elif feet_phase[foot] != -1:
+                phase = self.pb.phaseData[feet_phase[foot]]
+                j = js[phase.id]
+                A = np.zeros((3, n_variables))
+                A[:, j: j + self._default_n_variables(phase)] = self.foot(phase, foot)
+                b = effector_positions[foot][:3]
+                
+                P += np.dot(A.T, A)
+                q += -np.dot(A.T, b).reshape(A.shape[1])
         return P, q
 
     def posture_cost(self):
@@ -522,5 +535,4 @@ class Planner:
                     q += q_ * val[0]
                 else:
                     print("Unknown cost to add to the biped problem")
-
         return P, q
