@@ -397,7 +397,7 @@ class Planner:
         @param effector_positions list of each effector's final position
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        
+
         n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
         q = np.zeros(n_variables)
@@ -410,12 +410,12 @@ class Planner:
         feet_phase = self._feet_last_moving_phase(self.pb.n_phases - 1)
         for foot in range(self.n_effectors):
             phase = self.pb.phaseData[-1]
-            if foot in phase.moving:                
+            if foot in phase.moving:
                 j = js[phase.id]
                 A = np.zeros((3, n_variables))
                 A[:, j: j + self._default_n_variables(phase)] = self.foot(phase, foot)
                 b = effector_positions[foot][:3]
-                
+
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
             elif feet_phase[foot] != -1:
@@ -424,7 +424,7 @@ class Planner:
                 A = np.zeros((3, n_variables))
                 A[:, j: j + self._default_n_variables(phase)] = self.foot(phase, foot)
                 b = effector_positions[foot][:3]
-                
+
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])
         return P, q
@@ -434,8 +434,11 @@ class Planner:
         Compute a cost to keep the feet relative positions as close as possible from the initial ones
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
-        relative_positions = [np.array(self.pb.p0[i] - self.pb.p0[0])
-                              for i in range(1, self.n_effectors)]
+        relative_positions = [[None for _ in range(self.n_effectors)] for _ in range(self.n_effectors)]
+        for foot in range(self.n_effectors):
+            for other in range(self.n_effectors):
+                if foot != other and self.pb.p0[foot] is not None and self.pb.p0[other] is not None:
+                    relative_positions[foot][other] = np.array(self.pb.p0[foot] - self.pb.p0[other])
 
         n_variables = self._total_n_variables()
         P = np.zeros((n_variables, n_variables))
@@ -446,31 +449,31 @@ class Planner:
         for id, phase in enumerate(self.pb.phaseData):
             feet_phase = self._feet_last_moving_phase(id)
 
-            A_0 = np.zeros((3, n_variables))
-            b_0 = np.zeros(3)
-            if 0 in phase.moving:
-                A_0[:, j:j + self._default_n_variables(phase)] = -self.foot(phase, 0)
-            elif feet_phase[0] != -1:
-                j0 = js[feet_phase[0]]
-                phase_f = self.pb.phaseData[feet_phase[0]]
-                A_0[:, j0:j0 + self._default_n_variables(phase_f)] = -self.foot(phase_f, 0)
-            else:
-                b_0 = self.pb.p0[0]
+            for foot in range(self.n_effectors):
+                for other in range(self.n_effectors):
+                    if other > foot and relative_positions[foot][other] is not None:
+                        A = np.zeros((3, n_variables))
+                        b = relative_positions[foot][other]
+                        if foot in phase.moving:
+                            A[:, j:j + self._default_n_variables(phase)] = self.foot(phase, foot)
+                        elif feet_phase[foot] != -1:
+                            jf = js[feet_phase[foot]]
+                            phase_f = self.pb.phaseData[feet_phase[foot]]
+                            A[:, jf:jf + self._default_n_variables(phase_f)] = self.foot(phase_f, foot)
+                        else:
+                            b -= self.pb.p0[foot]
 
-            for foot in range(1, self.n_effectors):
-                A = np.copy(A_0)
-                b = b_0 + relative_positions[foot-1]
-                if foot in phase.moving:
-                    A[:, j:j + self._default_n_variables(phase)] = self.foot(phase, foot)
-                elif feet_phase[foot] != -1:
-                    jf = js[feet_phase[foot]]
-                    phase_f = self.pb.phaseData[feet_phase[foot]]
-                    A[:, jf:jf + self._default_n_variables(phase_f)] = self.foot(phase_f, foot)
-                else:
-                    b += -self.pb.p0[foot]
+                        if other in phase.moving:
+                            A[:, j:j + self._default_n_variables(phase)] = -self.foot(phase, other)
+                        elif feet_phase[other] != -1:
+                            jf = js[feet_phase[other]]
+                            phase_f = self.pb.phaseData[feet_phase[other]]
+                            A[:, jf:jf + self._default_n_variables(phase_f)] = -self.foot(phase_f, other)
+                        else:
+                            b += self.pb.p0[other]
 
-                P += np.dot(A.T, A)
-                q += -np.dot(A.T, b).reshape(A.shape[1])
+                        P += np.dot(A.T, A)
+                        q += -np.dot(A.T, b).reshape(A.shape[1])
 
             j += self._phase_n_variables(phase)
             js.append(j)
@@ -501,8 +504,10 @@ class Planner:
                     j_f = js[feet_phase[foot]]
                     phase_f = self.pb.phaseData[feet_phase[foot]]
                     A[:, j_f:j_f + self._default_n_variables(phase_f)] = -self.foot_xy(phase_f, foot)
-                else:
+                elif self.pb.p0[foot] is not None:
                     b += self.pb.p0[foot][:2]
+                else: 
+                    continue
 
                 P += np.dot(A.T, A)
                 q += -np.dot(A.T, b).reshape(A.shape[1])

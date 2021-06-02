@@ -61,7 +61,7 @@ def draw_scene(surfaces, gait=False, ax=None, alpha=1.):
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
-    for i, surfaces_phase in enumerate(surfaces):
+    for surfaces_phase in surfaces:
         for surface in surfaces_phase:
             if gait:
                 for foot_surface in surface:
@@ -92,8 +92,9 @@ def plot_initial_contacts(initial_feet_pose, ax=None):
         ax = fig.add_subplot(111, projection="3d")
     ax.grid(False)
 
-    for i in range(len(initial_feet_pose)):
-        plot_point(ax, initial_feet_pose[i], color=COLORS[i])
+    for i, pose in enumerate(initial_feet_pose):
+        if pose is not None:
+            plot_point(ax, pose, color=COLORS[i])
 
 
 def plot_new_contact(moving_feet, moving_feet_pos, ax=None):

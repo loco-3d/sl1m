@@ -22,7 +22,7 @@ class Constraints:
 
         self.default_n_variables = 4 * int(com)
 
-        self.M = 1.
+        self.M = 50.
 
     def _default_n_variables(self, phase):
         """
@@ -166,7 +166,7 @@ class Constraints:
         i = i_start
         j = js[-1]
         for foot, (K, k) in enumerate(phase.K):
-            if phase.id == 0:
+            if phase.id == 0 and pb.p0[foot] is not None:
                 l = k.shape[0]
                 foot_pose = pb.p0[foot]
                 G[i:i + l, j:j + self._default_n_variables(phase)] = K.dot(self.com_1(phase))
@@ -348,7 +348,7 @@ class Constraints:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
                     C[i:i + 2, j_f:j_f + self._default_n_variables(phase_f)] = weight * self.foot_xy(phase_f, foot)
-                else:
+                elif pb.p0[foot] is not None:
                     foot_pose = pb.p0[foot]
                     d[i:i + 2] -= weight * foot_pose[:2]
         C[i:i + 2, j:j + self._default_n_variables(phase)] = -self.com_xy(phase)
