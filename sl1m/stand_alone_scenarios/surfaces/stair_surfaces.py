@@ -13,8 +13,15 @@ astep2 = np.array(step2).T
 astep3 = np.array(step3).T
 astep4 = np.array(step4).T
 
+scene = [[afloor], [astep1], [astep2], [astep3], [astep4]]
+
 surfaces = [[afloor], [afloor], [astep1, astep2, astep3], [astep2, astep3, astep1],
             [astep3, astep2, astep1, astep4], [astep3, astep4], [astep4], [astep4]]
+surfaces_gait = [[surface] for surface in surfaces]
+
+walk_surfaces = [[[afloor]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[afloor, astep1, astep2]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [[astep1, astep2, astep3]], [
+    [astep1, astep2, astep3]],  [[astep1, astep2, astep3, astep4]], [[astep1, astep2, astep3, astep4]], [[astep1, astep2, astep3, astep4]], [[astep1, astep2, astep3, astep4]], [[astep3, astep4]], [[astep3, astep4]], [[astep3, astep4]], [[astep3, astep4]], [[astep4]], [[astep4]], [[astep4]], [[astep4]]]
+
 quadruped_surfaces = [[afloor],
                       [afloor, astep1, astep2],
                       [afloor, astep1, astep2],
@@ -39,7 +46,7 @@ quadruped_surfaces = [[afloor],
                       [astep4],
                       [astep4],
                       [astep4]]
-
+quadruped_surfaces_gait = [[surface] for surface in quadruped_surfaces]
 
 floor_small = [[0.29, 1., 0.], [-1.8, 1., 0.], [-1.8, -1., 0.], [0.29, -1., 0.]]
 step1_small = [[0.3, 0.6, 0.05], [0.3, -0.16, 0.05], [0.59, -0.16, 0.05], [0.59, 0.6, 0.05]]
@@ -53,6 +60,7 @@ astep2_small = np.array(step2_small).T
 astep3_small = np.array(step3_small).T
 astep4_small = np.array(step4_small).T
 
+solo_scene = [[afloor_small], [astep1_small], [astep2_small], [astep3_small], [astep4_small]]
 solo_surfaces = [[afloor_small],
                  [afloor_small],
                  [afloor_small],
@@ -72,7 +80,8 @@ solo_surfaces = [[afloor_small],
                  [afloor_small, astep1_small, astep2_small],
                  [afloor_small, astep1_small, astep2_small],
                  [astep1_small, astep2_small, astep3_small],
-                 [afloor_small, astep1_small, astep2_small],
+                 [astep1_small, astep2_small, astep3_small],
+                 [astep1_small, astep2_small, astep3_small],
                  [astep1_small, astep2_small, astep3_small],
                  [astep1_small, astep2_small, astep3_small],
                  [astep1_small, astep2_small, astep3_small],
@@ -95,8 +104,9 @@ solo_surfaces = [[afloor_small],
                  [astep2_small, astep3_small, astep4_small],
                  [astep2_small, astep3_small, astep4_small],
                  [astep2_small, astep3_small, astep4_small],
-                 [astep3_small, astep4_small],
-                 [astep3_small, astep4_small],
+                 [astep2_small, astep3_small, astep4_small],
+                 [astep2_small, astep3_small, astep4_small],
+                 [astep2_small, astep3_small, astep4_small],
                  [astep3_small, astep4_small],
                  [astep3_small, astep4_small],
                  [astep3_small, astep4_small],
@@ -105,3 +115,4 @@ solo_surfaces = [[afloor_small],
                  [astep4_small],
                  [astep4_small],
                  [astep4_small]]
+solo_surfaces_gait = [[surface] for surface in solo_surfaces]

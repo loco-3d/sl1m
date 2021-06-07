@@ -33,13 +33,8 @@ SET(${PROJECT_NAME}_SOURCES
   problem_definition.py
   )
 
-SET(${PROJECT_NAME}_PLANNER_SCENARIOS_SOURCES
-  __init__.py
-  )
-
 SET(${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES
   __init__.py
-  problem_definition_hrp2.py
   complex.py
   path_files/lp_complex_path.py
   path_files/lp_stair_bauzil_hrp2_path.py
@@ -78,7 +73,7 @@ SET(${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES
   __init__.py
   stair_surfaces.py
   complex_surfaces.py
-  rubble_stair_surfaces.py
+  flat_ground.py
   ramp_surfaces.py
   )
 SET(${PROJECT_NAME}_TOOLS_SOURCES

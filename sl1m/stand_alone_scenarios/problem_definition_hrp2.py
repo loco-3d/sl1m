@@ -86,10 +86,10 @@ class Problem:
         self.com_objects = []
         self.foot_objects = []
         for foot in range(self.n_effectors):
-            f = DIR + "COM_constraints_in_" + LIMB_NAMES[foot] + "_effector_frame.obj"
+            f = DIR + "COM_constraints_in_" + LIMB_NAMES[foot] + "_effector_frame_quasi_static_reduced.obj"
             self.com_objects.append(as_inequalities(load_obj(f)))
 
-            f = DIR + LIMB_NAMES[(foot + 1) % 2] + "_constraints_in_" + LIMB_NAMES[foot] + ".obj"
+            f = DIR + LIMB_NAMES[(foot + 1) % 2] + "_constraints_in_" + LIMB_NAMES[foot] + "_reduced.obj"
             self.foot_objects.append(as_inequalities(load_obj(f)))
 
     def generate_problem(self, R, surfaces, gait, p0, c0=None):
