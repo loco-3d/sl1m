@@ -494,11 +494,9 @@ class Planner:
         j = 0
         for phase in self.pb.phaseData:
             feet_phase = self._feet_last_moving_phase(phase.id)
-
-            feet = phase.moving
-            for foot in feet:
+            for foot in phase.moving:
                 A = np.zeros((2, n_variables))
-                b = step_size
+                b = step_size.copy()
                 A[:, j:j + self._default_n_variables(phase)] = self.foot_xy(phase, foot)
                 if feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
@@ -510,7 +508,7 @@ class Planner:
                     continue
 
                 P += np.dot(A.T, A)
-                q += -np.dot(A.T, b).reshape(A.shape[1])
+                q -= np.dot(A.T, b).reshape(A.shape[1])
 
             j += self._phase_n_variables(phase)
             js.append(j)

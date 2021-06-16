@@ -71,7 +71,7 @@ def draw_scene(surfaces, gait=False, ax=None, alpha=1.):
     return ax
 
 
-def draw_first_surface(surfaces, gait, ax=None):
+def draw_surface(surfaces, foot, ax=None):
     """
     Plot all the potential surfaces
     """
@@ -79,7 +79,7 @@ def draw_first_surface(surfaces, gait, ax=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     for surface in surfaces[0]:
-        plot_surface(surface, ax, gait[0])
+        plot_surface(surface, ax, foot)
     return ax
 
 
@@ -169,7 +169,7 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
 
-def plot_planner_result(coms, all_feet_pos, ax=None, show=True):
+def plot_planner_result(coms, all_feet_pos, step_size=None, ax=None, show=True):
     """
     Plot the feet positions and com positions
     """
@@ -185,6 +185,14 @@ def plot_planner_result(coms, all_feet_pos, ax=None, show=True):
         pz = [c[2] for c in foot_pose if c is not None]
         ax.scatter(px, py, pz, color=COLORS[foot], marker='o', linewidth=5)
         ax.plot(px, py, pz, color=COLORS[foot])
+
+    if step_size is not None:
+        for foot_pose in all_feet_pos:
+            px = [foot_pose[0][0] + step_size[0]]
+            py = [foot_pose[0][1] + step_size[1]]
+            pz = [foot_pose[0][2]]
+            ax.scatter(px, py, pz, color=COLORS[5], marker='o', linewidth=5)
+            ax.plot(px, py, pz, color=COLORS[5])
 
     if coms is not None:
         plot_point_list(ax, coms, color=COLORS[len(all_feet_pos)+1])
