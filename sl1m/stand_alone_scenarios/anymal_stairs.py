@@ -49,6 +49,6 @@ if __name__ == '__main__':
 
     ax = plot.draw_scene(scene)
     if(result.success):
-        plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
+        plot.plot_planner_result(result.coms, result.all_feet_pos, ax=ax, show=True)
     else:
         plt.show()
