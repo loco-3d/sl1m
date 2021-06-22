@@ -169,7 +169,7 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
 
-def plot_planner_result(coms, all_feet_pos, step_size=None, ax=None, show=True):
+def plot_planner_result(all_feet_pos, coms=None, step_size=None, ax=None, show=True):
     """
     Plot the feet positions and com positions
     """

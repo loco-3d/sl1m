@@ -383,7 +383,7 @@ class Constraints:
         @param feet_phase List of the feet las moving phase, -1 if they haven't moved
         @return i_start + the number of rows used by the constraint
         """
-        if phase.id == 0 and pb.c0 != None:
+        if phase.id == 0 and pb.c0 is not None:
             return self._com_equality_init(pb, phase, C, d, i_start)
         elif len(phase.stance) > 0:
             return self._com_weighted_equality(pb, phase, C, d, i_start, js, feet_phase)
