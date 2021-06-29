@@ -41,13 +41,28 @@ def draw_potential_surfaces(surfaces, gait, phase, ax=None, alpha=1.):
         plot_surface(surface, ax, gait[phase % (len(gait))])
     return ax
 
+def draw_potential_surfaces_gait(surfaces, phase, foot_index, ax=None, title=None):
+    """
+    Plot all the potential surfaces of one phase of the problem
+    """
+    if ax is None:
+        fig = plt.figure()
+        if title is not None:
+            fig.suptitle(title, fontsize=16)
+        ax = fig.add_subplot(111, projection="3d")
+    for surface in surfaces[phase][foot_index]:
+        plot_surface(surface, ax, foot_index)
+    return ax
 
-def draw_whole_scene(surface_dict, ax=None):
+
+def draw_whole_scene(surface_dict, ax=None, title=None):
     """
     Plot all the potential surfaces
     """
     if ax is None:
         fig = plt.figure()
+        if title is not None:
+            fig.suptitle(title, fontsize=16)
         ax = fig.add_subplot(111, projection="3d")
     for key in surface_dict.keys():
         plot_surface(np.array(surface_dict[key][0]).T, ax, 5)
@@ -146,12 +161,14 @@ def plot_heightmap(heightmap, alpha=1., ax=None):
     i = 0
     if alpha != 1.:
         i = 1
-    ax.plot_surface(heightmap.xv, heightmap.yv, heightmap.zv, color=COLORS[i], alpha=alpha)
+
+    xv, yv = np.meshgrid(heightmap.x, heightmap.y, sparse=False, indexing='ij')
+    ax.plot_surface(xv, yv, heightmap.z, color=COLORS[i], alpha=alpha)
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-    ax.set_zlim([np.min(heightmap.zv), np.max(heightmap.zv) + 1.])
+    ax.set_zlim([np.min(heightmap.z), np.max(heightmap.z) + 1.])
 
     return ax
 
