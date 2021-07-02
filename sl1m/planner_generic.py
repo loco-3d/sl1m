@@ -27,7 +27,8 @@ class Planner:
         self.default_n_variables = 4 * int(self.com)
 
         self.cost_dict = {"final_com": self.end_com_cost,
-                          "effector_positions": self.end_effectors_position_cost,
+                          "end_effector_positions": self.end_effectors_position_cost,
+                          "effector_positions": self.effector_position_cost,
                           "coms": self.com_cost,
                           "posture": self.posture_cost,
                           "step_size": self.step_size_cost}
@@ -514,6 +515,32 @@ class Planner:
             js.append(j)
 
         return P, q
+
+    def effector_position_cost(self, end_effector_positions):
+        """
+        Compute a cost to keep the step sizes as close as possible of a target step size
+        @param step_size desired size of the steps
+        @return P matrix and q vector s.t. we minimize x' P x + q' x
+        """
+        n_variables = self._total_n_variables()
+        P = np.zeros((n_variables, n_variables))
+        q = np.zeros(n_variables)
+
+        j = 0
+        for phase in self.pb.phaseData:
+            # feet_phase = self._feet_last_moving_phase(phase.id)
+            for foot in phase.moving:
+                A = np.zeros((2, n_variables))
+                A[:, j:j + self._default_n_variables(phase)] = self.foot_xy(phase, foot)
+                b = end_effector_positions[foot][phase.id]
+
+                P += np.dot(A.T, A)
+                q -= np.dot(A.T, b).reshape(A.shape[1])
+
+            j += self._phase_n_variables(phase)
+
+        return P, q
+
 
     def compute_costs(self, costs):
         """
