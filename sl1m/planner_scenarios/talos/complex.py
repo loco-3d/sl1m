@@ -16,8 +16,8 @@ from time import perf_counter as clock
 
 GAIT = [np.array([1, 0]), np.array([0, 1])]
 
-USE_BIPED_PLANNER = False
-USE_MIP = True
+USE_BIPED_PLANNER = True
+USE_MIP = False
 USE_COM = True
 
 paths = [os.environ["INSTALL_HPP_DIR"] + "/share/talos-rbprm/com_inequalities/feet_quasi_flat/talos_",
@@ -71,6 +71,6 @@ if __name__ == '__main__':
 
     ax = plot.draw_scene(surfaces)
     if(result.success):
-        plot.plot_planner_result(result.coms, result.all_feet_pos, ax=ax, show=True)
+        plot.plot_planner_result(result.all_feet_pos, coms=result.coms, ax=ax, show=True)
     else:
         plt.show()
