@@ -1,11 +1,9 @@
 from numpy import identity, zeros, ones, array
 import numpy as np
-import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d as a3
 import hppfcl
 from time import perf_counter as clock
 import trimesh
-import pickle 
+import pickle
 
 class Heightmap:
     def __init__(self, n_x, n_y, x_lim, y_lim):
@@ -26,13 +24,13 @@ class Heightmap:
         self.zv = np.zeros((n_x, n_y))
 
     def save_pickle(self, filename):
-        filehandler = open(filename, 'wb') 
+        filehandler = open(filename, 'wb')
         pickle.dump(self, filehandler)
 
     def build(self, affordances):
         """
         Build the heightmap and return it
-        For each slot in the grid create a vertical segment and check its collisions with the 
+        For each slot in the grid create a vertical segment and check its collisions with the
         affordances until one is found
         :param affordances list of affordances
         """
