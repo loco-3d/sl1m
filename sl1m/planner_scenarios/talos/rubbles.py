@@ -35,7 +35,7 @@ if __name__ == '__main__':
     t_3 = clock()
 
     if USE_BIPED_PLANNER:
-        pb = TalosProblem()
+        pb = TalosProblem(limb_names=limbs, constraint_paths=paths, suffix_com=suffix_com, suffix_feet=suffix_feet)
         pb.generate_problem(R, surfaces, [0, 1], p0)
         t_4 = clock()
         if USE_MIP:

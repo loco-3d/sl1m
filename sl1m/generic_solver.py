@@ -105,7 +105,7 @@ def solve_MIP_biped(pb, costs={}, solver=Solvers.GUROBI):
     @solver MIP solver to use
     @return ProblemData storing the result
     """
-    planner = BipedPlanner()
+    planner = BipedPlanner(mip=True)
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas
 

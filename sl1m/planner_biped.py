@@ -18,7 +18,8 @@ class BipedPlanner:
     - slack_positivity: The slack variables are positive and beta is between -alpha and alpha
     """
 
-    def __init__(self):
+    def __init__(self, mip=False):
+        self.mip = mip
         self.default_n_variables = 4
         self.slack_scale = 10.
 
@@ -129,7 +130,13 @@ class BipedPlanner:
         Counts the dimension of the equality constraints of a phase
         @param phase concerned phase
         """
-        return len(phase.S)
+        n_eq = len(phase.S)
+        if self.mip:
+            for phase in self.pb.phaseData:
+                n_surface = len(phase.S)
+                if n_surface > 1:
+                    n_eq += 1
+        return n_eq
 
     def _total_n_eq(self):
         """
@@ -177,6 +184,9 @@ class BipedPlanner:
 
             # equality
             i_start_eq = constraints.surface_equality(phase, E, e, j, i_start_eq)
+
+            if self.mip:
+                i_start_eq = constraints.slack_equality(phase, E, e, i_start_eq, j)
 
             j_previous = j
             j += self._phase_n_variables(phase)
