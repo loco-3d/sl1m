@@ -1,11 +1,6 @@
 from sl1m.constants_and_tools import default_transform_from_pos_normal, convert_surface_to_inequality
 from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
 import numpy as np
-import os
-import sl1m.stand_alone_scenarios
-
-LIMB_NAMES = ["LF", "RF"]
-DIR = os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"
 
 Z = np.array([0., 0., 1.])
 LF = 0
@@ -81,18 +76,23 @@ class TalosPhaseData:
         self.allRelativeK[LF] = [(RF, (ineLF.A, ineLF.b))]
         self.allRelativeK[RF] = [(LF, (ineRF.A, ineRF.b))]
 
-class Problem:
-    def __init__(self):
-        self.n_effectors = 2
 
+class Problem:
+    def __init__(self, limb_names, constraint_paths, suffix_com="_effector_frame_quasi_static_reduced.obj", suffix_feet="_reduced.obj"):
+        effectors = limb_names[:]
+        kinematic_constraints_path = constraint_paths[0]
+        relative_feet_constraints_path = constraint_paths[1]
+
+        self.n_effectors = 2
         self.com_objects = []
         self.foot_objects = []
-        for foot in range(self.n_effectors):
-            f = DIR + "COM_constraints_in_" + LIMB_NAMES[foot] + "_effector_frame.obj"
-            self.com_objects.append(as_inequalities(load_obj(f)))
+        for foot, foot_name in enumerate(effectors):
+            filekin = kinematic_constraints_path + "COM_constraints_in_" + foot_name + suffix_com
+            self.com_objects.append(as_inequalities(load_obj(filekin)))
 
-            f = DIR + LIMB_NAMES[(foot + 1) % 2] + "_constraints_in_" + LIMB_NAMES[foot] + ".obj"
-            self.foot_objects.append(as_inequalities(load_obj(f)))
+            o_name = effectors[(foot + 1) % 2]
+            filekin = relative_feet_constraints_path + o_name + "_constraints_in_" + foot_name + suffix_feet
+            self.foot_objects.append(as_inequalities(load_obj(filekin)))
 
     def generate_problem(self, R, surfaces, gait, p0, c0=None):
         """

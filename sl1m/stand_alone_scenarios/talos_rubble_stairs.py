@@ -50,6 +50,6 @@ if __name__ == '__main__':
     ax = plot.draw_scene(scene)
     plot.plot_initial_contacts(initial_contacts, ax=ax)
     if(result.success):
-        plot.plot_planner_result(result.coms, result.all_feet_pos, ax, True)
+        plot.plot_planner_result(result.all_feet_pos, coms=result.coms, ax=ax, show=True)
     else:
         plt.show()

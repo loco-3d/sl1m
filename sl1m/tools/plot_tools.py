@@ -41,13 +41,28 @@ def draw_potential_surfaces(surfaces, gait, phase, ax=None, alpha=1.):
         plot_surface(surface, ax, gait[phase % (len(gait))])
     return ax
 
+def draw_potential_surfaces_gait(surfaces, phase, foot_index, ax=None, title=None):
+    """
+    Plot all the potential surfaces of one phase of the problem
+    """
+    if ax is None:
+        fig = plt.figure()
+        if title is not None:
+            fig.suptitle(title, fontsize=16)
+        ax = fig.add_subplot(111, projection="3d")
+    for surface in surfaces[phase][foot_index]:
+        plot_surface(surface, ax, foot_index)
+    return ax
 
-def draw_whole_scene(surface_dict, ax=None):
+
+def draw_whole_scene(surface_dict, ax=None, title=None):
     """
     Plot all the potential surfaces
     """
     if ax is None:
         fig = plt.figure()
+        if title is not None:
+            fig.suptitle(title, fontsize=16)
         ax = fig.add_subplot(111, projection="3d")
     for key in surface_dict.keys():
         plot_surface(np.array(surface_dict[key][0]).T, ax, 5)
@@ -71,7 +86,7 @@ def draw_scene(surfaces, gait=False, ax=None, alpha=1.):
     return ax
 
 
-def draw_first_surface(surfaces, gait, ax=None):
+def draw_surface(surfaces, foot, ax=None):
     """
     Plot all the potential surfaces
     """
@@ -79,7 +94,7 @@ def draw_first_surface(surfaces, gait, ax=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     for surface in surfaces[0]:
-        plot_surface(surface, ax, gait[0])
+        plot_surface(surface, ax, foot)
     return ax
 
 
@@ -146,12 +161,14 @@ def plot_heightmap(heightmap, alpha=1., ax=None):
     i = 0
     if alpha != 1.:
         i = 1
-    ax.plot_surface(heightmap.xv, heightmap.yv, heightmap.zv, color=COLORS[i], alpha=alpha)
+
+    xv, yv = np.meshgrid(heightmap.x, heightmap.y, sparse=False, indexing='ij')
+    ax.plot_surface(xv, yv, heightmap.z, color=COLORS[i], alpha=alpha)
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-    ax.set_zlim([np.min(heightmap.zv), np.max(heightmap.zv) + 1.])
+    ax.set_zlim([np.min(heightmap.z), np.max(heightmap.z) + 1.])
 
     return ax
 
@@ -169,7 +186,7 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
 
-def plot_planner_result(coms, all_feet_pos, ax=None, show=True):
+def plot_planner_result(all_feet_pos, coms=None, step_size=None, ax=None, show=True):
     """
     Plot the feet positions and com positions
     """
@@ -185,6 +202,14 @@ def plot_planner_result(coms, all_feet_pos, ax=None, show=True):
         pz = [c[2] for c in foot_pose if c is not None]
         ax.scatter(px, py, pz, color=COLORS[foot], marker='o', linewidth=5)
         ax.plot(px, py, pz, color=COLORS[foot])
+
+    if step_size is not None:
+        for foot_pose in all_feet_pos:
+            px = [foot_pose[0][0] + step_size[0]]
+            py = [foot_pose[0][1] + step_size[1]]
+            pz = [foot_pose[0][2]]
+            ax.scatter(px, py, pz, color=COLORS[5], marker='o', linewidth=5)
+            ax.plot(px, py, pz, color=COLORS[5])
 
     if coms is not None:
         plot_point_list(ax, coms, color=COLORS[len(all_feet_pos)+1])

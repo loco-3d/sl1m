@@ -195,6 +195,28 @@ class BipedConstraints:
                 j_slack += self.n_slack_per_surface
                 i += 1
             return i
+            
+    def slack_equality(self, phase, C, d, i_start, j):
+        """
+        The slack variables (alpha) sum should be equal to the number of surfaces -1 
+        Sl for each moving foot, sum(alpha_s) = n_surfaces - 1
+        @param phase       The phase specific data
+        @param C           The equality constraint matrix
+        @param d           The equality constraint vector
+        @param i_start     Initial row to use
+        @param j           Column corresponding to this phase variables
+        @return i_start + the number of rows used by the constraint
+        """
+        i = i_start
+        n_surfaces = len(phase.S)
+        if n_surfaces > 1:
+            j_slack = self.default_n_variables
+            for _ in range(0, n_surfaces):
+                C[i, j + j_slack] = 1
+                j_slack += self.n_slack_per_surface
+            d[i] = n_surfaces - 1
+            i += 1
+        return i
 
     def slack_positivity(self, phase, A, b, j_start, i_start):
         """

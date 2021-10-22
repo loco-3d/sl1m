@@ -67,18 +67,18 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
     """
     planner = Planner(mip=True, com=com)
     G, h, C, d = planner.convert_pb_to_LP(pb)
-    slack_selection_vector = planner.alphas 
+    slack_selection_vector = planner.alphas
     P = None
-    
-    #if no combinatorial call directly a QP
-    if np.linalg.norm(slack_selection_vector) < 1:
-        return optimize_sparse_L1(planner, pb, costs, QP_SOLVER=solver, LP_SOLVER=solver)
-        
+
+    # If no combinatorial call directly a QP
+    if solver == Solvers.CVXPY and np.linalg.norm(slack_selection_vector) < 1:
+        return optimize_sparse_L1(planner, pb, costs)
+
     q = None
     if costs != None:
         P, q = planner.compute_costs(costs)
     result = call_MIP_solver(slack_selection_vector, P, q, G, h, C, d, solver=solver)
-    
+
     if costs != None and solver == Solvers.CVXPY:
         alphas = planner.get_alphas(result.x)
         selected_surfaces = planner.selected_surfaces(alphas)
@@ -105,7 +105,7 @@ def solve_MIP_biped(pb, costs={}, solver=Solvers.GUROBI):
     @solver MIP solver to use
     @return ProblemData storing the result
     """
-    planner = BipedPlanner()
+    planner = BipedPlanner(mip=True)
     G, h, C, d = planner.convert_pb_to_LP(pb)
     slack_selection_vector = planner.alphas
 

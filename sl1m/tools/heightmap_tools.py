@@ -20,8 +20,7 @@ class Heightmap:
         self.x = np.linspace(x_lim[0], x_lim[1], n_x)
         self.y = np.linspace(y_lim[0], y_lim[1], n_y)
 
-        self.xv, self.yv = np.meshgrid(self.x, self.y, sparse=False, indexing='ij')
-        self.zv = np.zeros((n_x, n_y))
+        self.z = np.zeros((n_x, n_y))
 
     def save_pickle(self, filename):
         filehandler = open(filename, 'wb')
@@ -36,8 +35,8 @@ class Heightmap:
         """
         for i in range(self.n_x):
             for j in range(self.n_y):
-                p1 = np.array([self.xv[i, j], self.yv[i, j], -1.])
-                p2 = np.array([self.xv[i, j], self.yv[i, j], 10.])
+                p1 = np.array([self.x[i], self.y[j], -1.])
+                p2 = np.array([self.x[i], self.y[j], 10.])
                 segment = np.array([p1, p2])
                 fcl_segment = convex(segment, [0, 1, 0])
 
@@ -51,7 +50,7 @@ class Heightmap:
                                 intersections.append(get_point_intersect_line_triangle(segment, triangle)[2])
 
                 if len(intersections) != 0:
-                    self.zv[i, j] = np.max(np.array(intersections))
+                    self.z[i, j] = np.max(np.array(intersections))
 
     def map_index(self, x, y):
         """

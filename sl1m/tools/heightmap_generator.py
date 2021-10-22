@@ -14,13 +14,22 @@ from hpp.gepetto import ViewerFactory
 
 # --------------------------------- PROBLEM DEFINITION ---------------------------------------------------------------
 
-ENV_URDF = "/opt/openrobots/share/hpp_environments/urdf/multicontact/bauzil_stairs.urdf"
-ENV_HEIGHTMAP = "/opt/openrobots/share/hpp_environments/heightmaps/multicontact/bauzil_stairs.pickle"
+# ENV_URDF = "/local/users/frisbourg/install/share/hpp_environments/urdf/Solo3D/floor_sparse.urdf"
+# ENV_HEIGHTMAP = "/local/users/frisbourg/install/share/hpp_environments/heightmaps/Solo3D/floor_sparse.pickle"
+
+# ENV_URDF = "/local/users/frisbourg/install/share/hpp_environments/urdf/Solo3D/floor_sparse.urdf"
+# ENV_HEIGHTMAP = "/local/users/frisbourg/install/share/hpp_environments/heightmaps/Solo3D/floor_sparse.pickle"
+
+ENV_URDF = "/local/users/frisbourg/install/share/hpp_environments/urdf/Solo3D/floor_angles.urdf"
+ENV_HEIGHTMAP = "/local/users/frisbourg/install/share/hpp_environments/heightmaps/Solo3D/floor_angles.pickle"
+
+# ENV_URDF = "/local/users/frisbourg/install/share/hpp_environments/urdf/Solo3D/stairs_rotation.urdf"
+# ENV_HEIGHTMAP = "/local/users/frisbourg/install/share/hpp_environments/heightmaps/Solo3D/stairs_rotation.pickle"
 
 N_X = 100
-N_Y = 50
-X_BOUNDS = [-0.5, 2.5]
-Y_BOUNDS = [0.5, 2.]
+N_Y = 100
+X_BOUNDS = [-4.0, 4.0]
+Y_BOUNDS = [-4.0, 4.0]
 
 LIMBS = ['solo_RHleg_rom', 'solo_LHleg_rom', 'solo_LFleg_rom', 'solo_RFleg_rom']
 
