@@ -239,13 +239,13 @@ class Constraints:
                         foot_pose = pb.p0[other]
                         h[i:i + l] -= K.dot(foot_pose)
                     i += l
-                elif phase.id == 0:
+                elif phase.id == 0 and pb.p0[other] is not None:
                     l = k.shape[0]
                     G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
                     h[i:i + l] = k
                     h[i:i + l] -= K.dot(pb.p0[other])
                     i += l
-                elif other in pb.phaseData[phase.id - 1].stance:
+                elif phase.id > 0 and other in pb.phaseData[phase.id - 1].stance:
                     l = k.shape[0]
                     G[i:i + l, j:j + self._default_n_variables(phase)] = -K.dot(self.foot(phase, foot))
                     h[i:i + l] = k
