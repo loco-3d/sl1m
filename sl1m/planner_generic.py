@@ -30,6 +30,7 @@ class Planner:
                           "end_effector_positions": self.end_effectors_position_cost,
                           "effector_positions": self.effector_position_cost,
                           "coms": self.com_cost,
+                          "coms_3D": self.com_cost_3D,
                           "posture": self.posture_cost,
                           "step_size": self.step_size_cost}
 
@@ -80,6 +81,14 @@ class Planner:
         M[2, 2] = 0
         M[2, 3] = 1
         return M
+
+    def com_xyz(self, phase):
+        """
+        Generate a selection matrix for the height of com_2
+        @param phase phase data
+        @return a (1, phase number of variables (without slacks)) matrix 
+        """
+        return self._expression_matrix(4, self._default_n_variables(phase), 0)
 
     def foot(self, phase, foot=None, id=None):
         """
@@ -264,7 +273,7 @@ class Planner:
 
             if self.com:
                 i_start = cons.fixed_foot_com(self.pb, phase, G, h, i_start, js, feet_phase)
-                i_start_eq = cons.com(self.pb, phase, C, d, i_start_eq, js, feet_phase)
+                # i_start_eq = cons.com(self.pb, phase, C, d, i_start_eq, js, feet_phase)
 
             if self.mip:
                 i_start_eq = cons.slack_equality(phase, C, d, i_start_eq, js[-1])
@@ -361,6 +370,31 @@ class Planner:
             A = np.zeros((2, n_variables))
             A[:, j: j + self._default_n_variables(phase)] = self.com_xy(phase)
             b = coms[phase.id][:2]
+
+            P += np.dot(A.T, A)
+            q += -np.dot(A.T, b).reshape(A.shape[1])
+
+            j += self._phase_n_variables(phase)
+
+        return P, q
+
+    def com_cost_3D(self, coms):
+        """
+        Compute a cost to keep the com close to a target com at each phase
+        @param coms list of target positions for the com
+        @return P matrix and q vector s.t. we minimize x' P x + q' x
+        """
+        n_variables = self._total_n_variables()
+        P = np.zeros((n_variables, n_variables))
+        q = np.zeros(n_variables)
+
+        j = 0
+        for phase in self.pb.phaseData:
+            A = np.zeros((4, n_variables))
+            b = np.zeros(4)
+            A[:3, j: j + self._default_n_variables(phase)] = self.com_xyz(phase)
+            b[:3] = coms[phase.id][:]
+            b[3] = coms[phase.id][2]
 
             P += np.dot(A.T, A)
             q += -np.dot(A.T, b).reshape(A.shape[1])
