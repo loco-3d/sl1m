@@ -104,7 +104,7 @@ class Problem:
         :param gait: The gait of the robot (list of id of the moving foot)
         :param p0: The initial positions of the limbs
         :param c0: The initial position of the com
-        :return: a "res" dictionnary with the format required by SL1M
+        :return: a "res" dictionary with the format required by SL1M
         """
         normal = np.array([0, 0, 1])
         self.p0 = p0
