@@ -34,7 +34,7 @@ def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
 def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
     """
     Calls the sl1m solver. Tries to solve non fixed sparsity by handling the combinatorial.
-    Ultimately calls solve which provides the approriate cost function
+    Ultimately calls solve which provides the appropriate cost function
     @param planner
     @param pb problem data
     @param surfaces potential surfaces
@@ -105,7 +105,7 @@ def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
 def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
     """
     Calls the sl1m solver. Tries to solve non fixed sparsity by handling the combinatorial.
-    Ultimately calls solve which provides the approriate cost function
+    Ultimately calls solve which provides the appropriate cost function
     @param planner
     @param pb problem data
     @param surfaces potential surfaces
