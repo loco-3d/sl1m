@@ -35,7 +35,7 @@ class Planner:
                           "posture": self.posture_cost,
                           "step_size": self.step_size_cost}
 
-        self.com_costs = ["final_com", "coms"]
+        self.com_costs = ["final_com", "coms_xy", "coms_z", "coms_3D"]
 
     def _default_n_variables(self, phase):
         """
