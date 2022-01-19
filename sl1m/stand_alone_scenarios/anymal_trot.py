@@ -30,6 +30,7 @@ N_GAIT["trot"] = 2
 
 # Parameters of the optimisation
 USE_COM = True
+USE_SL1M = False
 gait = "trot"  # type of gait chosen
 n_gait = N_GAIT[gait]  # Number of phase in the gait
 GAIT = GAITS[gait]
@@ -194,11 +195,14 @@ if __name__ == '__main__':
     costs = {
         "effector_positions": [1.0, effector_positions],
         "coms_xy": [0.5, com_positions],
-        "coms_z": [0.5, com_positions]
+        "coms_z": [0.05, com_positions]
     }
     t_3 = clock()
 
-    result = solve_MIP(pb, costs=costs, com=USE_COM)
+    if USE_SL1M:
+        result = solve_L1_combinatorial(pb, surfaces,costs=costs,  com=USE_COM)
+    else:
+        result = solve_MIP(pb, costs=costs, com=USE_COM)
     t_end = clock()
 
     print(result)
