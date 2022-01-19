@@ -29,7 +29,8 @@ class Planner:
         self.cost_dict = {"final_com": self.end_com_cost,
                           "end_effector_positions": self.end_effectors_position_cost,
                           "effector_positions": self.effector_position_cost,
-                          "coms": self.com_cost,
+                          "coms_xy": self.com_cost_xy,
+                          "coms_z": self.com_cost_z,
                           "coms_3D": self.com_cost_3D,
                           "posture": self.posture_cost,
                           "step_size": self.step_size_cost}
@@ -62,6 +63,14 @@ class Planner:
         @return a (2, phase number of variables (without slacks)) matrix 
         """
         return self._expression_matrix(2, self._default_n_variables(phase), 0)
+
+    def com_z(self, phase):
+        """
+        Generate a selection matrix for the com x and y components
+        @param phase phase data
+        @return a (2, phase number of variables (without slacks)) matrix 
+        """
+        return self._expression_matrix(2, self._default_n_variables(phase), 2)
 
     def com_1(self, phase):
         """
@@ -355,9 +364,9 @@ class Planner:
 
         return coms, moving_feet_pos, all_feet_pos
 
-    def com_cost(self, coms):
+    def com_cost_xy(self, coms):
         """
-        Compute a cost to keep the com close to a target com at each phase
+        Compute a cost to keep the com in X,Y axis close to a target com at each phase
         @param coms list of target positions for the com
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
@@ -378,9 +387,34 @@ class Planner:
 
         return P, q
 
+    def com_cost_z(self, coms):
+        """
+        Compute a cost to keep the com in Z axis close to a target com at each phase
+        @param coms list of target positions for the com
+        @return P matrix and q vector s.t. we minimize x' P x + q' x
+        """
+        n_variables = self._total_n_variables()
+        P = np.zeros((n_variables, n_variables))
+        q = np.zeros(n_variables)
+
+        j = 0
+        for phase in self.pb.phaseData:
+            A = np.zeros((2, n_variables))
+            b = np.zeros(2)
+            A[:, j: j + self._default_n_variables(phase)] = self.com_z(phase)
+            b[0] = coms[phase.id][2]
+            b[1] = coms[phase.id][2]
+
+            P += np.dot(A.T, A)
+            q += -np.dot(A.T, b).reshape(A.shape[1])
+
+            j += self._phase_n_variables(phase)
+
+        return P, q
+
     def com_cost_3D(self, coms):
         """
-        Compute a cost to keep the com close to a target com at each phase
+        Compute a cost to keep the com close to a target com in X,Y,Z axis at each phase
         @param coms list of target positions for the com
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
@@ -392,7 +426,7 @@ class Planner:
         for phase in self.pb.phaseData:
             A = np.zeros((4, n_variables))
             b = np.zeros(4)
-            A[:3, j: j + self._default_n_variables(phase)] = self.com_xyz(phase)
+            A[:, j: j + self._default_n_variables(phase)] = self.com_xyz(phase)
             b[:3] = coms[phase.id][:]
             b[3] = coms[phase.id][2]
 
