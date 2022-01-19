@@ -518,8 +518,8 @@ class Planner:
 
     def effector_position_cost(self, end_effector_positions):
         """
-        Compute a cost to keep the step sizes as close as possible of a target step size
-        @param step_size desired size of the steps
+        Compute a cost to keep the effectors with a specified distance to the shoulders
+        @param end_effector_positions desired effector positions
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
         n_variables = self._total_n_variables()

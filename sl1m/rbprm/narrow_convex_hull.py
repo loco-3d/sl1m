@@ -30,7 +30,7 @@ def removeDuplicates (points):
     return pList
 
 def removeNone (l):
-    return [i for i in l if len(i) is not 0]
+    return [i for i in l if len(i) != 0]
     
 def computeAxisAngleRotation(u, c):
     ux = u[0] ; uy = u[1] ; uz = u[2]
