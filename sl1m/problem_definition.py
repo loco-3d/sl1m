@@ -21,6 +21,8 @@ class PhaseData:
         self.root_orientation = R
         self.S = [[convert_surface_to_inequality(s, True) for s in foot_surfaces] for foot_surfaces in surfaces]
         self.n_surfaces = [len(s) for s in self.S]
+        if len(self.moving) != len(self.n_surfaces):
+            raise ArithmeticError("Error on the list of surfaces: for each moving foot, provide a list of potential surfaces.")
         self.transform = default_transform_from_pos_normal(np.zeros(3), normal, R)
         if com:
             self.generate_K(n_effectors, com_obj)
@@ -70,19 +72,19 @@ class Problem:
         effectors = None
         kinematic_constraints_path     = None
         relative_feet_constraints_path = None
-        
+
         if rbprm_robot is not None:
             effectors = rbprm_robot.limbs_names
             kinematic_constraints_path = rbprm_robot.kinematic_constraints_path
             relative_feet_constraints_path = rbprm_robot.relative_feet_constraints_path
-            
+
         if limb_names is not None:
             effectors = limb_names[:]
-            
+
         if constraint_paths is not None:
             kinematic_constraints_path     = constraint_paths[0]
             relative_feet_constraints_path = constraint_paths[1]
-        
+
         self.n_effectors = len(effectors)
         self.com_objects = []
         self.foot_objects = []
@@ -92,9 +94,9 @@ class Problem:
 
             foot_object = []
             for other, other_name in enumerate(effectors):
-                if other != foot:  
+                if other != foot:
                     if other_names is not None:
-                        o_name = other_names[other]                  
+                        o_name = other_names[other]
                     elif limb_names is not None:
                         o_name = other_name
                     else:
