@@ -28,7 +28,8 @@ class Planner:
 
         self.cost_dict = {"final_com": self.end_com_cost,
                           "end_effector_positions": self.end_effectors_position_cost,
-                          "effector_positions": self.effector_position_cost,
+                          "effector_positions_xy": self.effector_position_cost_xy,
+                          "effector_positions_3D": self.effector_position_cost_3D,
                           "coms_xy": self.com_cost_xy,
                           "coms_z": self.com_cost_z,
                           "coms_3D": self.com_cost_3D,
@@ -584,7 +585,7 @@ class Planner:
 
         return P, q
 
-    def effector_position_cost(self, end_effector_positions):
+    def effector_position_cost_xy(self, end_effector_positions):
         """
         Compute a cost to keep the effectors with a specified distance to the shoulders
         @param end_effector_positions desired effector positions
@@ -600,6 +601,30 @@ class Planner:
             for foot in phase.moving:
                 A = np.zeros((2, n_variables))
                 A[:, j:j + self._default_n_variables(phase)] = self.foot_xy(phase, foot)
+                b = end_effector_positions[foot][phase.id]
+
+                P += np.dot(A.T, A)
+                q -= np.dot(A.T, b).reshape(A.shape[1])
+
+            j += self._phase_n_variables(phase)
+
+        return P, q
+    
+    def effector_position_cost_3D(self, end_effector_positions):
+        """
+        Compute a cost to keep the effector positions close to the desired ones
+        @param end_effector_positions desired end effector positions
+        @return P matrix and q vector s.t. we minimize x' P x + q' x
+        """
+        n_variables = self._total_n_variables()
+        P = np.zeros((n_variables, n_variables))
+        q = np.zeros(n_variables)
+
+        j = 0
+        for phase in self.pb.phaseData:
+            for foot in phase.moving:
+                A = np.zeros((3, n_variables))
+                A[:, j:j + self._default_n_variables(phase)] = self.foot(phase, foot)
                 b = end_effector_positions[foot][phase.id]
 
                 P += np.dot(A.T, A)
