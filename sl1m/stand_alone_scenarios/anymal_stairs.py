@@ -12,6 +12,7 @@ import sl1m.tools.plot_tools as plot
 
 USE_COM = True
 GAIT = [np.array([1, 1, 1, 0]), np.array([1, 1, 0, 1]), np.array([1, 0, 1, 1]), np.array([0, 1, 1, 1])]
+# GAIT = [np.array([0, 1, 1, 0]), np.array([1, 0, 0, 1])]
 
 paths = [os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_",
          os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/relative_effector_positions/anymal_"]
