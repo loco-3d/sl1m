@@ -21,9 +21,10 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
     @return ProblemData storing the result
     """
     planner = Planner(mip=False, com=com)
-    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial_gait(planner, pb, surfaces, lp_solver)
+    sparsity_fixed, pb, surface_indices, t, pb_data = fix_sparsity_combinatorial_gait(planner, pb, surfaces, lp_solver)
     if sparsity_fixed:
-        pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
+        # pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
+        print("here")
         pb_data.surface_indices = surface_indices
     else:
         return ProblemData(False, t)

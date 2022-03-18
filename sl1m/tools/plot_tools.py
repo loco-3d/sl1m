@@ -186,7 +186,7 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
 
-def plot_planner_result(all_feet_pos, coms=None, step_size=None, effector_positions=None, ax=None, show=True):
+def plot_planner_result(all_feet_pos, coms=None, step_size=None, effector_positions=None, shoulder_positions_2D=None, ax=None, show=True):
     """
     Plot the feet positions and com positions
     """
@@ -201,7 +201,6 @@ def plot_planner_result(all_feet_pos, coms=None, step_size=None, effector_positi
         py = [c[1] for c in foot_pose if c is not None]
         pz = [c[2] for c in foot_pose if c is not None]
         ax.scatter(px, py, pz, color=COLORS[foot], marker='o', linewidth=5)
-        # ax.plot(px, py, pz, color=COLORS[foot])
 
     if step_size is not None:
         for foot_pose in all_feet_pos:
@@ -209,15 +208,20 @@ def plot_planner_result(all_feet_pos, coms=None, step_size=None, effector_positi
             py = [foot_pose[0][1] + step_size[1]]
             pz = [foot_pose[0][2]]
             ax.scatter(px, py, pz, color=COLORS[5], marker='o', linewidth=5)
-            # ax.plot(px, py, pz, color=COLORS[5])
 
     if effector_positions is not None:
         for foot, foot_pos in enumerate(effector_positions):
             px = [c[0] for c in foot_pos if c is not None]
             py = [c[1] for c in foot_pos if c is not None]
             pz = [0. for c in foot_pos if c is not None]
-            ax.scatter(px, py, pz, color=COLORS[foot], marker='+', linewidth=5)
-            # ax.plot(px, py, pz, color=COLORS[5])
+            ax.scatter(px, py, pz, color=COLORS[foot], marker='*', linewidth=5)
+
+    if shoulder_positions_2D is not None:
+        for foot, foot_pos in enumerate(shoulder_positions_2D):
+            px = [c[0] for c in foot_pos if c is not None]
+            py = [c[1] for c in foot_pos if c is not None]
+            pz = [0. for c in foot_pos if c is not None]
+            ax.scatter(px, py, pz, color=COLORS[foot], marker='x', linewidth=5)
 
     if coms is not None:
         plot_point_list(ax, coms, color=COLORS[len(all_feet_pos)+1])

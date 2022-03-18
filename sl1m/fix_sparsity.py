@@ -45,6 +45,8 @@ def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
     q = 100. * planner.alphas
 
     result = call_LP_solver(q, G, h, C, d, LP_SOLVER)
+    coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
+    pb_data = ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos)
     t = result.time
     if not result.success:
         print("Initial LP solver fails in fix_sparsity_combinatorial")
@@ -57,12 +59,12 @@ def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
             for j in range(len(phase.n_surfaces)):
                 phase.S[j] = [phase.S[j][selected_surfaces[i][j]]]
                 phase.n_surfaces[j] = 1
-        return True, pb, selected_surfaces, t
+        return True, pb, selected_surfaces, t, pb_data
 
     pbs = generate_fixed_sparsity_problems_gait(pb, alphas)
     if pbs is None:
         print("No combinatorial problems was found")
-        return False, pb, [], t
+        return False, pb, [], t, None
 
     # Handle the combinatorial
     sparsity_fixed = False
@@ -75,6 +77,8 @@ def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
         if result.success:
             alphas = planner.get_alphas(result.x)
             if is_sparsity_fixed_gait(fixed_pb, alphas):
+                coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
+                pb_data = ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos)
                 sparsity_fixed = True
                 pb = fixed_pb
                 break
@@ -82,7 +86,7 @@ def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
 
     if not sparsity_fixed:
         print("Sparsity could not be fixed")
-        return False, pb, [], t
+        return False, pb, [], t, None
 
     selected_surfaces = planner.selected_surfaces(alphas)
     k = 0
@@ -99,7 +103,7 @@ def fix_sparsity_combinatorial_gait(planner, pb, surfaces, LP_SOLVER):
             else:
                 surface_indices.append(0)
 
-    return sparsity_fixed, fixed_pb, surface_indices, t
+    return sparsity_fixed, fixed_pb, surface_indices, t, pb_data
 
 
 def fix_sparsity_combinatorial(planner, pb, surfaces, LP_SOLVER):
