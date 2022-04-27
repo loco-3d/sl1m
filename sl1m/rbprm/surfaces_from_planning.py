@@ -69,68 +69,90 @@ def getAllSurfacesDict(afftool):
 def getSurfacesFromGuideContinuous(rbprmBuilder, ps, afftool, pathId, viewer=None, step=1., useIntersection=False):
     if viewer:
         from hpp.corbaserver.rbprm.tools.display_tools import displaySurfaceFromPoints
-
-    window_size = 0.5  # smaller step at which we check the colliding surfaces
+    
     if pathId is None:
         pathId = ps.numberPaths() - 1
     pathLength = ps.pathLength(pathId)  # length of the path
-
     # get surface information
     surfaces_dict = getAllSurfacesDict(afftool)  # map surface names to surface points
-    seqs = []  # list of list of surfaces : for each phase contain a list of surfaces. One phase is defined by moving of 'step' along the path
-    t = 0.
     current_phase_end = step
-    end = False
+    window_size = 0.5  # smaller step at which we check the colliding surfaces
+    # Get surfaces for each phase along the path
+    seqs = []  # list of list of surfaces : for each phase contain a list of surfaces. One phase is defined by moving of 'step' along the path
     i = 0
-
+    t = 0.
+    end = False
     while not end:  # for all the path
         phase_contacts = []
         phase_contacts_names = []
         while t < current_phase_end:  # get the names of all the surfaces that the rom collide while moving from current_phase_end-step to current_phase_end
             q = ps.configAtParam(pathId, t)
             step_contacts = getContactsIntersections(rbprmBuilder, i, q)
-            step_contacts_names = getContactsNames(rbprmBuilder, i, q)
-            # do not consider the duplicates yet
-            phase_contacts += step_contacts
-            phase_contacts_names += step_contacts_names
+            step_contacts_names = getContactsNames(rbprmBuilder, i, q)  # (FIX ME - RPBRM) step_contacts and step_contacts_names not in the same order
+            # (FIX - PYTHON) Re-associate every intersections to their corresponding surfaces
+            step_contacts_aux = []
+            step_contacts_names_aux = []
+            for index_intersection, intersection in enumerate(step_contacts):
+                if len(intersection)>0: # Filter empty intersections
+                    name = getNameSurfaceIntersected(intersection, step_contacts_names, surfaces_dict)
+                    step_contacts_aux.append(intersection)
+                    step_contacts_names_aux.append(name)
+                    #print("  Name of surface ",step_contacts_names[index_intersection]," replaced by ",name)
+            # Do not consider the duplicates yet
+            phase_contacts += step_contacts_aux
+            phase_contacts_names += step_contacts_names_aux
             t += window_size
             assert len(phase_contacts) == len(phase_contacts_names)
         # end current phase
-
-        seq = []
-
-        for i, contact in enumerate(phase_contacts):
-            if contact != []:
-                if viewer:
-                    displaySurfaceFromPoints(viewer, contact, [0, 0, 1, 1])
-                if useIntersection and area(contact) > MAX_SURFACE:
-                    seq.append(contact)
-                else:
-                    surface = surfaces_dict[phase_contacts_names[i]][0]
-                    if surface not in seq:  # check if there is duplicate
-                        seq.append(surface)
-                    sorted(seq)
+        # Add surfaces or intersection to this phase.
+        seq, seq_name = [], []
+        if useIntersection:
+            for index_phase,contact in enumerate(phase_contacts):
+                # Add all intersections with ROMs => There can be two intersections on the same surface.
+                # But in Sl1m paper : All surfaces must not intersect with one another (ERROR?)
+                """
+                if contact != [] and area(contact) > MAX_SURFACE:
+                    seq.append(contact) # Add intersection
+                    seq_name.append(phase_contacts_names[index_phase]) # Do something with it for solutions a,b or c
+                """
+                # Solutions : (a) Combine duplicates in one convex surface;
+                #             (b) Keep the intersection with the biggest area ?
+                #             (c) keep only the last intersection with this surface ?
+                # Solution C implemented
+                if area(contact) > MAX_SURFACE:
+                    surface_name = phase_contacts_names[index_phase]
+                    if surface_name in seq_name:
+                        index_surface = seq_name.index(surface_name)
+                        seq[index_surface] = contact # Replace intersection
+                    else:
+                        seq.append(contact) # Add intersection
+                        seq_name.append(phase_contacts_names[index_phase]) # Do something with it for solutions a,b or c
+        else:
+            for index_phase,name_contact in enumerate(phase_contacts_names):
+                # Add surfaces intersecting with ROMs, only once per phase => No duplicate
+                if not name_contact in seq_name:
+                    seq.append(surfaces_dict[name_contact][0]) # Add entire surface
+                    seq_name.append(name_contact)
+        sorted(seq)
         seqs.append(seq)
-
         # increase value for the next phase
         t = current_phase_end
         current_phase_end += step
-        i += 0  # phase number
-
+        i += 1  # phase number
+        print("i: ",i)
         if t == pathLength:
             current_phase_end = pathLength+0.01
         if t > pathLength:
             end = True
     # end of all guide path
-
     # get rotation matrix of the root at each step
     seqs = listToArray(seqs)
     configs = []
     for t in arange(0, pathLength, step):
         configs.append(ps.configAtParam(pathId, t))
     R = getRotationsFromConfigs(configs)
-
     return R, seqs
+
 
 
 def getSurfacesFromGuide(rbprmBuilder, ps, afftool, pathId, viewer=None, step=0.6, useIntersection=False):
@@ -153,17 +175,27 @@ def getSurfacesFromGuide(rbprmBuilder, ps, afftool, pathId, viewer=None, step=0.
     for i, q in enumerate(configs):
         seq = []
         contacts = getContactsIntersections(rbprmBuilder, i, q)
-        contact_names = getContactsNames(rbprmBuilder, i, q)
-
+        contact_names = getContactsNames(rbprmBuilder, i, q)    # Contacts and contact_names not in the same order
+        # (FIX - PYTHON) Re-associate every intersections to their corresponding surfaces
+        contacts_aux = []
+        contact_names_aux = []
+        for index_intersection, intersection in enumerate(contacts):
+            if len(intersection)>0: # Filter empty intersections
+                name = getNameSurfaceIntersected(intersection, contact_names, surface_dict)
+                contacts_aux.append(intersection)
+                contact_names_aux.append(name)
+                #print("  Name of surface ",contact_names[index_intersection]," replaced by ",name)
+        contacts = contacts_aux
+        contact_names = contact_names_aux
+        # Add intersection or surface
         for j, contact in enumerate(contacts):
-            if contact != []:
-                # print (area(contact))
-                if useIntersection and area(contact) > MAX_SURFACE:
+            if useIntersection:
+                if area(contact) > MAX_SURFACE:
                     seq.append(contact)
-                else:
-                    seq.append(surface_dict[contact_names[j]][0])
-                if viewer:
-                    displaySurfaceFromPoints(viewer, contact, [0, 0, 1, 1])
+            else:
+                seq.append(surface_dict[contact_names[j]][0])
+            if viewer:
+                displaySurfaceFromPoints(viewer, contact, [0, 0, 1, 1])
         seqs.append(seq)
 
     # remove duplicates
@@ -173,3 +205,49 @@ def getSurfacesFromGuide(rbprmBuilder, ps, afftool, pathId, viewer=None, step=0.
     seqs = listToArray(seqs)  # change the format from list to array
     R = getRotationsFromConfigs(configs)
     return R, seqs
+
+
+# p : point tested
+# p0, p1, p2 : points defining plane
+def pointOnPlane(p, p0, p1, p2):
+    n = np.cross(np.array(p1)-np.array(p0), np.array(p2)-np.array(p0))
+    #n = n / np.linalg.norm(n)
+    return np.dot(n, np.array(p)-np.array(p0))<1e-6
+
+def sumAngles(p, surface):
+    sum_angles = 0.
+    for i in range(len(surface)-1):
+        v0 = np.array(surface[i])-np.array(p)
+        v1 = np.array(surface[i+1])-np.array(p)
+        v0, v1 = v0/np.linalg.norm(v0), v1/np.linalg.norm(v1)
+        #print("  dot : ",np.dot(v0,v1))
+        sum_angles += np.arccos( np.dot(v0,v1) )
+    # Last
+    v0 = np.array(surface[-1])-np.array(p)
+    v1 = np.array(surface[0])-np.array(p)
+    v0, v1 = v0/np.linalg.norm(v0), v1/np.linalg.norm(v1)
+    #print("  dot : ",np.dot(v0,v1))
+    sum_angles += np.arccos( np.dot(v0,v1) )
+    return abs(sum_angles)
+
+# Hypothesis : 
+# - intersection lies in on of the surface in nameSurfaces.
+def getNameSurfaceIntersected(intersection, namesSurfaces, surfaces_dict):
+    if len(intersection)>0:
+        for name in namesSurfaces:
+            surface = surfaces_dict[name][0]
+            # Check if a point of intersection is equal to one of this surface
+            for p_intersection in intersection:
+                for p_surface in surface:
+                    if np.linalg.norm( np.array(p_intersection)-np.array(p_surface) )<1e-6:
+                        # Equal
+                        return name
+            # Check if the first point of intersection lies on plane of the surface
+            p = intersection[0]
+            if pointOnPlane( p, surface[0], surface[1], surface[2] ):
+                # Check if point inside or outside the surface
+                # Sum of angles between p and all the vertex pairs.
+                sum_angles = sumAngles(p, surface)
+                if abs(sum_angles-np.pi*2)<1e-6:
+                    return name
+    return None
