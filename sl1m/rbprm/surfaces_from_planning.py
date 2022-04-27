@@ -133,7 +133,7 @@ def getSurfacesFromGuideContinuous(rbprmBuilder, ps, afftool, pathId, viewer=Non
                 if not name_contact in seq_name:
                     seq.append(surfaces_dict[name_contact][0]) # Add entire surface
                     seq_name.append(name_contact)
-        sorted(seq)
+        seq.sort()
         seqs.append(seq)
         # increase value for the next phase
         t = current_phase_end
@@ -196,6 +196,7 @@ def getSurfacesFromGuide(rbprmBuilder, ps, afftool, pathId, viewer=None, step=0.
                 seq.append(surface_dict[contact_names[j]][0])
             if viewer:
                 displaySurfaceFromPoints(viewer, contact, [0, 0, 1, 1])
+        seq.sort()
         seqs.append(seq)
 
     # remove duplicates
