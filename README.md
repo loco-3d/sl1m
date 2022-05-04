@@ -41,8 +41,16 @@ export ROS_PACKAGE_PATH=/opt/openrobots/share/example-robot-data/robots:${SOLO3D
 
 Execute the scripts:
 
-`python sl1m/stand_alone_scenarios/anymal_stairs.py`
-
-`python sl1m/stand_alone_scenarios/anymal_trot.py`
-
-
+```bash
+python sl1m/stand_alone_scenarios/anymal_stairs.py
+python sl1m/stand_alone_scenarios/anymal_trot.py
+python sl1m/stand_alone_scenarios/data.pickle
+python sl1m/stand_alone_scenarios/hrp2_complex.py
+python sl1m/stand_alone_scenarios/hrp2_stairs.py
+python sl1m/stand_alone_scenarios/problem_definition_hrp2.py
+python sl1m/stand_alone_scenarios/problem_definition_talos.py
+python sl1m/stand_alone_scenarios/solo_stairs.py
+python sl1m/stand_alone_scenarios/solo_trot.py
+python sl1m/stand_alone_scenarios/talos_ramp.py
+python sl1m/stand_alone_scenarios/talos_rubble_stairs.py
+```
