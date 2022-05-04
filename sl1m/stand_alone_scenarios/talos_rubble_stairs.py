@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from time import perf_counter as clock
@@ -14,8 +15,8 @@ GAIT = [0, 1]
 USE_COM = True
 GAIT = [np.array([1, 0]), np.array([0, 1])]
 
-paths = [os.environ["INSTALL_HPP_DIR"] + "/share/talos-rbprm/com_inequalities/feet_quasi_flat/talos_",
-         os.environ["INSTALL_HPP_DIR"] + "/share/talos-rbprm/relative_effector_positions/talos_"]
+paths = [str(Path(os.environ["INSTALL_HPP_DIR"]) / "talos-rbprm" / "com_inequalities" / "feet_quasi_flat") + os.sep,
+         str(Path(os.environ["INSTALL_HPP_DIR"]) / "talos-rbprm" / "relative_effector_positions") + os.sep]
 limbs = ["LF", "RF"]
 suffix_com = "_effector_frame_REDUCED.obj"
 suffix_feet = "_quasi_flat_REDUCED.obj"
