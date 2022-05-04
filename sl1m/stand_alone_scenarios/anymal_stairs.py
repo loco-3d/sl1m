@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import perf_counter as clock
 import os
+from pathlib import Path
 
 from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
 from sl1m.problem_definition import Problem
@@ -14,8 +15,8 @@ USE_COM = True
 GAIT = [np.array([1, 1, 1, 0]), np.array([1, 1, 0, 1]), np.array([1, 0, 1, 1]), np.array([0, 1, 1, 1])]
 # GAIT = [np.array([0, 1, 1, 0]), np.array([1, 0, 0, 1])]
 
-paths = [os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_",
-         os.environ["INSTALL_HPP_DIR"] + "/share/anymal-rbprm/relative_effector_positions/anymal_"]
+paths = [str(Path(os.environ["INSTALL_HPP_DIR"]) / "anymal-rbprm" / "com_inequalities" / "feet_quasi_flat" / "anymal_"),
+         str(Path(os.environ["INSTALL_HPP_DIR"]) / "anymal-rbprm" / "relative_effector_positions" / "anymal_")]
 limbs = ['RHleg', 'RFleg', 'LHleg', 'LFleg']
 others = ['RH_ADAPTER_TO_FOOT', 'RF_ADAPTER_TO_FOOT', 'LH_ADAPTER_TO_FOOT', 'LF_ADAPTER_TO_FOOT']
 suffix = "_effector_frame_quasi_static_upscale.obj"
