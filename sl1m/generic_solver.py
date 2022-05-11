@@ -9,7 +9,7 @@ from sl1m.problem_data import ProblemData
 
 # ----------------------- L1 -----------------------------------------------------------------------
 
-def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}, com=True):
+def solve_L1_combinatorial(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}, com=True):
     """
     Solve the problem by first chosing the surfaces with a L1 norm minimization problem handling the
     combinatorial if necesary, and then optimizing the feet positions with a QP
@@ -21,8 +21,9 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
     @return ProblemData storing the result
     """
     planner = Planner(mip=False, com=com)
-    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial_gait(planner, pb, surfaces, lp_solver)
+    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial_gait(planner, pb, lp_solver)
     if sparsity_fixed:
+        print("  Surfaces selected     : ",surface_indices)
         pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
         pb_data.surface_indices = surface_indices
     else:
@@ -31,7 +32,7 @@ def solve_L1_combinatorial(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Sol
     return pb_data
 
 
-def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
+def solve_L1_combinatorial_biped(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
     """
     Solve the problem for a biped by first chosing the surfaces with a L1 norm minimization problem
     handling the combinatorial if necesary, and then optimizing the feet positions with a QP
@@ -43,8 +44,7 @@ def solve_L1_combinatorial_biped(pb, surfaces, lp_solver=Solvers.GUROBI, qp_solv
     @return ProblemData storing the result
     """
     planner = BipedPlanner()
-    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(
-        planner, pb, surfaces, lp_solver)
+    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(planner, pb, lp_solver)
     if sparsity_fixed:
         pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
         pb_data.surface_indices = surface_indices
