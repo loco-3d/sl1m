@@ -237,9 +237,8 @@ def generate_fixed_sparsity_problems_gait(pb, alphas):
     n_pbs = 1
     for l in all_len:
         n_pbs *= l
-    if n_pbs > 2000:
+    if n_pbs > 1000:
         print("Problem probably too big to handle combinatorial", n_pbs)
-        return None
     print("Handling combinatorial: ", n_pbs)
     return generate_combinatorials_gait(pb, undecided_surfaces)
 
@@ -256,9 +255,8 @@ def generate_fixed_sparsity_problems(pb, alphas):
     n_pbs = 1
     for l in all_len:
         n_pbs *= l
-    if n_pbs > 2000:
+    if n_pbs > 1000:
         print("Problem probably too big to handle combinatorial", n_pbs)
-        return None
     print("Handling combinatorial: ", n_pbs)
     return generate_combinatorials(pb, undecided_surfaces)
 
