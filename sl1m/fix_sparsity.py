@@ -7,6 +7,7 @@ from sl1m.solver import call_QP_solver, call_LP_solver
 from sl1m.problem_data import ProblemData
 
 ALPHA_THRESHOLD = 0.01
+MAX_COMB_GENERATED = 100
 
 def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
     """
@@ -178,12 +179,14 @@ def get_undecided_surfaces_gait(pb, alphas):
     @param pb the problem data
     @return a list of phase indices, and sorted surface indices
     """
-    undecided_surfaces = []
+    undecided_surfaces, decided_surfaces = [], []
     for i, phase in enumerate(pb.phaseData):
         for j, n_surface in enumerate(phase.n_surfaces):
             if n_surface > 1 and np.array(alphas[i][j]).min() > ALPHA_THRESHOLD:
                 undecided_surfaces.append([i, j, np.argsort(alphas[i][j])])
-    return undecided_surfaces
+            else:
+                decided_surfaces.append([i, j, np.argmin(alphas[i][j])])
+    return undecided_surfaces, decided_surfaces
 
 
 def get_undecided_surfaces(pb, alphas):
@@ -193,11 +196,13 @@ def get_undecided_surfaces(pb, alphas):
     @param pb the problem data
     @return a list of phase indices, and sorted surface indices
     """
-    undecided_surfaces = []
+    undecided_surfaces, decided_surfaces = [], []
     for i, phase in enumerate(pb.phaseData):
         if phase.n_surfaces > 1 and np.array(alphas[i]).min() > ALPHA_THRESHOLD:
             undecided_surfaces.append([i, np.argsort(alphas[i])])
-    return undecided_surfaces
+        else:
+            decided_surfaces.append([i, np.argmin(alphas[i])])
+    return undecided_surfaces, decided_surfaces
 
 
 def is_sparsity_fixed_gait(pb, alphas):
@@ -206,7 +211,8 @@ def is_sparsity_fixed_gait(pb, alphas):
     @param alphas the list of slack variables found by the planner
     @return true if the sparsity is fixed (ie there is one and only one alpha~0 per phase)
     """
-    return len(get_undecided_surfaces_gait(pb, alphas)) == 0
+    undecided_surfaces, _ = get_undecided_surfaces_gait(pb, alphas)
+    return len(undecided_surfaces) == 0
 
 
 def is_sparsity_fixed(pb, alphas):
@@ -215,7 +221,8 @@ def is_sparsity_fixed(pb, alphas):
     @param alphas the list of slack variables found by the planner
     @return true if the sparsity is fixed (ie there is one and only one alpha~0 per phase)
     """
-    return len(get_undecided_surfaces(pb, alphas)) == 0
+    undecided_surfaces, _ = get_undecided_surfaces(pb, alphas)
+    return len(undecided_surfaces) == 0
 
 
 def generate_fixed_sparsity_problems_gait(pb, alphas):
@@ -225,7 +232,7 @@ def generate_fixed_sparsity_problems_gait(pb, alphas):
     @param alphas the list of slack variables found by the planner
     @return the list of problems
     """
-    undecided_surfaces = get_undecided_surfaces_gait(pb, alphas)
+    undecided_surfaces, decided_surfaces = get_undecided_surfaces_gait(pb, alphas)
     all_len = [len(undecided_surface[-1]) for undecided_surface in undecided_surfaces]
     n_pbs = 1
     for l in all_len:
@@ -244,7 +251,7 @@ def generate_fixed_sparsity_problems(pb, alphas):
     @param alphas the list of slack variables found by the planner
     @return the list of problems
     """
-    undecided_surfaces = get_undecided_surfaces(pb, alphas)
+    undecided_surfaces, decided_surfaces = get_undecided_surfaces(pb, alphas)
     all_len = [len(undecided_surface[-1]) for undecided_surface in undecided_surfaces]
     n_pbs = 1
     for l in all_len:
@@ -256,40 +263,55 @@ def generate_fixed_sparsity_problems(pb, alphas):
     return generate_combinatorials(pb, undecided_surfaces)
 
 
-def generate_combinatorials(pb, undecided_surfaces):
+def generate_combinatorials(pb, undecided_surfaces, decided_surfaces):
     """
-    Generate all the problems with only one potential surface per undecided phase
+    Generate all the problems with only one potential surface per undecided phase + fix all decided surfaces
     @param pb the problem data
     @param alphas the list of slack variables found by the planner
     @return the list of problems, the phase indices, and the indices of the selected surfaces
     """
     pbs = []
+    # Fix all decided surfaces
+    pb_fixed = copy.deepcopy(pb)
+    for i, decided_surface in enumerate(decided_surfaces):
+        phase = pb_fixed.phaseData[decided_surface[0]]
+        phase.S = [phase.S[decided_surface[-1]]]
+        phase.n_surfaces = 1
+    # Generate combinatorics
     sorted_combinations = list(itertools.product(*[s[-1] for s in undecided_surfaces]))
-    for combination in sorted_combinations:
-        fixed_pb = copy.deepcopy(pb)
+    for combination in sorted_combinations[0:min(MAX_COMB_GENERATED,len(sorted_combinations))]:
+        pb_comb = copy.deepcopy(pb_fixed)
         for i, undecided_surface in enumerate(undecided_surfaces):
-            phase = fixed_pb.phaseData[undecided_surface[0]]
+            phase = pb_comb.phaseData[undecided_surface[0]]
             phase.S = [phase.S[combination[i]]]
             phase.n_surfaces = 1
-        pbs.append([fixed_pb, combination])
+        pbs.append([pb_comb, combination])
     return pbs
 
 
-def generate_combinatorials_gait(pb, undecided_surfaces):
+def generate_combinatorials_gait(pb, undecided_surfaces, decided_surfaces):
     """
-    Generate all the problems with only one potential surface per undecided phase
+    Generate all the problems with only one potential surface per undecided phase + fix all decided surfaces
     @param pb the problem data
     @param alphas the list of slack variables found by the planner
     @return the list of fixed problems with the indices of the selected surfaces
     """
     pbs = []
+    # Fix all decided surfaces
+    pb_fixed = copy.deepcopy(pb)
+    for i, decided_surface in enumerate(decided_surfaces):
+        phase = pb_fixed.phaseData[decided_surface[0]]
+        effector = decided_surface[1]
+        phase.S[effector] = [phase.S[effector][decided_surface[-1]]]
+        phase.n_surfaces[effector] = 1
+    # Generate combinatorics
     sorted_combinations = list(itertools.product(*[s[-1] for s in undecided_surfaces]))
-    for combination in sorted_combinations:
-        fixed_pb = copy.deepcopy(pb)
+    for combination in sorted_combinations[0:min(MAX_COMB_GENERATED,len(sorted_combinations))]:
+        pb_comb = copy.deepcopy(pb_fixed)
         for i, undecided_surface in enumerate(undecided_surfaces):
-            phase = fixed_pb.phaseData[undecided_surface[0]]
+            phase = pb_comb.phaseData[undecided_surface[0]]
             effector = undecided_surface[1]
             phase.S[effector] = [phase.S[effector][combination[i]]]
             phase.n_surfaces[effector] = 1
-        pbs.append([fixed_pb, combination])
+        pbs.append([pb_comb, combination])
     return pbs
