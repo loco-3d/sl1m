@@ -139,7 +139,6 @@ def getSurfacesFromGuideContinuous(rbprmBuilder, ps, afftool, pathId, viewer=Non
         t = current_phase_end
         current_phase_end += step
         i += 1  # phase number
-        print("i: ",i)
         if t == pathLength:
             current_phase_end = pathLength+0.01
         if t > pathLength:
