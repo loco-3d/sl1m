@@ -3,9 +3,15 @@
 [![Pipeline status](https://gitlab.laas.fr/$ORG/sl1m/badges/master/pipeline.svg)](https://gitlab.laas.fr/loco-3d/sl1m/commits/master)
 [![Coverage report](https://gitlab.laas.fr/loco-3d/sl1m/badges/master/coverage.svg?job=doc-coverage)](http://projects.laas.fr/gepetto/doc/loco-3d/sl1m/master/coverage/)
 
+## Install
 
-## Python dependencies:
-	
+> 📝 Upon installing via the `robotpkg` *ppa* please ensure the correct version of
+	 python is noted, e.g. `sudo apt install robotpkg-py38-quadprog` means you
+	 install the `quadprog` software with `Python3.8` as it's dependency.
+
+### Python dependencies:
+
+
 	python -m pip install scipy
 	sudo apt install robotpkg-py38-quadprog
 	python -m pip install matplotlib
@@ -15,16 +21,25 @@
 :warning: this package requires gurobi :warning:
 A free academic license can be obtained at https://www.gurobi.com
 
-## Demo dependencies:
+### Demo dependencies:
 
 These are the dependencies for the robot and rbprm server.
 ```
-sudo apt install -y robotpkg-py38-hpp-rbprm \
-					robotpkg-py38-hpp-rbprm-corba \
+sudo apt install -y robotpkg-py38-hpp-rbprm-corba
+```
+
+### Installation troubleshooting:
+
+- If you realize you a python package such as `rbprm`, `anymal_rbprm`,
+  `solo_rbprm`, or `talos_rbprm` Please so the following:
+
+  ```
+  sudo apt install -y robotpkg-py38-hpp-rbprm-corba \
+					robotpkg-py38-hpp-rbprm \
 					robotpkg-py38-anymal-rbprm \
 					robotpkg-py38-solo-rbprm \
-					robotpkg-py38-talos-rbprm \
-```
+					robotpkg-py38-talos-rbprm
+  ```
 
 ## Run demo:
 
