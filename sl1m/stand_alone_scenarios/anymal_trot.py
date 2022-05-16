@@ -200,7 +200,7 @@ if __name__ == '__main__':
     t_3 = clock()
 
     if USE_SL1M:
-        result = solve_L1_combinatorial(pb, surfaces,costs=costs,  com=USE_COM)
+        result = solve_L1_combinatorial(pb, costs=costs,  com=USE_COM)
     else:
         result = solve_MIP(pb, costs=costs, com=USE_COM)
     t_end = clock()

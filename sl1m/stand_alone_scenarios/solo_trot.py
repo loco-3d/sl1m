@@ -62,7 +62,7 @@ if __name__ == '__main__':
     COSTS = {"step_size": [10.0, STEP_LENGTH]}   
 
     if USE_SL1M:
-        result = solve_L1_combinatorial(pb, surfaces, costs=COSTS, com=USE_COM)
+        result = solve_L1_combinatorial(pb, costs=COSTS, com=USE_COM)
     else:
         result = solve_MIP(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
