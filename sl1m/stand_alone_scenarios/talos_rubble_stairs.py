@@ -33,7 +33,7 @@ if __name__ == '__main__':
     pb.generate_problem(R, surfaces, GAIT, initial_contacts)
     t_3 = clock()
 
-    result = solve_L1_combinatorial(pb, surfaces, com=USE_COM)
+    result = solve_L1_combinatorial(pb, com=USE_COM)
     # result = solve_MIP(pb, com=USE_COM)
     t_end = clock()
 

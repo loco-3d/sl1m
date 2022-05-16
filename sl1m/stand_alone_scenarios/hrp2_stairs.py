@@ -32,7 +32,7 @@ if __name__ == '__main__':
     t_3 = clock()
 
     # result = solve_MIP(pb, com=USE_COM)
-    result = solve_L1_combinatorial(pb, surfaces, com=USE_COM)
+    result = solve_L1_combinatorial(pb, com=USE_COM)
     t_end = clock()
 
     print(result)

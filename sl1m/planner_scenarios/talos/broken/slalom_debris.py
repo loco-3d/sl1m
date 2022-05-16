@@ -41,7 +41,7 @@ if __name__ == '__main__':
     if USE_MIP:
         result = solve_MIP(pb, com=USE_COM)
     else:
-        result = solve_L1_combinatorial(pb, surfaces_gait, com=USE_COM)
+        result = solve_L1_combinatorial(pb, com=USE_COM)
 
     t_end = clock()
 
