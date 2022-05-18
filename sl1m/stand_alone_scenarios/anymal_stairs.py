@@ -27,11 +27,13 @@ if __name__ == '__main__':
         "final_com": [10.0, [1.2, 0.3, 0.9]]
     }
  
+    paths = [os.path.join(os.path.dirname(anymal_rbprm.__file__), "../../../..", "share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_"),
+             os.path.join(os.path.dirname(anymal_rbprm.__file__), "../../../..", "share/anymal-rbprm/relative_effector_positions/anymal_")]
     limbs = ['RHleg', 'RFleg', 'LHleg', 'LFleg']
     others = ['RH_ADAPTER_TO_FOOT', 'RF_ADAPTER_TO_FOOT', 'LH_ADAPTER_TO_FOOT', 'LF_ADAPTER_TO_FOOT']
     suffix = "_effector_frame_quasi_static_upscale.obj"
     offsets = {'RFleg': [0.373, -0.264, -0.47], 'LFleg': [0.373, 0.264, -0.47],
-            'RHleg': [-0.373, -0.264, -0.47], 'LHleg': [-0.373, 0.264, -0.47]}
+               'RHleg': [-0.373, -0.264, -0.47], 'LHleg': [-0.373, 0.264, -0.47]}
 
 
 

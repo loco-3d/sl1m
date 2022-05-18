@@ -61,7 +61,7 @@ if __name__ == '__main__':
     t_init = clock()
     R = [np.identity(3)] * len(surfaces)
     q_init = [1., 0., 0.241]
-    initial_contacts = [np.array(q_init) + offsets[limb] for limb in limbs]
+    initial_contacts = [np.array(q_init) + np.array(offsets[limb]) for limb in limbs]
     t_1 = clock()
 
     pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths)

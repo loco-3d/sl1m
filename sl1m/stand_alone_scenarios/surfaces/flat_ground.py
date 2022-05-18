@@ -13,4 +13,4 @@ walk_surfaces = [[[astart]], [[astart]], [[astart, aend]], [[astart, aend]], [[a
     [astart, aend]], [[astart, aend]], [[astart, aend]], [[astart, aend]],  [[astart, aend]], [[astart, aend]], [[astart, aend]], [[aend]], [[aend]]]
 
 
-trot_surfaces = [[[astart], [astart]], [[astart], [aend]]]
+trot_surfaces = [[[astart, aend], [astart, aend]], [[astart, aend], [astart, aend]]]

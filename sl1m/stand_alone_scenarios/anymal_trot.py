@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from math import ceil
 from time import perf_counter as clock
 import os
+import anymal_rbprm
 
 from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
 from sl1m.problem_definition import Problem
@@ -38,7 +39,6 @@ COSTS = {
     "final_com": [10.0, [0.0, 0.0, 0.47]]  # Achieve desired CoM at end of plan
 }
 
-import anymal_rbprm
 paths = [os.path.join(os.path.dirname(anymal_rbprm.__file__), "../../../..", "share/anymal-rbprm/com_inequalities/feet_quasi_flat/anymal_"),
          os.path.join(os.path.dirname(anymal_rbprm.__file__), "../../../..", "share/anymal-rbprm/relative_effector_positions/anymal_")]
 # ## SL1M order
@@ -69,11 +69,9 @@ if __name__ == '__main__':
     else:
         n_phases = 20 # dummy value
 
-    # surface = np.array([[-10., -10., 10., 10.],
-    #                     [10., -10., -10., 10.],
-    #                     [0., 0., 0., 0.]])
-    surface = np.array([[-4., -4., 4., 4.],
-                        [4., -4., -4., 4.],
+    surf_size = 4
+    surface = np.array([[-surf_size, -surf_size, surf_size, surf_size],
+                        [surf_size, -surf_size, -surf_size, surf_size],
                         [0., 0., 0., 0.]])
     scene = [[surface], [surface]]
     surfaces = [scene] * n_phases
@@ -89,7 +87,7 @@ if __name__ == '__main__':
     t_2 = clock()
 
     if USE_SL1M:
-        result = solve_L1_combinatorial(pb, costs=costs,  com=USE_COM)
+        result = solve_L1_combinatorial(pb, costs=COSTS,  com=USE_COM)
     else:
         result = solve_MIP(pb, costs=COSTS, com=USE_COM)
     t_end = clock()
