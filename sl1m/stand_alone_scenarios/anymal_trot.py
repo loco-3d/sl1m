@@ -75,9 +75,8 @@ if __name__ == '__main__':
     surface = np.array([[-4., -4., 4., 4.],
                         [4., -4., -4., 4.],
                         [0., 0., 0., 0.]])
-
-    scene = [[surface]]
-    surfaces = [[[surface]]] * n_phases
+    scene = [[surface], [surface]]
+    surfaces = [scene] * n_phases
 
     t_init = clock()
     R = [np.identity(3)] * n_phases
