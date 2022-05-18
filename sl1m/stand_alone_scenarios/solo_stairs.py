@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from time import perf_counter as clock
 from pathlib import Path
 import os
+import solo_rbprm
 
 from sl1m.solver import Solvers
 from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
@@ -20,8 +21,9 @@ USE_SL1M = True
 USE_COM = True
 TEST_CBC = False
 
-paths = [str(Path(os.environ["INSTALL_HPP_DIR"]) / "solo-rbprm" / "com_inequalities" / "feet_quasi_flat") + os.sep,
-         str(Path(os.environ["INSTALL_HPP_DIR"]) / "solo-rbprm" / "relative_effector_positions") + os.sep]
+solo_rbprm_path = Path(solo_rbprm.__file__).resolve().parent.parent.parent.parent.parent / "share" / "solo-rbprm"
+paths = [str(solo_rbprm_path/ "com_inequalities" / "feet_quasi_flat") + os.sep,
+         str(solo_rbprm_path/ "relative_effector_positions") + os.sep]
 others = ['HR_FOOT', 'HL_FOOT', 'FL_FOOT', 'FR_FOOT']
 limbs = ['HRleg', 'HLleg', 'FLleg', 'FRleg']
 offsets = {'FRleg':  [0.1946, -0.0875, -0.241], 'FLleg': [0.1946, 0.0875, -0.241],

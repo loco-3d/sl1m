@@ -3,8 +3,9 @@ from pathlib import Path
 import os
 import matplotlib.pyplot as plt
 from time import perf_counter as clock
+import talos_rbprm
 
-from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
+from sl1m.generic_solver import solve_L1_combinatorial
 from sl1m.problem_definition import Problem
 from sl1m.stand_alone_scenarios.surfaces.ramp_surfaces import surfaces_gait as surfaces
 from sl1m.stand_alone_scenarios.surfaces.ramp_surfaces import scene
@@ -14,9 +15,9 @@ import sl1m.tools.plot_tools as plot
 USE_COM = False
 GAIT = [np.array([1, 0]), np.array([0, 1])]
 
-paths = [str(Path(os.environ["INSTALL_HPP_DIR"]) / "talos-rbprm" / "com_inequalities" / "feet_quasi_flat") + os.sep,
-         str(Path(os.environ["INSTALL_HPP_DIR"]) / "talos-rbprm" / "relative_effector_positions") + os.sep]
-
+talos_rbprm_path = Path(talos_rbprm.__file__).resolve().parent.parent.parent.parent.parent / "share" / "talos-rbprm"
+paths = [str(talos_rbprm_path/ "com_inequalities" / "feet_quasi_flat") + os.sep,
+         str(talos_rbprm_path/ "relative_effector_positions") + os.sep]
 limbs = ["LF", "RF"]
 suffix_com = "_effector_frame_REDUCED.obj"
 suffix_feet = "_quasi_flat_REDUCED.obj"
