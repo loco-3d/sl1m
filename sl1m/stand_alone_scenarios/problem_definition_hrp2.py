@@ -10,7 +10,7 @@
 # pb.phaseData[i].root_orientation =  root orientation for phase i
 # pb.phaseData[i].S =  surfaces of phase i
 
-from sl1m.constants_and_tools import default_transform_from_pos_normal, convert_surface_to_inequality
+from sl1m.constants_and_tools import default_transform_from_pos_normal
 from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
 import numpy as np
 import os

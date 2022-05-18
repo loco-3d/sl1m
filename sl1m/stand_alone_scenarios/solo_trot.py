@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import perf_counter as clock
 import os
+from pathlib import Path
+import solo_rbprm
 
 from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
 from sl1m.problem_definition import Problem
@@ -30,11 +32,10 @@ else:
 STEP_LENGTH = [0.2, 0.0]
 
 
-# paths = [os.environ["INSTALL_HPP_DIR"] + "/share/solo-rbprm/com_inequalities/feet_quasi_flat/",
-#          os.environ["INSTALL_HPP_DIR"] + "/share/solo-rbprm/relative_effector_positions/"]
-paths = [os.environ["SOLO3D_ENV_DIR"] + "/com_inequalities/",
-         os.environ["INSTALL_HPP_DIR"] + "/solo-rbprm/relative_effector_positions/"]
-suffix_com = "_effector_frame.obj"
+solo_rbprm_path = Path(solo_rbprm.__file__).resolve().parent.parent.parent.parent.parent / "share" / "solo-rbprm"
+paths = [str(solo_rbprm_path/ "com_inequalities" / "feet_quasi_flat") + os.sep,
+         str(solo_rbprm_path/ "relative_effector_positions") + os.sep]
+suffix_com = "_effector_frame_quasi_static_reduced.obj"
 others = ['HR_FOOT', 'HL_FOOT', 'FL_FOOT', 'FR_FOOT']
 limbs = ['HRleg', 'HLleg', 'FLleg', 'FRleg']
 offsets = {'FRleg':  [0.1946, -0.0875, -0.241], 'FLleg': [0.1946, 0.0875, -0.241],

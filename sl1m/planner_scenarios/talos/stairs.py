@@ -2,6 +2,8 @@ import numpy as np
 import os
 import sl1m.tools.plot_tools as plot
 import matplotlib.pyplot as plt
+from pathlib import Path
+import talos_rbprm
 
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
 from sl1m.stand_alone_scenarios.problem_definition_talos import Problem as TalosProblem
@@ -16,8 +18,9 @@ USE_BIPED_PLANNER = False
 USE_MIP = False
 USE_COM = True
 
-paths = [os.environ["INSTALL_HPP_DIR"] + "/share/talos-rbprm/com_inequalities/feet_quasi_flat/talos_",
-         os.environ["INSTALL_HPP_DIR"] + "/share/talos-rbprm/relative_effector_positions/talos_"]
+talos_rbprm_path = Path(talos_rbprm.__file__).resolve().parent.parent.parent.parent.parent / "share" / "talos-rbprm"
+paths = [str(talos_rbprm_path/ "com_inequalities" / "feet_quasi_flat") + os.sep,
+         str(talos_rbprm_path/ "relative_effector_positions") + os.sep]
 limbs = ["LF", "RF"]
 suffix_com = "_effector_frame_REDUCED.obj"
 suffix_feet = "_quasi_flat_REDUCED.obj"

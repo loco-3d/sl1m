@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from time import perf_counter as clock
 
 import sl1m.stand_alone_scenarios
-from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
+from sl1m.generic_solver import solve_L1_combinatorial
 from sl1m.problem_definition import Problem
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import surfaces_gait as surfaces
 from sl1m.stand_alone_scenarios.surfaces.stair_surfaces import scene
