@@ -1,5 +1,9 @@
 from sl1m.constants_and_tools import default_transform_from_pos_normal
-from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
+from sl1m.tools.obj_to_constraints import (
+    load_obj,
+    as_inequalities,
+    rotate_inequalities,
+)
 import numpy as np
 
 Z = np.array([0.0, 0.0, 1.0])
@@ -21,7 +25,15 @@ RF = 1
 
 class TalosPhaseData:
     def __init__(
-        self, i, R, surfaces, moving_foot, normal, n_effectors, com_obj, foot_obj
+        self,
+        i,
+        R,
+        surfaces,
+        moving_foot,
+        normal,
+        n_effectors,
+        com_obj,
+        foot_obj,
     ):
         self.moving = moving_foot
         self.root_orientation = R[i]
@@ -41,7 +53,9 @@ class TalosPhaseData:
             trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
             trRF = trLF.copy()
         else:
-            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i - (i % 2)])
+            trLF = default_transform_from_pos_normal(
+                np.zeros(3), Z, R[i - (i % 2)]
+            )
             trRF = default_transform_from_pos_normal(
                 np.zeros(3), Z, R[i - ((i + 1) % 2)]
             )
@@ -76,7 +90,9 @@ class TalosPhaseData:
             trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
             trRF = trLF.copy()
         else:
-            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i - (i % 2)])
+            trLF = default_transform_from_pos_normal(
+                np.zeros(3), Z, R[i - (i % 2)]
+            )
             trRF = default_transform_from_pos_normal(
                 np.zeros(3), Z, R[i - ((i + 1) % 2)]
             )

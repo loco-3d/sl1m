@@ -31,7 +31,12 @@ N_Y = 100
 X_BOUNDS = [-4.0, 4.0]
 Y_BOUNDS = [-4.0, 4.0]
 
-LIMBS = ["solo_RHleg_rom", "solo_LHleg_rom", "solo_LFleg_rom", "solo_RFleg_rom"]
+LIMBS = [
+    "solo_RHleg_rom",
+    "solo_LHleg_rom",
+    "solo_LFleg_rom",
+    "solo_RFleg_rom",
+]
 
 # --------------------------------- METHODS ---------------------------------------------------------------
 

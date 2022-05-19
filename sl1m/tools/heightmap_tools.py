@@ -114,9 +114,15 @@ def intersect_line_triangle(segment, triangle):
     s2 = signed_tetra_volume(segment[1], triangle[0], triangle[1], triangle[2])
 
     if s1 != s2:
-        s3 = signed_tetra_volume(segment[0], segment[1], triangle[0], triangle[1])
-        s4 = signed_tetra_volume(segment[0], segment[1], triangle[1], triangle[2])
-        s5 = signed_tetra_volume(segment[0], segment[1], triangle[2], triangle[0])
+        s3 = signed_tetra_volume(
+            segment[0], segment[1], triangle[0], triangle[1]
+        )
+        s4 = signed_tetra_volume(
+            segment[0], segment[1], triangle[1], triangle[2]
+        )
+        s5 = signed_tetra_volume(
+            segment[0], segment[1], triangle[2], triangle[0]
+        )
 
         if s3 == s4 and s4 == s5:
             return True
@@ -131,13 +137,21 @@ def get_point_intersect_line_triangle(segment, triangle):
     s2 = signed_tetra_volume(segment[1], triangle[0], triangle[1], triangle[2])
 
     if s1 != s2:
-        s3 = signed_tetra_volume(segment[0], segment[1], triangle[0], triangle[1])
-        s4 = signed_tetra_volume(segment[0], segment[1], triangle[1], triangle[2])
-        s5 = signed_tetra_volume(segment[0], segment[1], triangle[2], triangle[0])
+        s3 = signed_tetra_volume(
+            segment[0], segment[1], triangle[0], triangle[1]
+        )
+        s4 = signed_tetra_volume(
+            segment[0], segment[1], triangle[1], triangle[2]
+        )
+        s5 = signed_tetra_volume(
+            segment[0], segment[1], triangle[2], triangle[0]
+        )
 
         if s3 == s4 and s4 == s5:
             n = np.cross(triangle[1] - triangle[0], triangle[2] - triangle[0])
-            t = np.dot(triangle[0] - segment[0], n) / np.dot(segment[1] - segment[0], n)
+            t = np.dot(triangle[0] - segment[0], n) / np.dot(
+                segment[1] - segment[0], n
+            )
             return segment[0] + t * (segment[1] - segment[0])
         else:
             return np.zeros(3)

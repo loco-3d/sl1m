@@ -2,7 +2,11 @@ from sl1m.constants_and_tools import (
     default_transform_from_pos_normal,
     convert_surface_to_inequality,
 )
-from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
+from sl1m.tools.obj_to_constraints import (
+    load_obj,
+    as_inequalities,
+    rotate_inequalities,
+)
 import numpy as np
 
 
@@ -35,7 +39,9 @@ class PhaseData:
             raise ArithmeticError(
                 "Error on the list of surfaces: for each moving foot, provide a list of potential surfaces."
             )
-        self.transform = default_transform_from_pos_normal(np.zeros(3), normal, R)
+        self.transform = default_transform_from_pos_normal(
+            np.zeros(3), normal, R
+        )
         if com:
             self.generate_K(n_effectors, com_obj)
         self.generate_relative_K(n_effectors, foot_obj)
@@ -64,7 +70,9 @@ class PhaseData:
             foot_res = []
             for other in range(n_effectors):
                 if other != foot:
-                    ine = rotate_inequalities(obj[foot][other], self.transform.copy())
+                    ine = rotate_inequalities(
+                        obj[foot][other], self.transform.copy()
+                    )
                     foot_res.append((other, (ine.A, ine.b)))
             self.allRelativeK += [foot_res]
 
@@ -96,7 +104,9 @@ class Problem:
         if rbprm_robot is not None:
             effectors = rbprm_robot.limbs_names
             kinematic_constraints_path = rbprm_robot.kinematic_constraints_path
-            relative_feet_constraints_path = rbprm_robot.relative_feet_constraints_path
+            relative_feet_constraints_path = (
+                rbprm_robot.relative_feet_constraints_path
+            )
 
         if limb_names is not None:
             effectors = limb_names[:]
@@ -182,5 +192,7 @@ class Problem:
         for i in range(self.n_phases):
             string += "\n \t \t Phase: " + str(i)
             string += "\n \t \t moving: " + str(self.phaseData[i].moving)
-            string += "\n \t \t n_surfaces: " + str(self.phaseData[i].n_surfaces)
+            string += "\n \t \t n_surfaces: " + str(
+                self.phaseData[i].n_surfaces
+            )
         return string

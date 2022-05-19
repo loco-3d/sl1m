@@ -95,7 +95,8 @@ print("Done.")
 print("Databases generated in : " + str(tGenerate) + " s")
 
 configSize = (
-    fullBody.getConfigSize() - fullBody.client.robot.getDimensionExtraConfigSpace()
+    fullBody.getConfigSize()
+    - fullBody.client.robot.getDimensionExtraConfigSpace()
 )
 q_init = q_ref[::]
 q_init[0:7] = tp.q_init[0:7]
@@ -133,7 +134,9 @@ def projectCoMInSupportPolygon(s):
     print("project state to com : ", desiredCOM)
     q_save = s.q()[::]
     while not success and maxIt > 0:
-        success = s.fullBody.projectStateToCOM(s.sId, desiredCOM, maxNumSample=0)
+        success = s.fullBody.projectStateToCOM(
+            s.sId, desiredCOM, maxNumSample=0
+        )
         maxIt -= 1
         desiredCOM[2] -= 0.005
     print("success = ", success)
@@ -216,7 +219,9 @@ def gen_state(
     # q_n = Quaternion().FromTwoVectors(np.matrix(Z_AXIS).T,np.matrix(normal).T)
     # rot = quatToConfig(qrot * q_n)
     if not isclose(normal, Z_AXIS).all():
-        qrot = Quaternion().FromTwoVectors(np.matrix(Z_AXIS).T, np.matrix(normal).T)
+        qrot = Quaternion().FromTwoVectors(
+            np.matrix(Z_AXIS).T, np.matrix(normal).T
+        )
         # ignore guide orientation when normal is not z ...
     # rot = quatToConfig(qrot)
     pos = allfeetpos[pId]
@@ -258,7 +263,9 @@ def gen_state(
         successCOM = projectCoMInSupportPolygon(sres)
         if not successCOM:
             # is it really an issue ?
-            print("Unable to project CoM in the center of the support polygone")
+            print(
+                "Unable to project CoM in the center of the support polygone"
+            )
 
     v(sres.q())
     return sres

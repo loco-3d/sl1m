@@ -79,7 +79,8 @@ print("Databases generated in : " + str(tGenerate) + " s")
 
 # define initial and final configurations :
 configSize = (
-    fullBody.getConfigSize() - fullBody.client.robot.getDimensionExtraConfigSpace()
+    fullBody.getConfigSize()
+    - fullBody.client.robot.getDimensionExtraConfigSpace()
 )
 
 

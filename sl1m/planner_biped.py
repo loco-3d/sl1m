@@ -1,5 +1,8 @@
 import numpy as np
-from sl1m.constants_and_tools import replace_surfaces_with_ineq_in_problem, normalize
+from sl1m.constants_and_tools import (
+    replace_surfaces_with_ineq_in_problem,
+    normalize,
+)
 from sl1m.constraints_biped import BipedConstraints
 
 
@@ -94,7 +97,9 @@ class BipedPlanner:
         Counts the number of variables, inequalities constraints in the problem
         @return the number of variables of the problem
         """
-        return sum([self._phase_n_variables(phase) for phase in self.pb.phaseData])
+        return sum(
+            [self._phase_n_variables(phase) for phase in self.pb.phaseData]
+        )
 
     def _phase_n_ineq(self, phase):
         """
@@ -191,10 +196,14 @@ class BipedPlanner:
             i_start = constraints.slack_positivity(phase, A, b, j, i_start)
 
             # equality
-            i_start_eq = constraints.surface_equality(phase, E, e, j, i_start_eq)
+            i_start_eq = constraints.surface_equality(
+                phase, E, e, j, i_start_eq
+            )
 
             if self.mip:
-                i_start_eq = constraints.slack_equality(phase, E, e, i_start_eq, j)
+                i_start_eq = constraints.slack_equality(
+                    phase, E, e, i_start_eq, j
+                )
 
             j_previous = j
             j += self._phase_n_variables(phase)
@@ -370,7 +379,9 @@ class BipedPlanner:
             else:
                 if phase.moving == 0:
                     A[:, j : j + self.default_n_variables] = -self.foot
-                    A[:, j_previous : j_previous + self.default_n_variables] = self.foot
+                    A[
+                        :, j_previous : j_previous + self.default_n_variables
+                    ] = self.foot
                 else:
                     A[:, j : j + self.default_n_variables] = self.foot
                     A[
@@ -406,7 +417,9 @@ class BipedPlanner:
             if id == 0:
                 b += self.pb.p0[foot][:2]
             else:
-                A[:, j_previous : j_previous + self.default_n_variables] = -self.foot_xy
+                A[
+                    :, j_previous : j_previous + self.default_n_variables
+                ] = -self.foot_xy
 
             P += np.dot(A.T, A)
             q += -np.dot(A.T, b).reshape(A.shape[1])
@@ -431,7 +444,9 @@ class BipedPlanner:
         if costs == {}:
             P += np.identity(n_variables)
         else:
-            for key, val in [(k, v) for k, v in costs.items() if k in self.cost_dict]:
+            for key, val in [
+                (k, v) for k, v in costs.items() if k in self.cost_dict
+            ]:
                 if key in self.cost_dict.keys():
                     P_, q_ = self.cost_dict[key](*val[1:])
                     P += P_ * val[0]

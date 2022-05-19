@@ -112,7 +112,9 @@ class Planner:
         if foot is not None:
             id = np.argmax(phase.moving == foot)
         elif id is None:
-            print("Error in foot selection matrix: you must specify either foot or id")
+            print(
+                "Error in foot selection matrix: you must specify either foot or id"
+            )
         j = self.default_n_variables + 3 * id
         return self._expression_matrix(3, self._default_n_variables(phase), j)
 
@@ -127,7 +129,9 @@ class Planner:
         if foot is not None:
             id = np.argmax(phase.moving == foot)
         elif id is None:
-            print("Error in foot selection matrix: you must specify either foot or id")
+            print(
+                "Error in foot selection matrix: you must specify either foot or id"
+            )
         j = self.default_n_variables + 3 * id
         return self._expression_matrix(2, self._default_n_variables(phase), j)
 
@@ -187,7 +191,9 @@ class Planner:
         Counts the number of variables, inequalities constraints in the problem
         @return the number of variables of the problem
         """
-        return sum([self._phase_n_variables(phase) for phase in self.pb.phaseData])
+        return sum(
+            [self._phase_n_variables(phase) for phase in self.pb.phaseData]
+        )
 
     def _phase_n_ineq(self, phase):
         """
@@ -220,7 +226,10 @@ class Planner:
 
         # Surfaces
         n_ineq += sum(
-            [sum([S[1].shape[0] for S in foot_surfaces]) for foot_surfaces in phase.S]
+            [
+                sum([S[1].shape[0] for S in foot_surfaces])
+                for foot_surfaces in phase.S
+            ]
         )
 
         # Slack positivity
@@ -293,7 +302,9 @@ class Planner:
                 # i_start_eq = cons.com(self.pb, phase, C, d, i_start_eq, js, feet_phase)
 
             if self.mip:
-                i_start_eq = cons.slack_equality(phase, C, d, i_start_eq, js[-1])
+                i_start_eq = cons.slack_equality(
+                    phase, C, d, i_start_eq, js[-1]
+                )
 
             js.append(js[-1] + self._phase_n_variables(phase))
 
@@ -442,7 +453,9 @@ class Planner:
         for phase in self.pb.phaseData:
             A = np.zeros((4, n_variables))
             b = np.zeros(4)
-            A[:, j : j + self._default_n_variables(phase)] = self.com_xyz(phase)
+            A[:, j : j + self._default_n_variables(phase)] = self.com_xyz(
+                phase
+            )
             b[:3] = coms[phase.id][:]
             b[3] = coms[phase.id][2]
 
@@ -467,7 +480,9 @@ class Planner:
         for phase in self.pb.phaseData:
             if phase.id == self.pb.n_phases - 1:
                 A = np.zeros((2, n_variables))
-                A[:, j : j + self._default_n_variables(phase)] = self.com_xy(phase)
+                A[:, j : j + self._default_n_variables(phase)] = self.com_xy(
+                    phase
+                )
                 b = com[:2]
 
                 P += np.dot(A.T, A)
@@ -498,7 +513,9 @@ class Planner:
             if foot in phase.moving:
                 j = js[phase.id]
                 A = np.zeros((3, n_variables))
-                A[:, j : j + self._default_n_variables(phase)] = self.foot(phase, foot)
+                A[:, j : j + self._default_n_variables(phase)] = self.foot(
+                    phase, foot
+                )
                 b = effector_positions[foot][:3]
 
                 P += np.dot(A.T, A)
@@ -507,7 +524,9 @@ class Planner:
                 phase = self.pb.phaseData[feet_phase[foot]]
                 j = js[phase.id]
                 A = np.zeros((3, n_variables))
-                A[:, j : j + self._default_n_variables(phase)] = self.foot(phase, foot)
+                A[:, j : j + self._default_n_variables(phase)] = self.foot(
+                    phase, foot
+                )
                 b = effector_positions[foot][:3]
 
                 P += np.dot(A.T, A)
@@ -520,7 +539,8 @@ class Planner:
         @return P matrix and q vector s.t. we minimize x' P x + q' x
         """
         relative_positions = [
-            [None for _ in range(self.n_effectors)] for _ in range(self.n_effectors)
+            [None for _ in range(self.n_effectors)]
+            for _ in range(self.n_effectors)
         ]
         for foot in range(self.n_effectors):
             for other in range(self.n_effectors):
@@ -544,13 +564,16 @@ class Planner:
 
             for foot in range(self.n_effectors):
                 for other in range(self.n_effectors):
-                    if other > foot and relative_positions[foot][other] is not None:
+                    if (
+                        other > foot
+                        and relative_positions[foot][other] is not None
+                    ):
                         A = np.zeros((3, n_variables))
                         b = relative_positions[foot][other]
                         if foot in phase.moving:
-                            A[:, j : j + self._default_n_variables(phase)] = self.foot(
-                                phase, foot
-                            )
+                            A[
+                                :, j : j + self._default_n_variables(phase)
+                            ] = self.foot(phase, foot)
                         elif feet_phase[foot] != -1:
                             jf = js[feet_phase[foot]]
                             phase_f = self.pb.phaseData[feet_phase[foot]]
@@ -561,9 +584,9 @@ class Planner:
                             b -= self.pb.p0[foot]
 
                         if other in phase.moving:
-                            A[:, j : j + self._default_n_variables(phase)] = -self.foot(
-                                phase, other
-                            )
+                            A[
+                                :, j : j + self._default_n_variables(phase)
+                            ] = -self.foot(phase, other)
                         elif feet_phase[other] != -1:
                             jf = js[feet_phase[other]]
                             phase_f = self.pb.phaseData[feet_phase[other]]
@@ -661,7 +684,9 @@ class Planner:
         if costs == {}:
             P += np.identity(n_variables)
         else:
-            for key, val in [(k, v) for k, v in costs.items() if k in self.cost_dict]:
+            for key, val in [
+                (k, v) for k, v in costs.items() if k in self.cost_dict
+            ]:
                 if not self.com and key in self.com_costs:
                     print(
                         "COM cost given, but no COM variable in planner. The cost is ignored"

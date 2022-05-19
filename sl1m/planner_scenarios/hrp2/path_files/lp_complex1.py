@@ -16,7 +16,9 @@ fullBody = Robot()
 # Set the bounds for the root
 fullBody.setJointBounds("root_joint", [-10.135, 2, -20, 20, 0, 2.8])
 fullBody.client.robot.setDimensionExtraConfigSpace(6)
-fullBody.client.robot.setExtraConfigSpaceBounds([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+fullBody.client.robot.setExtraConfigSpaceBounds(
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+)
 
 ps = tp.ProblemSolver(fullBody)
 
@@ -75,7 +77,8 @@ print("Databases generated in : " + str(tGenerate) + " s")
 
 # define initial and final configurations :
 configSize = (
-    fullBody.getConfigSize() - fullBody.client.robot.getDimensionExtraConfigSpace()
+    fullBody.getConfigSize()
+    - fullBody.client.robot.getDimensionExtraConfigSpace()
 )
 
 
@@ -124,7 +127,9 @@ def projectCoMInSupportPolygon(s):
     success = False
     maxIt = 20
     while not success and maxIt > 0:
-        success = s.fullBody.projectStateToCOM(s.sId, desiredCOM, maxNumSample=0)
+        success = s.fullBody.projectStateToCOM(
+            s.sId, desiredCOM, maxNumSample=0
+        )
         maxIt -= 1
         desiredCOM[2] -= 0.005
     return success
@@ -154,7 +159,11 @@ def gen_state(
     pos[2] += 0.01
     if newContact:
         sres, succ = StateHelper.addNewContact(
-            s, movingID, pos.tolist(), normal.tolist(), num_max_sample=num_max_sample
+            s,
+            movingID,
+            pos.tolist(),
+            normal.tolist(),
+            num_max_sample=num_max_sample,
         )
     else:
         sres, succ = StateHelper.cloneState(s)
@@ -176,7 +185,9 @@ def gen_state(
         successCOM = projectCoMInSupportPolygon(sres)
         if not successCOM:
             # is it really an issue ?
-            print("Unable to project CoM in the center of the support polygone")
+            print(
+                "Unable to project CoM in the center of the support polygone"
+            )
     v(sres.q())
     return sres
 
@@ -184,7 +195,9 @@ def gen_state(
 q = fullBody.getCurrentConfig()
 q[:3] = [-2.69, 0.21, 0.649702]
 v(q)
-s = rbprmstate.State(fullBody, q=q, limbsIncontact=[fullBody.lLegId, fullBody.rLegId])
+s = rbprmstate.State(
+    fullBody, q=q, limbsIncontact=[fullBody.lLegId, fullBody.rLegId]
+)
 
 idfirst = 2
 coms[0] = array(s.getCenterOfMass())

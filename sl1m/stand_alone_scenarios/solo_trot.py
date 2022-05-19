@@ -86,7 +86,9 @@ if __name__ == "__main__":
     t_init = clock()
     R = [np.identity(3)] * len(surfaces)
     q_init = [1.0, 0.0, 0.241]
-    initial_contacts = [np.array(q_init) + np.array(offsets[limb]) for limb in limbs]
+    initial_contacts = [
+        np.array(q_init) + np.array(offsets[limb]) for limb in limbs
+    ]
     t_1 = clock()
 
     pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths)
@@ -101,7 +103,9 @@ if __name__ == "__main__":
 
     print(result)
     print("Optimized number of steps:              ", pb.n_phases)
-    print("Total time is:                          ", 1000.0 * (t_end - t_init))
+    print(
+        "Total time is:                          ", 1000.0 * (t_end - t_init)
+    )
     print("Initializing the problem takes          ", 1000.0 * (t_1 - t_init))
     print("Generating the problem dictionary takes ", 1000.0 * (t_2 - t_1))
     print("Solving the problem takes               ", 1000.0 * (t_end - t_2))

@@ -27,7 +27,9 @@ def optimize_sparse_L1(planner, pb, costs, QP_SOLVER, LP_SOLVER):
 
     if result.success:
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
-        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos)
+        return ProblemData(
+            True, result.time, coms, moving_foot_pos, all_feet_pos
+        )
     else:
         print("optimize_sparse_L1 failed to solve the QP")
         return ProblemData(False, result.time)
@@ -53,7 +55,10 @@ def fix_sparsity_combinatorial_gait(planner, pb, LP_SOLVER):
         return False, pb, [], t
 
     alphas = planner.get_alphas(result.x)
-    print("  Nb surfaces per phase : ", get_number_surfaces_per_phase_gait(alphas))
+    print(
+        "  Nb surfaces per phase : ",
+        get_number_surfaces_per_phase_gait(alphas),
+    )
 
     if is_sparsity_fixed_gait(pb, alphas):
         print("  -> Sparsity fixed directly")
@@ -64,7 +69,9 @@ def fix_sparsity_combinatorial_gait(planner, pb, LP_SOLVER):
                 phase.n_surfaces[j] = 1
         return True, pb, selected_surfaces, t
 
-    undecided_surfaces, decided_surfaces = get_undecided_surfaces_gait(pb, alphas)
+    undecided_surfaces, decided_surfaces = get_undecided_surfaces_gait(
+        pb, alphas
+    )
     pbs = generate_fixed_sparsity_problems_gait(pb, alphas)
     if pbs is None:
         print("No combinatorial problems was found")
@@ -81,7 +88,12 @@ def fix_sparsity_combinatorial_gait(planner, pb, LP_SOLVER):
         if result.success:
             alphas = planner.get_alphas(result.x)
             if is_sparsity_fixed_gait(fixed_pb, alphas):
-                print("  -> Sparsity fixed in comb at try ", i + 1, " / ", len(pbs))
+                print(
+                    "  -> Sparsity fixed in comb at try ",
+                    i + 1,
+                    " / ",
+                    len(pbs),
+                )
                 sparsity_fixed = True
                 pb = fixed_pb
                 break
@@ -201,7 +213,10 @@ def get_undecided_surfaces_gait(pb, alphas):
     decided_surfaces = []
     for i, phase in enumerate(pb.phaseData):
         for j, n_surface in enumerate(phase.n_surfaces):
-            if n_surface > 1 and np.array(alphas[i][j]).min() > ALPHA_THRESHOLD:
+            if (
+                n_surface > 1
+                and np.array(alphas[i][j]).min() > ALPHA_THRESHOLD
+            ):
                 undecided_surfaces.append([i, j, np.argsort(alphas[i][j])])
             else:
                 decided_surfaces.append(
@@ -219,7 +234,10 @@ def get_undecided_surfaces(pb, alphas):
     """
     undecided_surfaces, decided_surfaces = [], []
     for i, phase in enumerate(pb.phaseData):
-        if phase.n_surfaces > 1 and np.array(alphas[i]).min() > ALPHA_THRESHOLD:
+        if (
+            phase.n_surfaces > 1
+            and np.array(alphas[i]).min() > ALPHA_THRESHOLD
+        ):
             undecided_surfaces.append([i, np.argsort(alphas[i])])
         else:
             decided_surfaces.append(
@@ -255,14 +273,20 @@ def generate_fixed_sparsity_problems_gait(pb, alphas):
     @param alphas the list of slack variables found by the planner
     @return the list of problems
     """
-    undecided_surfaces, decided_surfaces = get_undecided_surfaces_gait(pb, alphas)
-    all_len = [len(undecided_surface[-1]) for undecided_surface in undecided_surfaces]
+    undecided_surfaces, decided_surfaces = get_undecided_surfaces_gait(
+        pb, alphas
+    )
+    all_len = [
+        len(undecided_surface[-1]) for undecided_surface in undecided_surfaces
+    ]
     n_pbs = 1
     for l in all_len:
         n_pbs *= l
     if n_pbs > 1000:
         print("  Problem probably too big to handle combinatorial", n_pbs)
-    return generate_combinatorials_gait(pb, undecided_surfaces, decided_surfaces)
+    return generate_combinatorials_gait(
+        pb, undecided_surfaces, decided_surfaces
+    )
 
 
 def generate_fixed_sparsity_problems(pb, alphas):
@@ -273,7 +297,9 @@ def generate_fixed_sparsity_problems(pb, alphas):
     @return the list of problems
     """
     undecided_surfaces, decided_surfaces = get_undecided_surfaces(pb, alphas)
-    all_len = [len(undecided_surface[-1]) for undecided_surface in undecided_surfaces]
+    all_len = [
+        len(undecided_surface[-1]) for undecided_surface in undecided_surfaces
+    ]
     n_pbs = 1
     for l in all_len:
         n_pbs *= l
@@ -297,7 +323,9 @@ def generate_combinatorials(pb, undecided_surfaces, decided_surfaces):
         phase.S = [phase.S[decided_surface[-1]]]
         phase.n_surfaces = 1
     # Generate combinatorics
-    sorted_combinations = list(itertools.product(*[s[-1] for s in undecided_surfaces]))
+    sorted_combinations = list(
+        itertools.product(*[s[-1] for s in undecided_surfaces])
+    )
     for combination in sorted_combinations[
         0 : min(MAX_COMB_GENERATED, len(sorted_combinations))
     ]:
@@ -326,7 +354,9 @@ def generate_combinatorials_gait(pb, undecided_surfaces, decided_surfaces):
         phase.S[effector] = [phase.S[effector][decided_surface[-1]]]
         phase.n_surfaces[effector] = 1
     # Generate combinatorics
-    sorted_combinations = list(itertools.product(*[s[-1] for s in undecided_surfaces]))
+    sorted_combinations = list(
+        itertools.product(*[s[-1] for s in undecided_surfaces])
+    )
     for combination in sorted_combinations[
         0 : min(MAX_COMB_GENERATED, len(sorted_combinations))
     ]:

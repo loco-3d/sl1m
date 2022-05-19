@@ -10,7 +10,9 @@ TalosAbstract.urdfName += "_large"
 
 def compute_path():
     talos_abstract = TalosAbstract()
-    talos_abstract.setJointBounds("root_joint", [-3.2, 1.8, 0.19, 0.21, 0.95, 1.7])
+    talos_abstract.setJointBounds(
+        "root_joint", [-3.2, 1.8, 0.19, 0.21, 0.95, 1.7]
+    )
     # As this scenario only consider walking, we fix the DOF of the torso :
     talos_abstract.setJointBounds("torso_1_joint", [0, 0])
     talos_abstract.setJointBounds("torso_2_joint", [0.0, 0.0])
@@ -109,7 +111,9 @@ def compute_path():
 
     pId_stairs = ps.numberPaths() - 1
     ### END climb the stairs #####
-    talos_abstract.setJointBounds("root_joint", [-3.2, 2.5, -0.8, 0.3, 1.4, 2.0])
+    talos_abstract.setJointBounds(
+        "root_joint", [-3.2, 2.5, -0.8, 0.3, 1.4, 2.0]
+    )
     ps.resetGoalConfigs()
     ### BEGIN turn around on the platform #####
     ps.setParameter("Kinodynamic/velocityBound", 0.2)
@@ -163,7 +167,9 @@ def compute_path():
     pp = PathPlayer(v)
     pp.dt = 0.1
     pp.displayVelocityPath(pathId)
-    v.client.gui.setVisibility("path_" + str(pathId) + "_root", "ALWAYS_ON_TOP")
+    v.client.gui.setVisibility(
+        "path_" + str(pathId) + "_root", "ALWAYS_ON_TOP"
+    )
     pp.dt = 0.01
 
     q_far = q_goal[::]

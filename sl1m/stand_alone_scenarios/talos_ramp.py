@@ -7,7 +7,9 @@ import talos_rbprm
 
 from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
 from sl1m.problem_definition import Problem
-from sl1m.stand_alone_scenarios.surfaces.ramp_surfaces import surfaces_gait as surfaces
+from sl1m.stand_alone_scenarios.surfaces.ramp_surfaces import (
+    surfaces_gait as surfaces,
+)
 from sl1m.stand_alone_scenarios.surfaces.ramp_surfaces import scene
 
 import sl1m.tools.plot_tools as plot
@@ -35,7 +37,10 @@ if __name__ == "__main__":
     R = [np.identity(3)] * len(surfaces)
     t_1 = clock()
 
-    initial_contacts = [np.array([1.7, 0.285, 0.6]), np.array([1.7, 0.115, 0.6])]
+    initial_contacts = [
+        np.array([1.7, 0.285, 0.6]),
+        np.array([1.7, 0.115, 0.6]),
+    ]
     t_2 = clock()
 
     pb = Problem(
@@ -61,7 +66,9 @@ if __name__ == "__main__":
 
     print(result)
     print("Optimized number of steps:              ", pb.n_phases)
-    print("Total time is:                          ", 1000.0 * (t_end - t_init))
+    print(
+        "Total time is:                          ", 1000.0 * (t_end - t_init)
+    )
     print("Computing the surfaces takes            ", 1000.0 * (t_1 - t_init))
     print("Computing the initial contacts takes    ", 1000.0 * (t_2 - t_1))
     print("Generating the problem dictionary takes ", 1000.0 * (t_3 - t_2))

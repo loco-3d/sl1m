@@ -1,5 +1,14 @@
 import numpy as np
-from numpy import array, zeros, ones, vstack, hstack, identity, cross, concatenate
+from numpy import (
+    array,
+    zeros,
+    ones,
+    vstack,
+    hstack,
+    identity,
+    cross,
+    concatenate,
+)
 from numpy.linalg import norm
 from scipy.spatial import ConvexHull
 
@@ -125,7 +134,9 @@ def surface_points_to_inequalities(S, normal, eq_as_ineq):
     d = array([n.dot(S[:, 0])])
     if eq_as_ineq:
         A = vstack([ine.A, n, -n])
-        b = concatenate([ine.b, d + EPSILON_EQ, -d + EPSILON_EQ]).reshape((-1,))
+        b = concatenate([ine.b, d + EPSILON_EQ, -d + EPSILON_EQ]).reshape(
+            (-1,)
+        )
     else:
         A = vstack([ine.A, n, -n])
         b = concatenate([ine.b, d, -d]).reshape((-1,))

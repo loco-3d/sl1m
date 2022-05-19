@@ -79,7 +79,8 @@ print("Databases generated in : " + str(tGenerate) + " s")
 
 # define initial and final configurations :
 configSize = (
-    fullBody.getConfigSize() - fullBody.client.robot.getDimensionExtraConfigSpace()
+    fullBody.getConfigSize()
+    - fullBody.client.robot.getDimensionExtraConfigSpace()
 )
 
 
@@ -265,17 +266,22 @@ def nil():
         paths += [(pathId, ps.pathLength(pathId))]
         # ~ print "j", j
         if j + 2 < len(all_states):
-            nPid = ps.directPath(all_states[j + 1].q(), all_states[j + 2].q(), False)[1]
+            nPid = ps.directPath(
+                all_states[j + 1].q(), all_states[j + 2].q(), False
+            )[1]
             paths += [(nPid, ps.pathLength(nPid))]
 
             p0 = comTraj(
-                all_states[j].getCenterOfMass(), all_states[j].getCenterOfMass()
+                all_states[j].getCenterOfMass(),
+                all_states[j].getCenterOfMass(),
             )
             p1 = comTraj(
-                all_states[j].getCenterOfMass(), all_states[j + 1].getCenterOfMass()
+                all_states[j].getCenterOfMass(),
+                all_states[j + 1].getCenterOfMass(),
             )
             p2 = comTraj(
-                all_states[j + 1].getCenterOfMass(), all_states[j + 2].getCenterOfMass()
+                all_states[j + 1].getCenterOfMass(),
+                all_states[j + 2].getCenterOfMass(),
             )
             comTrajs += [(p0, p1, p2)]
             stateTrajs += [(all_states[j].sId, all_states[j + 2].sId)]
@@ -302,13 +308,16 @@ def comrrt():
             # ~ paths += [(nPid, ps.pathLength(nPid))]
 
             p0 = comTraj(
-                all_states[j].getCenterOfMass(), all_states[j].getCenterOfMass()
+                all_states[j].getCenterOfMass(),
+                all_states[j].getCenterOfMass(),
             )
             p1 = comTraj(
-                all_states[j].getCenterOfMass(), all_states[j + 1].getCenterOfMass()
+                all_states[j].getCenterOfMass(),
+                all_states[j + 1].getCenterOfMass(),
             )
             p2 = comTraj(
-                all_states[j + 1].getCenterOfMass(), all_states[j + 2].getCenterOfMass()
+                all_states[j + 1].getCenterOfMass(),
+                all_states[j + 2].getCenterOfMass(),
             )
             comTrajs += [(p0, p1, p2)]
             stateTrajs += [(all_states[j].sId, all_states[j + 2].sId)]
@@ -318,7 +327,11 @@ def comrrt():
     for stateTraj, comTtraj in zip(stateTrajs, comTrajs):
         paths += [
             fullBody.comRRTFromPosBetweenState(
-                stateTraj[0], stateTraj[1], comTtraj[0], comTtraj[1], comTtraj[2]
+                stateTraj[0],
+                stateTraj[1],
+                comTtraj[0],
+                comTtraj[1],
+                comTtraj[2],
             )[-1]
         ]
         pp(int(paths[-1]))

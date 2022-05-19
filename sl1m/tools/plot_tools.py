@@ -50,7 +50,9 @@ def draw_potential_surfaces(surfaces, gait, phase, ax=None, alpha=1.0):
     return ax
 
 
-def draw_potential_surfaces_gait(surfaces, phase, foot_index, ax=None, title=None):
+def draw_potential_surfaces_gait(
+    surfaces, phase, foot_index, ax=None, title=None
+):
     """
     Plot all the potential surfaces of one phase of the problem
     """
@@ -156,7 +158,9 @@ def plot_selected_surfaces(surfaces, surface_indices, gait, ax=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     for i, surfaces_phase in enumerate(surfaces):
-        plot_surface(surfaces_phase[surface_indices[i]], ax, gait[i % len(gait)])
+        plot_surface(
+            surfaces_phase[surface_indices[i]], ax, gait[i % len(gait)]
+        )
     return ax
 
 
@@ -195,7 +199,9 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
 
-def plot_planner_result(all_feet_pos, coms=None, step_size=None, ax=None, show=True):
+def plot_planner_result(
+    all_feet_pos, coms=None, step_size=None, ax=None, show=True
+):
     """
     Plot the feet positions and com positions
     """

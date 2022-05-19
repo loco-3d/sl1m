@@ -43,9 +43,21 @@ def computeAxisAngleRotation(u, c):
     uz = u[2]
     s = np.sqrt(1 - c * c)
     return [
-        [c + ux * ux * (1 - c), ux * uy * (1 - c) - uz * s, ux * uz * (1 - c) + uy * s],
-        [uy * ux * (1 - c) + uz * s, c + uy * uy * (1 - c), uy * uz * (1 - c) - ux * s],
-        [uz * ux * (1 - c) - uy * s, uz * uy * (1 - c) + ux * s, c + uz * uz * (1 - c)],
+        [
+            c + ux * ux * (1 - c),
+            ux * uy * (1 - c) - uz * s,
+            ux * uz * (1 - c) + uy * s,
+        ],
+        [
+            uy * ux * (1 - c) + uz * s,
+            c + uy * uy * (1 - c),
+            uy * uz * (1 - c) - ux * s,
+        ],
+        [
+            uz * ux * (1 - c) - uy * s,
+            uz * uy * (1 - c) + ux * s,
+            c + uz * uz * (1 - c),
+        ],
     ]
 
 

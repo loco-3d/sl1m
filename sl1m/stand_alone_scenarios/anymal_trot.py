@@ -42,8 +42,13 @@ COSTS = {
         1.0,
         STEP_LENGTH,
     ],  # Maintain step size as close as possible to desired. Does not guarantee exceeding.
-    "posture": [0.01],  # Keep relative feet positions as close as possible to initial
-    "final_com": [10.0, [0.0, 0.0, 0.47]],  # Achieve desired CoM at end of plan
+    "posture": [
+        0.01
+    ],  # Keep relative feet positions as close as possible to initial
+    "final_com": [
+        10.0,
+        [0.0, 0.0, 0.47],
+    ],  # Achieve desired CoM at end of plan
 }
 
 paths = [
@@ -113,7 +118,10 @@ if __name__ == "__main__":
     t_1 = clock()
 
     pb = Problem(
-        limb_names=limbs, other_names=others, constraint_paths=paths, suffix_com=suffix
+        limb_names=limbs,
+        other_names=others,
+        constraint_paths=paths,
+        suffix_com=suffix,
     )
     pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3])
     t_2 = clock()
@@ -146,7 +154,11 @@ if __name__ == "__main__":
             1000.0 * (t_end - t_2)
         )
     )
-    print("The LP and QP optimizations take        {0:>8.3f}ms".format(result.time))
+    print(
+        "The LP and QP optimizations take        {0:>8.3f}ms".format(
+            result.time
+        )
+    )
 
     # Analyse result:
     if result.success:
@@ -172,7 +184,8 @@ if __name__ == "__main__":
                         i,
                         j,
                         np.linalg.norm(
-                            result.all_feet_pos[i][j] - result.all_feet_pos[i][j - 1]
+                            result.all_feet_pos[i][j]
+                            - result.all_feet_pos[i][j - 1]
                         ),
                     )
                 )

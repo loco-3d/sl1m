@@ -6,7 +6,9 @@ from pathlib import Path
 import talos_rbprm
 
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
-from sl1m.stand_alone_scenarios.problem_definition_talos import Problem as TalosProblem
+from sl1m.stand_alone_scenarios.problem_definition_talos import (
+    Problem as TalosProblem,
+)
 from sl1m.problem_definition import Problem
 from sl1m.generic_solver import *
 
@@ -84,7 +86,9 @@ if __name__ == "__main__":
     print(result)
 
     print("Optimized number of steps:              ", pb.n_phases)
-    print("Total time is:                          ", 1000.0 * (t_end - t_init))
+    print(
+        "Total time is:                          ", 1000.0 * (t_end - t_init)
+    )
     print("Computing the path takes                ", 1000.0 * (t_1 - t_init))
     print("Computing the surfaces takes            ", 1000.0 * (t_2 - t_1))
     print("Computing the initial contacts takes    ", 1000.0 * (t_3 - t_2))

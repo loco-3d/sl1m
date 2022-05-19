@@ -11,7 +11,11 @@
 # pb.phaseData[i].S =  surfaces of phase i
 
 from sl1m.constants_and_tools import default_transform_from_pos_normal
-from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities
+from sl1m.tools.obj_to_constraints import (
+    load_obj,
+    as_inequalities,
+    rotate_inequalities,
+)
 import numpy as np
 import os
 import sl1m.stand_alone_scenarios
@@ -20,12 +24,23 @@ LIMB_NAMES = ["LF", "RF"]
 Z = np.array([0.0, 0.0, 1.0])
 LF = 0
 RF = 1
-DIR = os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"
+DIR = (
+    os.path.dirname(sl1m.stand_alone_scenarios.__file__)
+    + "/constraints_files/"
+)
 
 
 class PhaseData:
     def __init__(
-        self, i, R, surfaces, moving_foot, normal, n_effectors, com_obj, foot_obj
+        self,
+        i,
+        R,
+        surfaces,
+        moving_foot,
+        normal,
+        n_effectors,
+        com_obj,
+        foot_obj,
     ):
         self.moving = moving_foot
         self.root_orientation = R[i]
@@ -45,7 +60,9 @@ class PhaseData:
             trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
             trRF = trLF.copy()
         else:
-            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i - (i % 2)])
+            trLF = default_transform_from_pos_normal(
+                np.zeros(3), Z, R[i - (i % 2)]
+            )
             trRF = default_transform_from_pos_normal(
                 np.zeros(3), Z, R[i - ((i + 1) % 2)]
             )
@@ -80,7 +97,9 @@ class PhaseData:
             trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
             trRF = trLF.copy()
         else:
-            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i - (i % 2)])
+            trLF = default_transform_from_pos_normal(
+                np.zeros(3), Z, R[i - (i % 2)]
+            )
             trRF = default_transform_from_pos_normal(
                 np.zeros(3), Z, R[i - ((i + 1) % 2)]
             )

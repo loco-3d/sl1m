@@ -90,7 +90,9 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
     q = None
     if costs != None:
         P, q = planner.compute_costs(costs)
-    result = call_MIP_solver(slack_selection_vector, P, q, G, h, C, d, solver=solver)
+    result = call_MIP_solver(
+        slack_selection_vector, P, q, G, h, C, d, solver=solver
+    )
 
     if costs != None and solver == Solvers.CVXPY:
         alphas = planner.get_alphas(result.x)
@@ -100,7 +102,11 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
                 phase.S[j] = [phase.S[j][selected_surfaces[i][j]]]
                 phase.n_surfaces[j] = 1
         return optimize_sparse_L1(
-            planner, pb, costs, QP_SOLVER=Solvers.CVXPY, LP_SOLVER=Solvers.CVXPY
+            planner,
+            pb,
+            costs,
+            QP_SOLVER=Solvers.CVXPY,
+            LP_SOLVER=Solvers.CVXPY,
         )
 
     if result.success:
@@ -108,7 +114,12 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
         surface_indices = planner.selected_surfaces(alphas)
         return ProblemData(
-            True, result.time, coms, moving_foot_pos, all_feet_pos, surface_indices
+            True,
+            result.time,
+            coms,
+            moving_foot_pos,
+            all_feet_pos,
+            surface_indices,
         )
     return ProblemData(False, result.time)
 
@@ -128,15 +139,24 @@ def solve_MIP_biped(pb, costs={}, solver=Solvers.GUROBI):
 
     if costs != None:
         P, q = planner.compute_costs(costs)
-        result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
+        result = solve_MIP_gurobi_cost(
+            slack_selection_vector, P, q, G, h, C, d
+        )
     else:
-        result = call_MIP_solver(slack_selection_vector, G, h, C, d, solver=solver)
+        result = call_MIP_solver(
+            slack_selection_vector, G, h, C, d, solver=solver
+        )
 
     if result.success:
         alphas = planner.get_alphas(result.x)
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
         surface_indices = planner.selected_surfaces(alphas)
         return ProblemData(
-            True, result.time, coms, moving_foot_pos, all_feet_pos, surface_indices
+            True,
+            result.time,
+            coms,
+            moving_foot_pos,
+            all_feet_pos,
+            surface_indices,
         )
     return ProblemData(False, result.time)

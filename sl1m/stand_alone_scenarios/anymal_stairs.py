@@ -24,12 +24,19 @@ if __name__ == "__main__":
         np.array([0, 1, 1, 1]),
     ]
     anymal_rbprm_path = (
-        Path(anymal_rbprm.__file__).resolve().parent.parent.parent.parent.parent
+        Path(anymal_rbprm.__file__)
+        .resolve()
+        .parent.parent.parent.parent.parent
         / "share"
         / "anymal-rbprm"
     )
     paths = [
-        str(anymal_rbprm_path / "com_inequalities" / "feet_quasi_flat" / "anymal_"),
+        str(
+            anymal_rbprm_path
+            / "com_inequalities"
+            / "feet_quasi_flat"
+            / "anymal_"
+        ),
         str(anymal_rbprm_path / "relative_effector_positions" / "anymal_"),
     ]
 
@@ -64,7 +71,10 @@ if __name__ == "__main__":
     t_2 = clock()
 
     pb = Problem(
-        limb_names=limbs, other_names=others, constraint_paths=paths, suffix_com=suffix
+        limb_names=limbs,
+        other_names=others,
+        constraint_paths=paths,
+        suffix_com=suffix,
     )
     pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init)
     t_3 = clock()
@@ -77,7 +87,9 @@ if __name__ == "__main__":
 
     print(result)
     print("Optimized number of steps:              ", pb.n_phases)
-    print("Total time is:                          ", 1000.0 * (t_end - t_init))
+    print(
+        "Total time is:                          ", 1000.0 * (t_end - t_init)
+    )
     print("Computing the surfaces takes            ", 1000.0 * (t_1 - t_init))
     print("Computing the initial contacts takes    ", 1000.0 * (t_2 - t_1))
     print("Generating the problem dictionary takes ", 1000.0 * (t_3 - t_2))

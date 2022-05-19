@@ -12,7 +12,8 @@ time.sleep(1)
 
 rbprmBuilder = Robot()
 rbprmBuilder.setJointBounds(
-    "root_joint", [-5, 5, -5, 5, rbprmBuilder.ref_height, rbprmBuilder.ref_height]
+    "root_joint",
+    [-5, 5, -5, 5, rbprmBuilder.ref_height, rbprmBuilder.ref_height],
 )
 # As this scenario only consider walking, we fix the DOF of the torso :
 rbprmBuilder.setJointBounds("torso_1_joint", [0, 0])
