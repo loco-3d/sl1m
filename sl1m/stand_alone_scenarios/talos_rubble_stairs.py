@@ -5,14 +5,13 @@ import matplotlib.pyplot as plt
 from time import perf_counter as clock
 import talos_rbprm
 
-from sl1m.generic_solver import solve_L1_combinatorial
+from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
 from sl1m.problem_definition import Problem
 from sl1m.stand_alone_scenarios.surfaces.complex_surfaces import rubble_stairs_gait as surfaces
 from sl1m.stand_alone_scenarios.surfaces.complex_surfaces import scene
 import sl1m.tools.plot_tools as plot
 
-GAIT = [0, 1]
-
+USE_SL1M = True
 USE_COM = True
 GAIT = [np.array([1, 0]), np.array([0, 1])]
 
@@ -36,8 +35,10 @@ if __name__ == '__main__':
     pb.generate_problem(R, surfaces, GAIT, initial_contacts)
     t_3 = clock()
 
-    result = solve_L1_combinatorial(pb, com=USE_COM)
-    # result = solve_MIP(pb, com=USE_COM)
+    if USE_SL1M:
+        result = solve_L1_combinatorial(pb, com=USE_COM)
+    else:
+        result = solve_MIP(pb, com=USE_COM)
     t_end = clock()
 
     print(result)
