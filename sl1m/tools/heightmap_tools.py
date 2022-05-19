@@ -5,6 +5,7 @@ from time import perf_counter as clock
 import trimesh
 import pickle
 
+
 class Heightmap:
     def __init__(self, n_x, n_y, x_lim, y_lim):
         """
@@ -23,7 +24,7 @@ class Heightmap:
         self.z = np.zeros((n_x, n_y))
 
     def save_pickle(self, filename):
-        filehandler = open(filename, 'wb')
+        filehandler = open(filename, "wb")
         pickle.dump(self, filehandler)
 
     def build(self, affordances):
@@ -35,8 +36,8 @@ class Heightmap:
         """
         for i in range(self.n_x):
             for j in range(self.n_y):
-                p1 = np.array([self.x[i], self.y[j], -1.])
-                p2 = np.array([self.x[i], self.y[j], 10.])
+                p1 = np.array([self.x[i], self.y[j], -1.0])
+                p2 = np.array([self.x[i], self.y[j], 10.0])
                 segment = np.array([p1, p2])
                 fcl_segment = convex(segment, [0, 1, 0])
 
@@ -47,7 +48,11 @@ class Heightmap:
                         for triangle_list in affordance:
                             triangle = [np.array(p) for p in triangle_list]
                             if intersect_line_triangle(segment, triangle):
-                                intersections.append(get_point_intersect_line_triangle(segment, triangle)[2])
+                                intersections.append(
+                                    get_point_intersect_line_triangle(
+                                        segment, triangle
+                                    )[2]
+                                )
 
                 if len(intersections) != 0:
                     self.z[i, j] = np.max(np.array(intersections))
@@ -89,7 +94,7 @@ def distance(object1, object2):
     """
     Returns the distance between object1 and object2
     """
-    guess = np.array([1., 0., 0.])
+    guess = np.array([1.0, 0.0, 0.0])
     support_hint = np.array([0, 0], dtype=np.int32)
 
     shape = hppfcl.MinkowskiDiff()
@@ -101,7 +106,7 @@ def distance(object1, object2):
 
 # Method to intersect triangle and segment
 def signed_tetra_volume(a, b, c, d):
-    return np.sign(np.dot(np.cross(b-a, c-a), d-a)/6.0)
+    return np.sign(np.dot(np.cross(b - a, c - a), d - a) / 6.0)
 
 
 def intersect_line_triangle(segment, triangle):
@@ -131,7 +136,7 @@ def get_point_intersect_line_triangle(segment, triangle):
         s5 = signed_tetra_volume(segment[0], segment[1], triangle[2], triangle[0])
 
         if s3 == s4 and s4 == s5:
-            n = np.cross(triangle[1]-triangle[0], triangle[2]-triangle[0])
+            n = np.cross(triangle[1] - triangle[0], triangle[2] - triangle[0])
             t = np.dot(triangle[0] - segment[0], n) / np.dot(segment[1] - segment[0], n)
             return segment[0] + t * (segment[1] - segment[0])
         else:

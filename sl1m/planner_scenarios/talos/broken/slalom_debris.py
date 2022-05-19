@@ -14,27 +14,42 @@ GAIT = [np.array([1, 0]), np.array([0, 1])]
 USE_MIP = False
 USE_COM = False
 
-paths = [os.environ["INSTALL_HPP_DIR"] + "/share/talos-rbprm/com_inequalities/feet_quasi_flat/talos_",
-         os.environ["INSTALL_HPP_DIR"] + "/share/talos-rbprm/relative_effector_positions/talos_"]
+paths = [
+    os.environ["INSTALL_HPP_DIR"]
+    + "/share/talos-rbprm/com_inequalities/feet_quasi_flat/talos_",
+    os.environ["INSTALL_HPP_DIR"]
+    + "/share/talos-rbprm/relative_effector_positions/talos_",
+]
 limbs = ["LF", "RF"]
 suffix_com = "_effector_frame_REDUCED.obj"
 suffix_feet = "_quasi_flat_REDUCED.obj"
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     t_init = clock()
 
     from sl1m.planner_scenarios.talos import lp_slalom_debris_path as tp
+
     t_1 = clock()
 
-    R, surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 0.7, False)
+    R, surfaces = getSurfacesFromGuideContinuous(
+        tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 0.7, False
+    )
     t_2 = clock()
 
-    p0 = [np.array(tp.q_init[:3]) + [0, 0.085, -0.98], np.array(tp.q_init[:3]) + [0, -0.085, -0.98]]
+    p0 = [
+        np.array(tp.q_init[:3]) + [0, 0.085, -0.98],
+        np.array(tp.q_init[:3]) + [0, -0.085, -0.98],
+    ]
     t_3 = clock()
-        
+
     surfaces_gait = [[surface] for surface in surfaces]
 
-    pb = Problem(limb_names=limbs, constraint_paths=paths, suffix_com=suffix_com, suffix_feet=suffix_feet)
+    pb = Problem(
+        limb_names=limbs,
+        constraint_paths=paths,
+        suffix_com=suffix_com,
+        suffix_feet=suffix_feet,
+    )
     pb.generate_problem(R, surfaces_gait, GAIT, p0, tp.q_init[:3])
     t_4 = clock()
 
@@ -47,16 +62,18 @@ if __name__ == '__main__':
 
     print(result)
     print("Optimized number of steps:              ", pb.n_phases)
-    print("Total time is:                          ", 1000. * (t_end-t_init))
-    print("Computing the path takes                ", 1000. * (t_1 - t_init))
-    print("Computing the surfaces takes            ", 1000. * (t_2 - t_1))
-    print("Computing the initial contacts takes    ", 1000. * (t_3 - t_2))
-    print("Generating the problem dictionary takes ", 1000. * (t_4 - t_3))
-    print("Solving the problem takes               ", 1000. * (t_end - t_4))
+    print("Total time is:                          ", 1000.0 * (t_end - t_init))
+    print("Computing the path takes                ", 1000.0 * (t_1 - t_init))
+    print("Computing the surfaces takes            ", 1000.0 * (t_2 - t_1))
+    print("Computing the initial contacts takes    ", 1000.0 * (t_3 - t_2))
+    print("Generating the problem dictionary takes ", 1000.0 * (t_4 - t_3))
+    print("Solving the problem takes               ", 1000.0 * (t_end - t_4))
     print("The LP and QP optimizations take        ", result.time)
 
     ax = plot.draw_scene(surfaces)
-    if(result.success):
-        plot.plot_planner_result(result.all_feet_pos, coms=result.coms, ax=ax, show=True)
+    if result.success:
+        plot.plot_planner_result(
+            result.all_feet_pos, coms=result.coms, ax=ax, show=True
+        )
     else:
         plt.show()
