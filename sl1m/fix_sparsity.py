@@ -96,12 +96,9 @@ def fix_sparsity_combinatorial_gait(planner, pb, LP_SOLVER):
     # Fill empty surface_indices
     for i, phase in enumerate(pb.phaseData):
         len_effectors = len(phase.n_surfaces)
-        surface_indices.append([ 0*len_effectors ])
+        surface_indices.append([0]*len_effectors)
     # Fill it with decided surfaces
-    for decided_surface in decided_surfaces: # decided surfaces : [i_phase, i_effector, i_surface_selected]
-        i_phase = decided_surface[0]
-        i_effector = decided_surface[1]
-        index_surface_selected = decided_surface[2]
+    for i_phase, i_effector, index_surface_selected in decided_surfaces:
         # Update surface_indices
         surface_indices[i_phase][i_effector] = index_surface_selected
     # Fill it with succeeding combinatorial
@@ -195,7 +192,8 @@ def get_undecided_surfaces_gait(pb, alphas):
     @param pb the problem data
     @return a list of phase indices, and sorted surface indices
     """
-    undecided_surfaces, decided_surfaces = [], []
+    undecided_surfaces = []
+    decided_surfaces = []
     for i, phase in enumerate(pb.phaseData):
         for j, n_surface in enumerate(phase.n_surfaces):
             if n_surface > 1 and np.array(alphas[i][j]).min() > ALPHA_THRESHOLD:
