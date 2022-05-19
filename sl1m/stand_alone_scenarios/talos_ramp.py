@@ -5,14 +5,16 @@ import matplotlib.pyplot as plt
 from time import perf_counter as clock
 import talos_rbprm
 
-from sl1m.generic_solver import solve_L1_combinatorial
+from sl1m.generic_solver import solve_L1_combinatorial, solve_MIP
 from sl1m.problem_definition import Problem
 from sl1m.stand_alone_scenarios.surfaces.ramp_surfaces import surfaces_gait as surfaces
 from sl1m.stand_alone_scenarios.surfaces.ramp_surfaces import scene
 
 import sl1m.tools.plot_tools as plot
 
+USE_SL1M = True
 USE_COM = False
+
 GAIT = [np.array([1, 0]), np.array([0, 1])]
 
 talos_rbprm_path = Path(talos_rbprm.__file__).resolve().parent.parent.parent.parent.parent / "share" / "talos-rbprm"
@@ -34,7 +36,16 @@ if __name__ == '__main__':
     pb.generate_problem(R, surfaces, GAIT, initial_contacts)
     t_3 = clock()
 
-    result = solve_L1_combinatorial(pb, com=USE_COM)
+    COSTS = {
+        "step_size": [10.0, [0.1, 0]],
+        "posture": [1.0],
+        # "final_com": [10.0, [2.5, 0., 0.241]]
+    }
+
+    if USE_SL1M:
+        result = solve_L1_combinatorial(pb, com=USE_COM, costs=COSTS)
+    else:
+        result = solve_MIP(pb, com=USE_COM, costs=COSTS)
     t_end = clock()
 
     print(result)
