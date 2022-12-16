@@ -18,10 +18,8 @@ USE_COM = True
 
 if __name__ == "__main__":
     paths = [
-        os.path.dirname(sl1m.stand_alone_scenarios.__file__)
-        + "/constraints_files/",
-        os.path.dirname(sl1m.stand_alone_scenarios.__file__)
-        + "/constraints_files/",
+        os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/",
+        os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/",
     ]
     limbs = ["LF", "RF"]
 
@@ -45,9 +43,7 @@ if __name__ == "__main__":
 
     print(result)
     print("Optimized number of steps:              ", pb.n_phases)
-    print(
-        "Total time is:                          ", 1000.0 * (t_end - t_init)
-    )
+    print("Total time is:                          ", 1000.0 * (t_end - t_init))
     print("Computing the surfaces takes            ", 1000.0 * (t_1 - t_init))
     print("Computing the initial contacts takes    ", 1000.0 * (t_2 - t_1))
     print("Generating the problem dictionary takes ", 1000.0 * (t_3 - t_2))

@@ -42,9 +42,7 @@ COSTS = {
         1.0,
         STEP_LENGTH,
     ],  # Maintain step size as close as possible to desired. Does not guarantee exceeding.
-    "posture": [
-        0.01
-    ],  # Keep relative feet positions as close as possible to initial
+    "posture": [0.01],  # Keep relative feet positions as close as possible to initial
     "final_com": [
         10.0,
         [0.0, 0.0, 0.47],
@@ -154,11 +152,7 @@ if __name__ == "__main__":
             1000.0 * (t_end - t_2)
         )
     )
-    print(
-        "The LP and QP optimizations take        {0:>8.3f}ms".format(
-            result.time
-        )
-    )
+    print("The LP and QP optimizations take        {0:>8.3f}ms".format(result.time))
 
     # Analyse result:
     if result.success:
@@ -184,8 +178,7 @@ if __name__ == "__main__":
                         i,
                         j,
                         np.linalg.norm(
-                            result.all_feet_pos[i][j]
-                            - result.all_feet_pos[i][j - 1]
+                            result.all_feet_pos[i][j] - result.all_feet_pos[i][j - 1]
                         ),
                     )
                 )

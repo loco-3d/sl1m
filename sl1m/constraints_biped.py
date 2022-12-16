@@ -77,12 +77,10 @@ class BipedConstraints:
                 )
                 b[i : i + l] = k + K[:, -1:].dot(fixed_foot_z)
         else:
-            A[i : i + l, j : j + self.default_n_variables] = K[:, -1:].dot(
-                self.com_z
-            )
-            A[
-                i : i + l, j_previous : j_previous + self.default_n_variables
-            ] = -K[:, -1:].dot(self.foot_z)
+            A[i : i + l, j : j + self.default_n_variables] = K[:, -1:].dot(self.com_z)
+            A[i : i + l, j_previous : j_previous + self.default_n_variables] = -K[
+                :, -1:
+            ].dot(self.foot_z)
             b[i : i + l] = k
 
         return i + l
@@ -117,9 +115,9 @@ class BipedConstraints:
             A[i : i + l, j : j + self.default_n_variables] = K[:, -1:].dot(
                 self.com_z
             ) - K.dot(self.foot)
-            A[
-                i : i + l, j_previous : j_previous + self.default_n_variables
-            ] = K[:, :2].dot(self.foot_xy)
+            A[i : i + l, j_previous : j_previous + self.default_n_variables] = K[
+                :, :2
+            ].dot(self.foot_xy)
             b[i : i + l] = k
 
         return i + l
@@ -145,16 +143,14 @@ class BipedConstraints:
         if id == 0:
             if pb.p0 is not None:
                 fixed_foot_position = pb.p0[fixed_foot]
-                A[i : i + l, j : j + self.default_n_variables] = K.dot(
-                    self.foot
-                )
+                A[i : i + l, j : j + self.default_n_variables] = K.dot(self.foot)
                 b[i : i + l] = k + K.dot(fixed_foot_position)
                 return i + l
         else:
             A[i : i + l, j : j + self.default_n_variables] = K.dot(self.foot)
-            A[
-                i : i + l, j_previous : j_previous + self.default_n_variables
-            ] = -K.dot(self.foot)
+            A[i : i + l, j_previous : j_previous + self.default_n_variables] = -K.dot(
+                self.foot
+            )
             b[i : i + l] = k
 
         return i + l
@@ -175,9 +171,7 @@ class BipedConstraints:
         i = i_start
         for S, s in phase.S:
             l = S.shape[0] - 1
-            A[i : i + l, j : j + self.default_n_variables] = S[:-1, :].dot(
-                self.foot
-            )
+            A[i : i + l, j : j + self.default_n_variables] = S[:-1, :].dot(self.foot)
             b[i : i + l] = s[:-1]
             if n_surfaces > 1:
                 A[i : i + l, j + j_slack] = -np.ones(l) * self.slack_scale
@@ -199,17 +193,13 @@ class BipedConstraints:
         n_surfaces = len(phase.S)
         i = i_start
         if n_surfaces == 1:
-            E[i, j : j + self.default_n_variables] = phase.S[0][0][-1].dot(
-                self.foot
-            )
+            E[i, j : j + self.default_n_variables] = phase.S[0][0][-1].dot(self.foot)
             e[i] = phase.S[0][1][-1]
             return i + 1
         else:
             j_slack = self.default_n_variables + 1
             for S, s in phase.S:
-                E[i, j : j + self.default_n_variables] = S[-1, :].dot(
-                    self.foot
-                )
+                E[i, j : j + self.default_n_variables] = S[-1, :].dot(self.foot)
                 E[i, j + j_slack] = -1 * self.slack_scale
                 e[i] = s[-1]
                 j_slack += self.n_slack_per_surface

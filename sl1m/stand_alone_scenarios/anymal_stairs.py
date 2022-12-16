@@ -24,19 +24,12 @@ if __name__ == "__main__":
         np.array([0, 1, 1, 1]),
     ]
     anymal_rbprm_path = (
-        Path(anymal_rbprm.__file__)
-        .resolve()
-        .parent.parent.parent.parent.parent
+        Path(anymal_rbprm.__file__).resolve().parent.parent.parent.parent.parent
         / "share"
         / "anymal-rbprm"
     )
     paths = [
-        str(
-            anymal_rbprm_path
-            / "com_inequalities"
-            / "feet_quasi_flat"
-            / "anymal_"
-        ),
+        str(anymal_rbprm_path / "com_inequalities" / "feet_quasi_flat" / "anymal_"),
         str(anymal_rbprm_path / "relative_effector_positions" / "anymal_"),
     ]
 
@@ -87,9 +80,7 @@ if __name__ == "__main__":
 
     print(result)
     print("Optimized number of steps:              ", pb.n_phases)
-    print(
-        "Total time is:                          ", 1000.0 * (t_end - t_init)
-    )
+    print("Total time is:                          ", 1000.0 * (t_end - t_init))
     print("Computing the surfaces takes            ", 1000.0 * (t_1 - t_init))
     print("Computing the initial contacts takes    ", 1000.0 * (t_2 - t_1))
     print("Generating the problem dictionary takes ", 1000.0 * (t_3 - t_2))

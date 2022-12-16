@@ -170,9 +170,7 @@ def plot_polytope(A, b, V=None, color="b", ax=None, plotLines=True, lw=4):
         f, ax = plut.create_empty_figure()
 
     if plotLines:
-        plot_inequalities(
-            A, b, [-1, 1], [-1, 1], color=color, ls="--", ax=ax, lw=lw
-        )
+        plot_inequalities(A, b, [-1, 1], [-1, 1], color=color, ls="--", ax=ax, lw=lw)
     n = b.shape[0]
     if n < 2:
         return (ax, None)

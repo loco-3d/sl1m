@@ -97,9 +97,7 @@ class Constraints:
         if foot is not None:
             id = np.argmax(phase.moving == foot)
         elif id is None:
-            print(
-                "Error in foot selection matrix: you must specify either foot or id"
-            )
+            print("Error in foot selection matrix: you must specify either foot or id")
         j = self.default_n_variables + 3 * id
         return self._expression_matrix(3, self._default_n_variables(phase), j)
 
@@ -114,15 +112,11 @@ class Constraints:
         if foot is not None:
             id = np.argmax(phase.moving == foot)
         elif id is None:
-            print(
-                "Error in foot selection matrix: you must specify either foot or id"
-            )
+            print("Error in foot selection matrix: you must specify either foot or id")
         j = self.default_n_variables + 3 * id
         return self._expression_matrix(2, self._default_n_variables(phase), j)
 
-    def _fixed_foot_com_2_kinematic(
-        self, pb, phase, G, h, i_start, js, feet_phase
-    ):
+    def _fixed_foot_com_2_kinematic(self, pb, phase, G, h, i_start, js, feet_phase):
         """
         The COM 2 must belong to a reachable polytope above each stance foot of the phase
         For each effector id , K_id (c2 - p_id) <= k_id
@@ -146,9 +140,9 @@ class Constraints:
                 )
                 h[i : i + l] = k
                 if foot in phase.moving:
-                    G[
-                        i : i + l, j : j + self._default_n_variables(phase)
-                    ] -= K.dot(self.foot(phase, foot))
+                    G[i : i + l, j : j + self._default_n_variables(phase)] -= K.dot(
+                        self.foot(phase, foot)
+                    )
                 elif feet_phase[foot] != -1:
                     j_f = js[feet_phase[foot]]
                     phase_f = pb.phaseData[feet_phase[foot]]
@@ -162,9 +156,7 @@ class Constraints:
                 i += l
         return i
 
-    def _fixed_foot_com_1_kinematic(
-        self, pb, phase, G, h, i_start, js, feet_phase
-    ):
+    def _fixed_foot_com_1_kinematic(self, pb, phase, G, h, i_start, js, feet_phase):
         """
         The COM 1 must belong to a reachable polytope above each stance foot of the previous phase
         For each effector id in stance phase, K_id (c1- p_id(t-1)) <= k_id
@@ -224,12 +216,8 @@ class Constraints:
         """
         i = i_start
         if phase.id != 0:
-            i = self._fixed_foot_com_1_kinematic(
-                pb, phase, G, h, i, js, feet_phase
-            )
-        return self._fixed_foot_com_2_kinematic(
-            pb, phase, G, h, i, js, feet_phase
-        )
+            i = self._fixed_foot_com_1_kinematic(pb, phase, G, h, i, js, feet_phase)
+        return self._fixed_foot_com_2_kinematic(pb, phase, G, h, i, js, feet_phase)
 
     def foot_relative_distance(self, pb, phase, G, h, i_start, js, feet_phase):
         """
@@ -253,14 +241,14 @@ class Constraints:
             for (other, (K, k)) in constraints:
                 if other in phase.stance:
                     l = k.shape[0]
-                    G[
-                        i : i + l, j : j + self._default_n_variables(phase)
-                    ] = -K.dot(self.foot(phase, foot))
+                    G[i : i + l, j : j + self._default_n_variables(phase)] = -K.dot(
+                        self.foot(phase, foot)
+                    )
                     h[i : i + l] = k
                     if other in phase.moving:
-                        G[
-                            i : i + l, j : j + self._default_n_variables(phase)
-                        ] += K.dot(self.foot(phase, other))
+                        G[i : i + l, j : j + self._default_n_variables(phase)] += K.dot(
+                            self.foot(phase, other)
+                        )
                     elif feet_phase[other] != -1:
                         j_f = js[feet_phase[other]]
                         phase_f = pb.phaseData[feet_phase[other]]
@@ -274,17 +262,17 @@ class Constraints:
                     i += l
                 elif phase.id == 0:
                     l = k.shape[0]
-                    G[
-                        i : i + l, j : j + self._default_n_variables(phase)
-                    ] = -K.dot(self.foot(phase, foot))
+                    G[i : i + l, j : j + self._default_n_variables(phase)] = -K.dot(
+                        self.foot(phase, foot)
+                    )
                     h[i : i + l] = k
                     h[i : i + l] -= K.dot(pb.p0[other])
                     i += l
                 elif other in pb.phaseData[phase.id - 1].stance:
                     l = k.shape[0]
-                    G[
-                        i : i + l, j : j + self._default_n_variables(phase)
-                    ] = -K.dot(self.foot(phase, foot))
+                    G[i : i + l, j : j + self._default_n_variables(phase)] = -K.dot(
+                        self.foot(phase, foot)
+                    )
                     h[i : i + l] = k
                     if feet_phase[other] != -1:
                         j_f = js[feet_phase[other]]
@@ -314,9 +302,9 @@ class Constraints:
         j_alpha = j + self._default_n_variables(phase)
         for n_surface in phase.n_surfaces:
             if n_surface > 1:
-                G[
-                    i : i + n_surface, j_alpha : j_alpha + n_surface
-                ] = -np.identity(n_surface)
+                G[i : i + n_surface, j_alpha : j_alpha + n_surface] = -np.identity(
+                    n_surface
+                )
                 j_alpha += n_surface
                 i += n_surface
         return i
@@ -398,9 +386,7 @@ class Constraints:
                 elif pb.p0[foot] is not None:
                     foot_pose = pb.p0[foot]
                     d[i : i + 2] -= weight * foot_pose[:2]
-        C[i : i + 2, j : j + self._default_n_variables(phase)] = -self.com_xy(
-            phase
-        )
+        C[i : i + 2, j : j + self._default_n_variables(phase)] = -self.com_xy(phase)
         i += 2
         return i
 
@@ -435,8 +421,6 @@ class Constraints:
         if phase.id == 0 and pb.c0 is not None:
             return self._com_equality_init(pb, phase, C, d, i_start)
         elif len(phase.stance) > 0:
-            return self._com_weighted_equality(
-                pb, phase, C, d, i_start, js, feet_phase
-            )
+            return self._com_weighted_equality(pb, phase, C, d, i_start, js, feet_phase)
         else:
             return i_start

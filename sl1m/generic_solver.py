@@ -90,9 +90,7 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
     q = None
     if costs != None:
         P, q = planner.compute_costs(costs)
-    result = call_MIP_solver(
-        slack_selection_vector, P, q, G, h, C, d, solver=solver
-    )
+    result = call_MIP_solver(slack_selection_vector, P, q, G, h, C, d, solver=solver)
 
     if costs != None and solver == Solvers.CVXPY:
         alphas = planner.get_alphas(result.x)
@@ -139,13 +137,9 @@ def solve_MIP_biped(pb, costs={}, solver=Solvers.GUROBI):
 
     if costs != None:
         P, q = planner.compute_costs(costs)
-        result = solve_MIP_gurobi_cost(
-            slack_selection_vector, P, q, G, h, C, d
-        )
+        result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
     else:
-        result = call_MIP_solver(
-            slack_selection_vector, G, h, C, d, solver=solver
-        )
+        result = call_MIP_solver(slack_selection_vector, G, h, C, d, solver=solver)
 
     if result.success:
         alphas = planner.get_alphas(result.x)

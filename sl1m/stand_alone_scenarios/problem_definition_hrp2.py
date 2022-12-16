@@ -24,10 +24,7 @@ LIMB_NAMES = ["LF", "RF"]
 Z = np.array([0.0, 0.0, 1.0])
 LF = 0
 RF = 1
-DIR = (
-    os.path.dirname(sl1m.stand_alone_scenarios.__file__)
-    + "/constraints_files/"
-)
+DIR = os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"
 
 
 class PhaseData:
@@ -60,9 +57,7 @@ class PhaseData:
             trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
             trRF = trLF.copy()
         else:
-            trLF = default_transform_from_pos_normal(
-                np.zeros(3), Z, R[i - (i % 2)]
-            )
+            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i - (i % 2)])
             trRF = default_transform_from_pos_normal(
                 np.zeros(3), Z, R[i - ((i + 1) % 2)]
             )
@@ -97,9 +92,7 @@ class PhaseData:
             trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i])
             trRF = trLF.copy()
         else:
-            trLF = default_transform_from_pos_normal(
-                np.zeros(3), Z, R[i - (i % 2)]
-            )
+            trLF = default_transform_from_pos_normal(np.zeros(3), Z, R[i - (i % 2)])
             trRF = default_transform_from_pos_normal(
                 np.zeros(3), Z, R[i - ((i + 1) % 2)]
             )

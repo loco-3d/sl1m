@@ -79,8 +79,7 @@ print("Databases generated in : " + str(tGenerate) + " s")
 
 # define initial and final configurations :
 configSize = (
-    fullBody.getConfigSize()
-    - fullBody.client.robot.getDimensionExtraConfigSpace()
+    fullBody.getConfigSize() - fullBody.client.robot.getDimensionExtraConfigSpace()
 )
 
 
@@ -266,9 +265,7 @@ def nil():
         paths += [(pathId, ps.pathLength(pathId))]
         # ~ print "j", j
         if j + 2 < len(all_states):
-            nPid = ps.directPath(
-                all_states[j + 1].q(), all_states[j + 2].q(), False
-            )[1]
+            nPid = ps.directPath(all_states[j + 1].q(), all_states[j + 2].q(), False)[1]
             paths += [(nPid, ps.pathLength(nPid))]
 
             p0 = comTraj(

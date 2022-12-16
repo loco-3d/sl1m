@@ -41,29 +41,21 @@ def getRotationsFromConfigs(configs):
 
 def getContactsNames(rbprmBuilder, i, q):
     if i % 2 == LF:  # left leg
-        step_contacts = (
-            rbprmBuilder.clientRbprm.rbprm.getCollidingObstacleAtConfig(
-                q, "talos_lleg_rom"
-            )
+        step_contacts = rbprmBuilder.clientRbprm.rbprm.getCollidingObstacleAtConfig(
+            q, "talos_lleg_rom"
         )
     elif i % 2 == RF:  # right leg
-        step_contacts = (
-            rbprmBuilder.clientRbprm.rbprm.getCollidingObstacleAtConfig(
-                q, "talos_rleg_rom"
-            )
+        step_contacts = rbprmBuilder.clientRbprm.rbprm.getCollidingObstacleAtConfig(
+            q, "talos_rleg_rom"
         )
     return step_contacts
 
 
 def getContactsIntersections(rbprmBuilder, i, q):
     if i % 2 == LF:  # left leg
-        intersections = rbprmBuilder.getContactSurfacesAtConfig(
-            q, "talos_lleg_rom"
-        )
+        intersections = rbprmBuilder.getContactSurfacesAtConfig(q, "talos_lleg_rom")
     elif i % 2 == RF:  # right leg
-        intersections = rbprmBuilder.getContactSurfacesAtConfig(
-            q, "talos_rleg_rom"
-        )
+        intersections = rbprmBuilder.getContactSurfacesAtConfig(q, "talos_rleg_rom")
     return intersections
 
 
@@ -77,9 +69,7 @@ def getAllSurfaces(afftool):
 
 def getAllSurfacesDict(afftool):
     all_surfaces = getAllSurfaces(afftool)
-    all_names = afftool.getAffRefObstacles(
-        "Support"
-    )  # id in names and surfaces match
+    all_names = afftool.getAffRefObstacles("Support")  # id in names and surfaces match
     surfaces_dict = dict(
         zip(all_names, all_surfaces)
     )  # map surface names to surface points
@@ -104,9 +94,7 @@ def getSurfacesFromGuideContinuous(
         pathId = ps.numberPaths() - 1
     pathLength = ps.pathLength(pathId)  # length of the path
     # get surface information
-    surfaces_dict = getAllSurfacesDict(
-        afftool
-    )  # map surface names to surface points
+    surfaces_dict = getAllSurfacesDict(afftool)  # map surface names to surface points
     current_phase_end = step
     window_size = 0.5  # smaller step at which we check the colliding surfaces
     # Get surfaces for each phase along the path
@@ -173,9 +161,7 @@ def getSurfacesFromGuideContinuous(
             for index_phase, name_contact in enumerate(phase_contacts_names):
                 # Add surfaces intersecting with ROMs, only once per phase => No duplicate
                 if not name_contact in seq_name:
-                    seq.append(
-                        surfaces_dict[name_contact][0]
-                    )  # Add entire surface
+                    seq.append(surfaces_dict[name_contact][0])  # Add entire surface
                     seq_name.append(name_contact)
         seq.sort()
         seqs.append(seq)
@@ -299,9 +285,7 @@ def getNameSurfaceIntersected(intersection, namesSurfaces, surfaces_dict):
             for p_intersection in intersection:
                 for p_surface in surface:
                     if (
-                        np.linalg.norm(
-                            np.array(p_intersection) - np.array(p_surface)
-                        )
+                        np.linalg.norm(np.array(p_intersection) - np.array(p_surface))
                         < 1e-6
                     ):
                         # Equal

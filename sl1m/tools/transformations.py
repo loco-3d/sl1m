@@ -378,17 +378,11 @@ def rotation_from_matrix(matrix):
     # rotation angle depending on direction
     cosa = (numpy.trace(R33) - 1.0) / 2.0
     if abs(direction[2]) > 1e-8:
-        sina = (
-            R[1, 0] + (cosa - 1.0) * direction[0] * direction[1]
-        ) / direction[2]
+        sina = (R[1, 0] + (cosa - 1.0) * direction[0] * direction[1]) / direction[2]
     elif abs(direction[1]) > 1e-8:
-        sina = (
-            R[0, 2] + (cosa - 1.0) * direction[0] * direction[2]
-        ) / direction[1]
+        sina = (R[0, 2] + (cosa - 1.0) * direction[0] * direction[2]) / direction[1]
     else:
-        sina = (
-            R[2, 1] + (cosa - 1.0) * direction[1] * direction[2]
-        ) / direction[0]
+        sina = (R[2, 1] + (cosa - 1.0) * direction[1] * direction[2]) / direction[0]
     angle = math.atan2(sina, cosa)
     return angle, direction, point
 
@@ -468,9 +462,7 @@ def scale_from_matrix(matrix):
     return factor, origin, direction
 
 
-def projection_matrix(
-    point, normal, direction=None, perspective=None, pseudo=False
-):
+def projection_matrix(point, normal, direction=None, perspective=None, pseudo=False):
     """Return matrix to project onto plane defined by point and normal.
 
     Using either perspective point, projection direction, or none of both.
@@ -506,9 +498,7 @@ def projection_matrix(
     normal = unit_vector(normal[:3])
     if perspective is not None:
         # perspective projection
-        perspective = numpy.array(
-            perspective[:3], dtype=numpy.float64, copy=False
-        )
+        perspective = numpy.array(perspective[:3], dtype=numpy.float64, copy=False)
         M[0, 0] = M[1, 1] = M[2, 2] = numpy.dot(perspective - point, normal)
         M[:3, :3] -= numpy.outer(perspective, normal)
         if pseudo:
@@ -594,9 +584,7 @@ def projection_from_matrix(matrix, pseudo=False):
         # perspective projection
         i = numpy.where(abs(numpy.real(w)) > 1e-8)[0]
         if not len(i):
-            raise ValueError(
-                "no eigenvector not corresponding to eigenvalue 0"
-            )
+            raise ValueError("no eigenvector not corresponding to eigenvalue 0")
         point = numpy.real(V[:, i[-1]]).squeeze()
         point /= point[3]
         normal = -M[3, :3]
@@ -1065,9 +1053,7 @@ def superimposition_matrix(v0, v1, scale=False, usesvd=True):
     """
     v0 = numpy.array(v0, dtype=numpy.float64, copy=False)[:3]
     v1 = numpy.array(v1, dtype=numpy.float64, copy=False)[:3]
-    return affine_matrix_from_points(
-        v0, v1, shear=False, scale=scale, usesvd=usesvd
-    )
+    return affine_matrix_from_points(v0, v1, shear=False, scale=scale, usesvd=usesvd)
 
 
 def euler_matrix(ai, aj, ak, axes="sxyz"):

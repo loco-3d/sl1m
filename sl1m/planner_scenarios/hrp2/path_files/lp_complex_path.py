@@ -43,9 +43,7 @@ r(q_goal)
 
 afftool = AffordanceTool()
 afftool.setAffordanceConfig("Support", [0.5, 0.03, 0.00005])
-afftool.loadObstacleModel(
-    packageName, "multicontact/bauzil_ramp", "planning", r
-)
+afftool.loadObstacleModel(packageName, "multicontact/bauzil_ramp", "planning", r)
 afftool.visualiseAffordances("Support", r, [0.25, 0.5, 0.5])
 
 ps.client.problem.selectConfigurationShooter("RbprmShooter")

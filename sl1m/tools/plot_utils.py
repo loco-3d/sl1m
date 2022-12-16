@@ -215,9 +215,7 @@ def plotNdQuantityPerSolver(
                         len(boundUp.shape) == 2
                     ):  # bound variable in time but constant for each solver
                         if np.max(boundUp[:, k]) < 2 * ymax:
-                            ymax = np.max(
-                                np.concatenate(([ymax], boundUp[:, k]))
-                            )
+                            ymax = np.max(np.concatenate(([ymax], boundUp[:, k])))
                         ax[i, j].plot(
                             boundUp[:, k],
                             "--",
@@ -238,9 +236,7 @@ def plotNdQuantityPerSolver(
                         )
                     else:
                         if np.min(boundLow[:, k]) > 2 * ymin:
-                            ymin = np.min(
-                                np.concatenate(([ymin], boundLow[:, k]))
-                            )
+                            ymin = np.min(np.concatenate(([ymin], boundLow[:, k])))
                         ax[i, j].plot(
                             boundLow[:, k],
                             "--",
@@ -265,14 +261,10 @@ def plotNdQuantityPerSolver(
                             mp = margins
                             mn = margins
                         ymax = np.max(
-                            np.concatenate(
-                                ([ymax], quantity[:, s, k] + mp[:, s, k])
-                            )
+                            np.concatenate(([ymax], quantity[:, s, k] + mp[:, s, k]))
                         )
                         ymin = np.min(
-                            np.concatenate(
-                                ([ymin], quantity[:, s, k] - mn[:, s, k])
-                            )
+                            np.concatenate(([ymin], quantity[:, s, k] - mn[:, s, k]))
                         )
                         ax[i, j].fill_between(
                             x,
@@ -309,9 +301,7 @@ def plotNdQuantityPerSolver(
                     )
                 k += 1
             else:
-                ax[i, j].yaxis.set_major_formatter(
-                    ticker.FormatStrFormatter("%0.0f")
-                )
+                ax[i, j].yaxis.set_major_formatter(ticker.FormatStrFormatter("%0.0f"))
 
     if SAVE_FIGURES:
         for ext in FILE_EXTENSIONS:
@@ -347,9 +337,7 @@ def plotQuantityPerSolver(
         x = range(quantity.shape[0])
 
     for i in range(len(solver_names)):
-        ax.plot(
-            x, quantity[:, i], line_styles[i], alpha=LINE_ALPHA, linewidth=lw
-        )
+        ax.plot(x, quantity[:, i], line_styles[i], alpha=LINE_ALPHA, linewidth=lw)
         lw = max(lw - LINE_WIDTH_RED, LINE_WIDTH_MIN)
     ax.set_yscale(yscale)
     ax.set_ylabel(ylabel)
@@ -389,9 +377,7 @@ def plotQuantityVsQuantityPerSolver(
         r = 2
         c = 3
     else:
-        print(
-            "ERROR in plotQuantityVsQuantityPerSolver, number of solvers not managed"
-        )
+        print("ERROR in plotQuantityVsQuantityPerSolver, number of solvers not managed")
         return
     f, ax = plt.subplots(r, c, sharex=True, sharey=True)
     for i in range(len(solver_names)):

@@ -79,9 +79,7 @@ def call_LP_solver(q, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
     return result
 
 
-def call_QP_solver(
-    P, q, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI
-):
+def call_QP_solver(P, q, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
     """
     Solve the QP problem with a specific solver
     :param: P, q, G, h, C, d problem data
@@ -122,9 +120,7 @@ def call_MIP_solver(
     result = None
     if hasCost:
         if solver == Solvers.GUROBI:
-            result = solve_MIP_gurobi_cost(
-                slack_selection_vector, P, q, G, h, C, d
-            )
+            result = solve_MIP_gurobi_cost(slack_selection_vector, P, q, G, h, C, d)
         elif solver == Solvers.CVXPY:
             result = solve_MIP_cvxpy(slack_selection_vector, G, h, C, d)
         else:
@@ -166,9 +162,7 @@ def get_nonzero_rows(M):
 # -------------------------- SOLVE METHODS ---------------------------------------------------------
 
 
-def solve_least_square(
-    A, b, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI
-):
+def solve_least_square(A, b, G=None, h=None, C=None, d=None, solver=Solvers.GUROBI):
     """
     min ||Ax-b||**2
     subject to  G x <= h
@@ -325,9 +319,7 @@ def solve_lp_gurobi(q, G=None, h=None, C=None, d=None):
     t_end = clock()
     try:
         res = [el.x for el in cVars]
-        return ResultData(
-            model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res
-        )
+        return ResultData(model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res)
     except:
         return ResultData(False, ms(t_end - t_init))
 
@@ -455,9 +447,7 @@ def solve_qp_gurobi(P, q, G=None, h=None, C=None, d=None, verbose=False):
     t_end = clock()
     try:
         res = [el.x for el in cVars]
-        return ResultData(
-            model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res
-        )
+        return ResultData(model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res)
     except:
         return ResultData(False, ms(t_end - t_init))
 
@@ -478,9 +468,7 @@ def solve_MIP_gurobi(slack_selection_vector, G=None, h=None, C=None, d=None):
     cVars = []
     for variable in slack_selection_vector:
         if variable > 0:
-            cVars.append(
-                model.addVar(lb=0, ub=1, vtype=grb.GRB.BINARY, name="slack")
-            )
+            cVars.append(model.addVar(lb=0, ub=1, vtype=grb.GRB.BINARY, name="slack"))
         else:
             cVars.append(
                 model.addVar(
@@ -515,9 +503,7 @@ def solve_MIP_gurobi(slack_selection_vector, G=None, h=None, C=None, d=None):
             model.addConstr(expr, grb.GRB.EQUAL, d[i])
     model.update()
 
-    slack_indices = [
-        i for i, el in enumerate(slack_selection_vector) if el > 0
-    ]
+    slack_indices = [i for i, el in enumerate(slack_selection_vector) if el > 0]
 
     # equality slack sum
     variables = []
@@ -539,16 +525,12 @@ def solve_MIP_gurobi(slack_selection_vector, G=None, h=None, C=None, d=None):
     t_end = clock()
     try:
         res = [el.x for el in cVars]
-        return ResultData(
-            model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res
-        )
+        return ResultData(model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res)
     except:
         return ResultData(False, ms(t_end - t_init))
 
 
-def solve_MIP_gurobi_cost(
-    slack_selection_vector, P, q, G=None, h=None, C=None, d=None
-):
+def solve_MIP_gurobi_cost(slack_selection_vector, P, q, G=None, h=None, C=None, d=None):
     """
     Solve the Mixed-Integer problem using Gurobipy
     min (1/2)x' P x + q' x
@@ -558,9 +540,7 @@ def solve_MIP_gurobi_cost(
     grb.setParam("LogFile", "")
     grb.setParam("OutputFlag", 0)
 
-    slack_indices = [
-        i for i, el in enumerate(slack_selection_vector) if el > 0
-    ]
+    slack_indices = [i for i, el in enumerate(slack_selection_vector) if el > 0]
     n_variables = len(slack_selection_vector)
 
     model = grb.Model("mip")
@@ -569,9 +549,7 @@ def solve_MIP_gurobi_cost(
     cVars = []
     for variable in slack_selection_vector:
         if variable > 0:
-            cVars.append(
-                model.addVar(lb=0, ub=1, vtype=grb.GRB.BINARY, name="slack")
-            )
+            cVars.append(model.addVar(lb=0, ub=1, vtype=grb.GRB.BINARY, name="slack"))
         else:
             cVars.append(
                 model.addVar(
@@ -619,9 +597,7 @@ def solve_MIP_gurobi_cost(
     t_end = clock()
     try:
         res = [variable.x for variable in cVars]
-        return ResultData(
-            model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res
-        )
+        return ResultData(model.Status == grb.GRB.OPTIMAL, ms(t_end - t_init), res)
     except:
         print("Failed to solve the MIP")
         return ResultData(False, ms(t_end - t_init))
@@ -646,9 +622,7 @@ def solve_MIP_cvxpy(slack_selection_vector, G=None, h=None, C=None, d=None):
         eq_constraints = C * variables == d
         constraints.append(eq_constraints)
 
-    slack_indices = [
-        i for i, el in enumerate(slack_selection_vector) if el > 0
-    ]
+    slack_indices = [i for i, el in enumerate(slack_selection_vector) if el > 0]
     n_slack_variables = len([el for el in slack_selection_vector if el > 0])
     obj = cvxpy.Minimize(slack_selection_vector * variables)
 
@@ -663,9 +637,7 @@ def solve_MIP_cvxpy(slack_selection_vector, G=None, h=None, C=None, d=None):
     for i, el in enumerate(slack_indices):
         if i != 0 and el - previousL > 2.0:
             assert len(currentSum) > 0
-            constraints = constraints + [
-                sum(currentSum) == len(currentSum) - 1
-            ]
+            constraints = constraints + [sum(currentSum) == len(currentSum) - 1]
             currentSum = [boolvars[i]]
         elif el != 0:
             currentSum = currentSum + [boolvars[i]]

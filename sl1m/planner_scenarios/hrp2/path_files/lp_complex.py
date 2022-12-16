@@ -79,8 +79,7 @@ print("Databases generated in : " + str(tGenerate) + " s")
 
 # define initial and final configurations :
 configSize = (
-    fullBody.getConfigSize()
-    - fullBody.client.robot.getDimensionExtraConfigSpace()
+    fullBody.getConfigSize() - fullBody.client.robot.getDimensionExtraConfigSpace()
 )
 
 
@@ -145,9 +144,7 @@ from hpp.corbaserver.rbprm.rbprmstate import StateHelper
 pb, coms, footpos, allfeetpos, res = solve()
 
 
-def gen_state(
-    s, pId, com, num_max_sample=1, first=False, normal=z, newContact=True
-):
+def gen_state(s, pId, com, num_max_sample=1, first=False, normal=z, newContact=True):
     # ~ pId = 6
     phase = pb["phaseData"][pId]
     moving = phase["moving"]
@@ -196,9 +193,7 @@ def gen_state(
 q = fullBody.getCurrentConfig()
 q[:3] = [-2.69, 0.24, 0.649702]
 v(q)
-s = rbprmstate.State(
-    fullBody, q=q, limbsIncontact=[fullBody.lLegId, fullBody.rLegId]
-)
+s = rbprmstate.State(fullBody, q=q, limbsIncontact=[fullBody.lLegId, fullBody.rLegId])
 
 idfirst = 2
 coms[0] = array(s.getCenterOfMass())
@@ -231,9 +226,7 @@ for i in range(0, 5):
     # ~ com = (coms[i-1] + (coms[i] - coms[i-1]) *0.8).tolist()
     # get normal
     n = normal(pb["phaseData"][i])
-    snew = gen_state(
-        sprev, i + 2, com, num_max_sample=200, first=False, normal=n
-    )
+    snew = gen_state(sprev, i + 2, com, num_max_sample=200, first=False, normal=n)
     all_states += [snew]
     sprev = snew
     # ~ com2 = coms[i+1].tolist()
@@ -359,9 +352,7 @@ def nil():
         paths += [(pathId, ps.pathLength(pathId))]
         # ~ print "j", j
         if j + 2 < len(all_states):
-            nPid = ps.directPath(
-                all_states[j + 1].q(), all_states[j + 2].q(), False
-            )[1]
+            nPid = ps.directPath(all_states[j + 1].q(), all_states[j + 2].q(), False)[1]
             paths += [(nPid, ps.pathLength(nPid))]
 
             # ~ print "coms j", all_states[j].getCenterOfMass()

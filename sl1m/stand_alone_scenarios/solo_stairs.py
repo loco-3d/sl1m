@@ -57,9 +57,7 @@ if __name__ == "__main__":
     t_2 = clock()
 
     pb = Problem(limb_names=limbs, other_names=others, constraint_paths=paths)
-    pb.generate_problem(
-        R, surfaces, GAIT, initial_contacts, q_init[:3], com=USE_COM
-    )
+    pb.generate_problem(R, surfaces, GAIT, initial_contacts, q_init[:3], com=USE_COM)
     t_3 = clock()
 
     if USE_SL1M:
@@ -70,9 +68,7 @@ if __name__ == "__main__":
 
     print(result)
     print("Optimized number of steps:              ", pb.n_phases)
-    print(
-        "Total time is:                          ", 1000.0 * (t_end - t_init)
-    )
+    print("Total time is:                          ", 1000.0 * (t_end - t_init))
     print("Computing the surfaces takes            ", 1000.0 * (t_1 - t_init))
     print("Computing the initial contacts takes    ", 1000.0 * (t_2 - t_1))
     print("Generating the problem dictionary takes ", 1000.0 * (t_3 - t_2))
@@ -96,9 +92,7 @@ if __name__ == "__main__":
         print(result)
 
         print("Optimized number of steps:              ", pb.n_phases)
-        print(
-            "Solving the problem takes               ", 1000.0 * (t_end - t_3)
-        )
+        print("Solving the problem takes               ", 1000.0 * (t_end - t_3))
         print("The LP and QP optimizations take        ", result.time)
 
         ax = plot.draw_scene(scene)
