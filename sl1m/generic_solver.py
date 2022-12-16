@@ -1,15 +1,21 @@
-
 import numpy as np
 from sl1m.planner_biped import BipedPlanner
 from sl1m.planner_generic import Planner
 from sl1m.solver import call_MIP_solver, Solvers, solve_MIP_gurobi_cost
-from sl1m.fix_sparsity import fix_sparsity_combinatorial, fix_sparsity_combinatorial_gait, optimize_sparse_L1
+from sl1m.fix_sparsity import (
+    fix_sparsity_combinatorial,
+    fix_sparsity_combinatorial_gait,
+    optimize_sparse_L1,
+)
 from sl1m.problem_data import ProblemData
 
 
 # ----------------------- L1 -----------------------------------------------------------------------
 
-def solve_L1_combinatorial(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}, com=True):
+
+def solve_L1_combinatorial(
+    pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}, com=True
+):
     """
     Solve the problem by first chosing the surfaces with a L1 norm minimization problem handling the
     combinatorial if necesary, and then optimizing the feet positions with a QP
@@ -21,9 +27,11 @@ def solve_L1_combinatorial(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROB
     @return ProblemData storing the result
     """
     planner = Planner(mip=False, com=com)
-    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial_gait(planner, pb, lp_solver)
+    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial_gait(
+        planner, pb, lp_solver
+    )
     if sparsity_fixed:
-        print("  Surfaces selected     : ",surface_indices)
+        print("  Surfaces selected     : ", surface_indices)
         pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
         pb_data.surface_indices = surface_indices
     else:
@@ -32,7 +40,9 @@ def solve_L1_combinatorial(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROB
     return pb_data
 
 
-def solve_L1_combinatorial_biped(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}):
+def solve_L1_combinatorial_biped(
+    pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers.GUROBI, costs={}
+):
     """
     Solve the problem for a biped by first chosing the surfaces with a L1 norm minimization problem
     handling the combinatorial if necesary, and then optimizing the feet positions with a QP
@@ -44,7 +54,9 @@ def solve_L1_combinatorial_biped(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers
     @return ProblemData storing the result
     """
     planner = BipedPlanner()
-    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(planner, pb, lp_solver)
+    sparsity_fixed, pb, surface_indices, t = fix_sparsity_combinatorial(
+        planner, pb, lp_solver
+    )
     if sparsity_fixed:
         pb_data = optimize_sparse_L1(planner, pb, costs, qp_solver, lp_solver)
         pb_data.surface_indices = surface_indices
@@ -55,6 +67,7 @@ def solve_L1_combinatorial_biped(pb, lp_solver=Solvers.GUROBI, qp_solver=Solvers
 
 
 # ----------------------- MIP -----------------------------------------------------------------------
+
 
 def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
     """
@@ -86,13 +99,26 @@ def solve_MIP(pb, costs={}, solver=Solvers.GUROBI, com=False):
             for j in range(len(phase.n_surfaces)):
                 phase.S[j] = [phase.S[j][selected_surfaces[i][j]]]
                 phase.n_surfaces[j] = 1
-        return optimize_sparse_L1(planner, pb, costs, QP_SOLVER=Solvers.CVXPY, LP_SOLVER=Solvers.CVXPY)
+        return optimize_sparse_L1(
+            planner,
+            pb,
+            costs,
+            QP_SOLVER=Solvers.CVXPY,
+            LP_SOLVER=Solvers.CVXPY,
+        )
 
     if result.success:
         alphas = planner.get_alphas(result.x)
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
         surface_indices = planner.selected_surfaces(alphas)
-        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, surface_indices)
+        return ProblemData(
+            True,
+            result.time,
+            coms,
+            moving_foot_pos,
+            all_feet_pos,
+            surface_indices,
+        )
     return ProblemData(False, result.time)
 
 
@@ -119,5 +145,12 @@ def solve_MIP_biped(pb, costs={}, solver=Solvers.GUROBI):
         alphas = planner.get_alphas(result.x)
         coms, moving_foot_pos, all_feet_pos = planner.get_result(result.x)
         surface_indices = planner.selected_surfaces(alphas)
-        return ProblemData(True, result.time, coms, moving_foot_pos, all_feet_pos, surface_indices)
+        return ProblemData(
+            True,
+            result.time,
+            coms,
+            moving_foot_pos,
+            all_feet_pos,
+            surface_indices,
+        )
     return ProblemData(False, result.time)

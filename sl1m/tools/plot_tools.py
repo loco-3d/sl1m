@@ -1,10 +1,18 @@
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D 
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 
-COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
-          '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+COLORS = [
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+]
 
 
 def plot_point(ax, point, color="b", linewidth=2):
@@ -14,10 +22,10 @@ def plot_point(ax, point, color="b", linewidth=2):
     x = np.array(point)[0]
     y = np.array(point)[1]
     z = np.array(point)[2]
-    ax.scatter(x, y, z, color=color, marker='o', linewidth=linewidth)
+    ax.scatter(x, y, z, color=color, marker="o", linewidth=linewidth)
 
 
-def plot_surface(points, ax, color_id=0, alpha=1.):
+def plot_surface(points, ax, color_id=0, alpha=1.0):
     """
     Plot a surface
     """
@@ -30,7 +38,7 @@ def plot_surface(points, ax, color_id=0, alpha=1.):
         ax.plot(xs, ys, zs, color=COLORS[color_id % len(COLORS)], alpha=alpha)
 
 
-def draw_potential_surfaces(surfaces, gait, phase, ax=None, alpha=1.):
+def draw_potential_surfaces(surfaces, gait, phase, ax=None, alpha=1.0):
     """
     Plot all the potential surfaces of one phase of the problem
     """
@@ -40,6 +48,7 @@ def draw_potential_surfaces(surfaces, gait, phase, ax=None, alpha=1.):
     for surface in surfaces:
         plot_surface(surface, ax, gait[phase % (len(gait))])
     return ax
+
 
 def draw_potential_surfaces_gait(surfaces, phase, foot_index, ax=None, title=None):
     """
@@ -69,7 +78,7 @@ def draw_whole_scene(surface_dict, ax=None, title=None):
     return ax
 
 
-def draw_scene(surfaces, gait=False, ax=None, alpha=1.):
+def draw_scene(surfaces, gait=False, ax=None, alpha=1.0):
     """
     Plot all the potential surfaces of the problem
     """
@@ -151,7 +160,7 @@ def plot_selected_surfaces(surfaces, surface_indices, gait, ax=None):
     return ax
 
 
-def plot_heightmap(heightmap, alpha=1., ax=None):
+def plot_heightmap(heightmap, alpha=1.0, ax=None):
     """
     Plot the heightmap
     """
@@ -159,16 +168,16 @@ def plot_heightmap(heightmap, alpha=1., ax=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
     i = 0
-    if alpha != 1.:
+    if alpha != 1.0:
         i = 1
 
-    xv, yv = np.meshgrid(heightmap.x, heightmap.y, sparse=False, indexing='ij')
+    xv, yv = np.meshgrid(heightmap.x, heightmap.y, sparse=False, indexing="ij")
     ax.plot_surface(xv, yv, heightmap.z, color=COLORS[i], alpha=alpha)
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-    ax.set_zlim([np.min(heightmap.z), np.max(heightmap.z) + 1.])
+    ax.set_zlim([np.min(heightmap.z), np.max(heightmap.z) + 1.0])
 
     return ax
 
@@ -179,9 +188,9 @@ def plot_point_list(ax, wps, color="b", D3=True, linewidth=2):
     """
     x = np.array(wps)[:, 0]
     y = np.array(wps)[:, 1]
-    if(D3):
+    if D3:
         z = np.array(wps)[:, 2]
-        ax.scatter(x, y, z, c=color, marker='o', linewidth=5)
+        ax.scatter(x, y, z, c=color, marker="o", linewidth=5)
     else:
         ax.scatter(x, y, color=color, linewidth=linewidth)
 
@@ -200,7 +209,7 @@ def plot_planner_result(all_feet_pos, coms=None, step_size=None, ax=None, show=T
         px = [c[0] for c in foot_pose if c is not None]
         py = [c[1] for c in foot_pose if c is not None]
         pz = [c[2] for c in foot_pose if c is not None]
-        ax.scatter(px, py, pz, color=COLORS[foot], marker='o', linewidth=5)
+        ax.scatter(px, py, pz, color=COLORS[foot], marker="o", linewidth=5)
         ax.plot(px, py, pz, color=COLORS[foot])
 
     if step_size is not None:
@@ -208,15 +217,15 @@ def plot_planner_result(all_feet_pos, coms=None, step_size=None, ax=None, show=T
             px = [foot_pose[0][0] + step_size[0]]
             py = [foot_pose[0][1] + step_size[1]]
             pz = [foot_pose[0][2]]
-            ax.scatter(px, py, pz, color=COLORS[5], marker='o', linewidth=5)
+            ax.scatter(px, py, pz, color=COLORS[5], marker="o", linewidth=5)
             ax.plot(px, py, pz, color=COLORS[5])
 
     if coms is not None:
-        plot_point_list(ax, coms, color=COLORS[len(all_feet_pos)+1])
+        plot_point_list(ax, coms, color=COLORS[len(all_feet_pos) + 1])
         cx = [c[0] for c in coms]
         cy = [c[1] for c in coms]
         cz = [c[2] for c in coms]
-        ax.plot(cx, cy, cz, color=COLORS[len(all_feet_pos)+1])
+        ax.plot(cx, cy, cz, color=COLORS[len(all_feet_pos) + 1])
 
     if show:
         plt.draw()

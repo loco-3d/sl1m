@@ -4,7 +4,9 @@ import sl1m.tools.plot_tools as plot
 import matplotlib.pyplot as plt
 
 from sl1m.rbprm.surfaces_from_planning import getSurfacesFromGuideContinuous
-from sl1m.stand_alone_scenarios.problem_definition_hrp2 import Problem as HRP2Problem
+from sl1m.stand_alone_scenarios.problem_definition_hrp2 import (
+    Problem as HRP2Problem,
+)
 from sl1m.problem_definition import Problem
 from sl1m.generic_solver import *
 
@@ -18,20 +20,28 @@ USE_BIPED_PLANNER = False
 USE_MIP = True
 USE_COM = True
 
-paths = [os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/",
-         os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/"]
+paths = [
+    os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/",
+    os.path.dirname(sl1m.stand_alone_scenarios.__file__) + "/constraints_files/",
+]
 limbs = ["LF", "RF"]
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     t_init = clock()
 
     from sl1m.planner_scenarios.hrp2 import lp_complex_path as tp
+
     t_1 = clock()
 
-    R, surfaces = getSurfacesFromGuideContinuous(tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 0.7, False)
+    R, surfaces = getSurfacesFromGuideContinuous(
+        tp.rbprmBuilder, tp.ps, tp.afftool, tp.pathId, tp.v, 0.7, False
+    )
     t_2 = clock()
 
-    p0 = [np.array(tp.q_init[:3]) + [0, 0.095, -0.5], np.array(tp.q_init[:3]) + [0, -0.095, -0.5]]
+    p0 = [
+        np.array(tp.q_init[:3]) + [0, 0.095, -0.5],
+        np.array(tp.q_init[:3]) + [0, -0.095, -0.5],
+    ]
     t_3 = clock()
 
     if USE_BIPED_PLANNER:
@@ -59,15 +69,17 @@ if __name__ == '__main__':
     print(result)
 
     print("Optimized number of steps:              ", pb.n_phases)
-    print("Total time is:                          ", 1000. * (t_end-t_init))
-    print("Computing the surfaces takes            ", 1000. * (t_1 - t_init))
-    print("Computing the initial contacts takes    ", 1000. * (t_2 - t_1))
-    print("Generating the problem dictionary takes ", 1000. * (t_3 - t_2))
-    print("Solving the problem takes               ", 1000. * (t_end - t_3))
+    print("Total time is:                          ", 1000.0 * (t_end - t_init))
+    print("Computing the surfaces takes            ", 1000.0 * (t_1 - t_init))
+    print("Computing the initial contacts takes    ", 1000.0 * (t_2 - t_1))
+    print("Generating the problem dictionary takes ", 1000.0 * (t_3 - t_2))
+    print("Solving the problem takes               ", 1000.0 * (t_end - t_3))
     print("The LP and QP optimizations take        ", result.time)
 
     ax = plot.draw_scene(surfaces)
-    if(result.success):
-        plot.plot_planner_result(result.all_feet_pos, coms=result.coms, ax=ax, show=True)
+    if result.success:
+        plot.plot_planner_result(
+            result.all_feet_pos, coms=result.coms, ax=ax, show=True
+        )
     else:
         plt.show()

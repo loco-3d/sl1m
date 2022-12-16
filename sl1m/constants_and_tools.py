@@ -1,22 +1,36 @@
 import numpy as np
-from numpy import array, zeros, ones, vstack, hstack, identity, cross, concatenate
+from numpy import (
+    array,
+    zeros,
+    ones,
+    vstack,
+    hstack,
+    identity,
+    cross,
+    concatenate,
+)
 from numpy.linalg import norm
 from scipy.spatial import ConvexHull
 
-from sl1m.tools.obj_to_constraints import load_obj, as_inequalities, rotate_inequalities, inequalities_to_Inequalities_object
+from sl1m.tools.obj_to_constraints import (
+    load_obj,
+    as_inequalities,
+    rotate_inequalities,
+    inequalities_to_Inequalities_object,
+)
 
 # --------------------------------- CONSTANTS ---------------------------------------------------------------
 
 EPSILON = 0.000001
-EPSILON_EQ = 0.
+EPSILON_EQ = 0.0
 
-IDENTITY = array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
-GRAVITY = array([0., 0., -9.81])
-GRAVITY_6 = array([0., 0., -9.81, 0., 0., 0.])
+IDENTITY = array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+GRAVITY = array([0.0, 0.0, -9.81])
+GRAVITY_6 = array([0.0, 0.0, -9.81, 0.0, 0.0, 0.0])
 
-X = array([1., 0., 0.])
-Y = array([0., 1., 0.])
-Z = array([0., 0., 1.])
+X = array([1.0, 0.0, 0.0])
+Y = array([0.0, 1.0, 0.0])
+Z = array([0.0, 0.0, 1.0])
 
 # --------------------------------- METHODS ---------------------------------------------------------------
 
@@ -29,7 +43,7 @@ def normalize(Ab):
     for i in range(A.shape[0]):
         n = norm(A[i, :])
         if n <= EPSILON:
-            n = 1.
+            n = 1.0
         A_normalized[i, :] = A[i, :] / n
         b_normalized[i] = b[i] / n
     return A_normalized, b_normalized
@@ -38,7 +52,7 @@ def normalize(Ab):
 def convert_surface_to_inequality(s, eq_as_ineq):
     # TODO does normal orientation matter ? It will for collisions
     n = cross(s[:, 1] - s[:, 0], s[:, 2] - s[:, 0])
-    if n[2] <= 0.:
+    if n[2] <= 0.0:
         for i in range(3):
             n[i] = -n[i]
     norm_n = norm(n)
@@ -62,7 +76,10 @@ def replace_surfaces_with_ineq_in_phaseData(phase, eq_as_ineq):
 
 
 def replace_surfaces_with_ineq_in_problem(pb, eq_as_ineq=False):
-    [replace_surfaces_with_ineq_in_phaseData(phase, eq_as_ineq) for phase in pb.phaseData]
+    [
+        replace_surfaces_with_ineq_in_phaseData(phase, eq_as_ineq)
+        for phase in pb.phaseData
+    ]
 
 
 def ineqQHull(hull):
@@ -72,7 +89,7 @@ def ineqQHull(hull):
 
 
 def default_transform_from_pos_normal(pos, normal, transform=IDENTITY):
-    """ 
+    """
     transform matrix is a rotation matrix from the root trajectory
     used to align the foot yaw (z-axis) orientation
     surface normal is used to align the foot roll and pitch (x- and y- axes) orientation
@@ -85,23 +102,27 @@ def default_transform_from_pos_normal(pos, normal, transform=IDENTITY):
     if abs(c) > 0.99:
         rot = identity(3)
     else:
-        u = v/norm(v)
-        h = (1. - c)/(1. - c**2)
-        s = (1. - c**2)
+        u = v / norm(v)
+        h = (1.0 - c) / (1.0 - c**2)
+        s = 1.0 - c**2
         assert s > 0
         s = np.sqrt(s)
         ux, uy, uz = u
-        rot = array([[c + h*ux**2, h*ux*uy - uz*s, h*ux*uz + uy*s],
-                     [h*ux*uy + uz*s, c + h*ux**2, h*uy*uz - ux*s],
-                     [h*ux*uz - uy*s, h*uy*uz + ux*s, c + h*uz**2]])
+        rot = array(
+            [
+                [c + h * ux**2, h * ux * uy - uz * s, h * ux * uz + uy * s],
+                [h * ux * uy + uz * s, c + h * ux**2, h * uy * uz - ux * s],
+                [h * ux * uz - uy * s, h * uy * uz + ux * s, c + h * uz**2],
+            ]
+        )
 
     rot = np.dot(transform, rot)
-    return vstack([hstack([rot, pos.reshape((-1, 1))]), [0.,  0.,  0.,  1.]])
+    return vstack([hstack([rot, pos.reshape((-1, 1))]), [0.0, 0.0, 0.0, 1.0]])
 
 
 def surface_points_to_inequalities(S, normal, eq_as_ineq):
     n = array(normal)
-    tr = default_transform_from_pos_normal(array([0., 0., 0.]), n)
+    tr = default_transform_from_pos_normal(array([0.0, 0.0, 0.0]), n)
     trinv = tr.copy()
     trinv[:3, :3] = tr[:3, :3].T
     trpts = [tr[:3, :3].dot(s)[:2] for s in S.T]
@@ -115,7 +136,7 @@ def surface_points_to_inequalities(S, normal, eq_as_ineq):
         A = vstack([ine.A, n, -n])
         b = concatenate([ine.b, d + EPSILON_EQ, -d + EPSILON_EQ]).reshape((-1,))
     else:
-        A = vstack([ine.A, n , -n ])
+        A = vstack([ine.A, n, -n])
         b = concatenate([ine.b, d, -d]).reshape((-1,))
         A = vstack([ine.A, n])
         b = concatenate([ine.b, d]).reshape((-1,))
@@ -124,7 +145,7 @@ def surface_points_to_inequalities(S, normal, eq_as_ineq):
 
 
 def timMs(t1, t2):
-    """ 
+    """
     Expresses the duration between t1 and t2 in milliseconds
     """
-    return (t2-t1) * 1000.
+    return (t2 - t1) * 1000.0

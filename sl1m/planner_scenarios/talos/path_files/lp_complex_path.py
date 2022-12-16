@@ -7,37 +7,63 @@ import time
 
 TalosAbstract.urdfName += "_large"
 
+
 def compute_path():
     talos_abstract = TalosAbstract()
     talos_abstract.setJointBounds("root_joint", [-3.2, 1.8, 0.19, 0.21, 0.95, 1.7])
     # As this scenario only consider walking, we fix the DOF of the torso :
-    talos_abstract.setJointBounds('torso_1_joint', [0, 0])
-    talos_abstract.setJointBounds('torso_2_joint', [0., 0.])
-    vMax = 1.  # linear velocity bound for the root
-    aMax = 2.  # linear acceleration bound for the root
+    talos_abstract.setJointBounds("torso_1_joint", [0, 0])
+    talos_abstract.setJointBounds("torso_2_joint", [0.0, 0.0])
+    vMax = 1.0  # linear velocity bound for the root
+    aMax = 2.0  # linear acceleration bound for the root
     extraDof = 6
     mu = 0.5  # coefficient of friction
     talos_abstract.setFilter([TalosAbstract.rLegId, TalosAbstract.lLegId])
 
-    talos_abstract.setAffordanceFilter(TalosAbstract.rLegId, ['Support', ])
-    talos_abstract.setAffordanceFilter(TalosAbstract.lLegId, ['Support'])
-    talos_abstract.boundSO3([-4., 4., -0.1, 0.1, -0.1, 0.1])
+    talos_abstract.setAffordanceFilter(
+        TalosAbstract.rLegId,
+        [
+            "Support",
+        ],
+    )
+    talos_abstract.setAffordanceFilter(TalosAbstract.lLegId, ["Support"])
+    talos_abstract.boundSO3([-4.0, 4.0, -0.1, 0.1, -0.1, 0.1])
     # Add 6 extraDOF to the problem, used to store the linear velocity and acceleration of the root
     talos_abstract.client.robot.setDimensionExtraConfigSpace(extraDof)
     # We set the bounds of this extraDof with velocity and acceleration bounds (expect on z axis)
-    extraDofBounds = [-vMax, vMax, -vMax, vMax, -10., 10., -aMax, aMax, -aMax, aMax, -10., 10.]
+    extraDofBounds = [
+        -vMax,
+        vMax,
+        -vMax,
+        vMax,
+        -10.0,
+        10.0,
+        -aMax,
+        aMax,
+        -aMax,
+        aMax,
+        -10.0,
+        10.0,
+    ]
     talos_abstract.client.robot.setExtraConfigSpaceBounds(extraDofBounds)
-    talos_abstract.getConfigSize() - talos_abstract.client.robot.getDimensionExtraConfigSpace()
+    (
+        talos_abstract.getConfigSize()
+        - talos_abstract.client.robot.getDimensionExtraConfigSpace()
+    )
 
     ps = ProblemSolver(talos_abstract)
     vf = ViewerFactory(ps)
 
     afftool = AffordanceTool()
-    afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.00005])
+    afftool.setAffordanceConfig("Support", [0.5, 0.03, 0.00005])
     afftool.loadObstacleModel(
-        "package://hpp_environments/urdf/multicontact/bauzil_ramp_simplified.urdf", "planning", vf, reduceSizes=[0.07, 0., 0.])
+        "package://hpp_environments/urdf/multicontact/bauzil_ramp_simplified.urdf",
+        "planning",
+        vf,
+        reduceSizes=[0.07, 0.0, 0.0],
+    )
     v = vf.createViewer(displayArrows=True)
-    afftool.visualiseAffordances('Support', v, [0.25, 0.5, 0.5])
+    afftool.visualiseAffordances("Support", v, [0.25, 0.5, 0.5])
     v.addLandmark(v.sceneName, 1)
 
     ps.setParameter("Kinodynamic/velocityBound", vMax)
@@ -45,7 +71,7 @@ def compute_path():
     # force the orientation of the trunk to match the direction of the motion
     ps.setParameter("Kinodynamic/forceYawOrientation", True)
     ps.setParameter("Kinodynamic/synchronizeVerticalAxis", True)
-    ps.setParameter("Kinodynamic/verticalAccelerationBound", 10.)
+    ps.setParameter("Kinodynamic/verticalAccelerationBound", 10.0)
     ps.setParameter("DynamicPlanner/sizeFootX", 0.2)
     ps.setParameter("DynamicPlanner/sizeFootY", 0.12)
     ps.setParameter("DynamicPlanner/friction", mu)
@@ -83,7 +109,7 @@ def compute_path():
 
     pId_stairs = ps.numberPaths() - 1
     ### END climb the stairs #####
-    talos_abstract.setJointBounds("root_joint", [-3.2, 2.5, -0.8, 0.3, 1.4, 2.])
+    talos_abstract.setJointBounds("root_joint", [-3.2, 2.5, -0.8, 0.3, 1.4, 2.0])
     ps.resetGoalConfigs()
     ### BEGIN turn around on the platform #####
     ps.setParameter("Kinodynamic/velocityBound", 0.2)
@@ -118,7 +144,7 @@ def compute_path():
     q_goal[0:3] = [-1.7, -0.6, 1.58]
     v(q_goal)  # after bridge
     q_goal[3:7] = [0, 0, 1, 0]
-    q_goal[-6:-3] = [0., 0, 0]
+    q_goal[-6:-3] = [0.0, 0, 0]
     ps.setInitialConfig(q_init)
     ps.addGoalConfig(q_goal)
     v(q_goal)
@@ -137,7 +163,7 @@ def compute_path():
     pp = PathPlayer(v)
     pp.dt = 0.1
     pp.displayVelocityPath(pathId)
-    v.client.gui.setVisibility("path_"+str(pathId)+"_root", "ALWAYS_ON_TOP")
+    v.client.gui.setVisibility("path_" + str(pathId) + "_root", "ALWAYS_ON_TOP")
     pp.dt = 0.01
 
     q_far = q_goal[::]

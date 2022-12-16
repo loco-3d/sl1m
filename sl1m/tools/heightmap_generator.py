@@ -31,7 +31,12 @@ N_Y = 100
 X_BOUNDS = [-4.0, 4.0]
 Y_BOUNDS = [-4.0, 4.0]
 
-LIMBS = ['solo_RHleg_rom', 'solo_LHleg_rom', 'solo_LFleg_rom', 'solo_RFleg_rom']
+LIMBS = [
+    "solo_RHleg_rom",
+    "solo_LHleg_rom",
+    "solo_LFleg_rom",
+    "solo_RFleg_rom",
+]
 
 # --------------------------------- METHODS ---------------------------------------------------------------
 
@@ -42,19 +47,19 @@ def init_affordance():
     dictionary and all the affordance points
     """
     robot = Robot()
-    robot.setJointBounds("root_joint", [-5., 5., -5., 5., 0.241, 1.5])
+    robot.setJointBounds("root_joint", [-5.0, 5.0, -5.0, 5.0, 0.241, 1.5])
     robot.boundSO3([-3.14, 3.14, -0.01, 0.01, -0.01, 0.01])
     robot.setFilter(LIMBS)
     for limb in LIMBS:
-        robot.setAffordanceFilter(limb, ['Support'])
+        robot.setAffordanceFilter(limb, ["Support"])
     ps = ProblemSolver(robot)
     vf = ViewerFactory(ps)
     afftool = AffordanceTool()
-    afftool.setAffordanceConfig('Support', [0.5, 0.03, 0.00005])
+    afftool.setAffordanceConfig("Support", [0.5, 0.03, 0.00005])
     afftool.loadObstacleModel(ENV_URDF, "environment", vf)
     ps.selectPathValidation("RbprmPathValidation", 0.05)
 
-    return afftool.getAffordancePoints('Support')
+    return afftool.getAffordancePoints("Support")
 
 
 # --------------------------------- MAIN ---------------------------------------------------------------
