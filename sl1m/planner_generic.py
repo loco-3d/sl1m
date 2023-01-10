@@ -1,6 +1,7 @@
 import numpy as np
 from sl1m.constants_and_tools import *
 from sl1m.constraints import Constraints
+from copy import deepcopy
 
 
 class Planner:
@@ -597,7 +598,7 @@ class Planner:
             feet_phase = self._feet_last_moving_phase(phase.id)
             for foot in phase.moving:
                 A = np.zeros((2, n_variables))
-                b = step_size.copy()
+                b = deepcopy(step_size)
                 A[:, j : j + self._default_n_variables(phase)] = self.foot_xy(
                     phase, foot
                 )
