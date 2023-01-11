@@ -2,10 +2,7 @@ import numpy as np
 import quadprog
 from enum import Enum
 from scipy.optimize import linprog
-try:
-    from time import perf_counter as clock
-except:
-    from time import clock
+from time import perf_counter as clock
 
 try:
     import glpk

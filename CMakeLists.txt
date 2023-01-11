@@ -36,11 +36,9 @@ SET(${PROJECT_NAME}_SOURCES
 SET(${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES
   __init__.py
   complex.py
-  )
-SET(${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_PATH_SOURCES
-  lp_complex_path.py
-  lp_stair_bauzil_hrp2_path.py
-  lp_stair_bauzil_hrp2_path_10.py
+  path_files/lp_complex_path.py
+  path_files/lp_stair_bauzil_hrp2_path.py
+  path_files/lp_stair_bauzil_hrp2_path_10.py
   )
 
 SET(${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES
@@ -48,12 +46,10 @@ SET(${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES
   complex.py
   stairs.py
   rubbles.py
-  )
-SET(${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_PATH_SOURCES
-  lp_complex_path.py
-  lp_ramp_path.py
-  lp_rubbles_path.py
-  lp_stairs_path.py
+  path_files/lp_complex_path.py
+  path_files/lp_ramp_path.py
+  path_files/lp_rubbles_path.py
+  path_files/lp_stairs_path.py
   )
 
 SET(${PROJECT_NAME}_RBPRM_SOURCES
@@ -101,17 +97,10 @@ ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_SOURCES)
 FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/talos ${src})
 ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES)
-FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_PATH_SOURCES})
-  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/talos/path_files ${src})
-ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_PATH_SOURCES)
 
 FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/hrp2 ${src})
 ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES)
-
-FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_PATH_SOURCES})
-  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/hrp2/path_files/ ${src})
-ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_PATH_SOURCES)
 
 FOREACH(src ${${PROJECT_NAME}_RBPRM_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/rbprm ${src})
