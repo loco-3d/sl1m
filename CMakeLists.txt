@@ -79,6 +79,7 @@ SET(${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES
   complex_surfaces.py
   flat_ground.py
   ramp_surfaces.py
+  inclined_surfaces.py
   )
 SET(${PROJECT_NAME}_TOOLS_SOURCES
   __init__.py
