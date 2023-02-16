@@ -121,16 +121,27 @@ def default_transform_from_pos_normal(pos, normal, transform=IDENTITY):
 
 
 def surface_points_to_inequalities(S, normal, eq_as_ineq):
+    # Homogenous tranformation matrix from world frame to surface frame.
+    # Normal vector corresponds to z-axis.
+    # 1st vertex is the Origin.
     n = array(normal)
-    tr = default_transform_from_pos_normal(array([0.0, 0.0, 0.0]), n)
-    trinv = tr.copy()
-    trinv[:3, :3] = tr[:3, :3].T
-    trpts = [tr[:3, :3].dot(s)[:2] for s in S.T]
+    tr = default_transform_from_pos_normal(S.T[0], n)
+
+    # Projection of vertices on the surface local frame --> z = 0. (2D)
+    # P_world = R_ @ P_local + T_
+    # --> P_local = R_-1 @ (P_world - T_)
+    trpts = [np.dot(tr[:3, :3].T , (pos - tr[:-1,-1]))[:2] for pos in S.T]
+
     hull = ConvexHull(array(trpts))
     A, b = ineqQHull(hull)
+    # Increase inequality matrix with z = 0 column
     A = hstack([A, zeros((A.shape[0], 1))])
-    ine = inequalities_to_Inequalities_object(A, b)
-    ine = rotate_inequalities(ine, trinv)
+    # In local frame : A_l @ P_local <= b_l
+    # --> A_l @ R-1 @ P_world <= b_l + A_l @ R_-1 @ T_
+    A_world = np.dot(A,tr[:3,:3].T)
+    b_world = b + np.dot(np.dot(A,tr[:3,:3].T), tr[:-1,-1])
+    ine = inequalities_to_Inequalities_object(A_world, b_world)
+
     d = array([n.dot(S[:, 0])])
     if eq_as_ineq:
         A = vstack([ine.A, n, -n])
