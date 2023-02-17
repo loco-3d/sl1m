@@ -22,67 +22,72 @@ FINDPYTHON()
 SET(${PROJECT_NAME}_SOURCES
   __init__.py
   constants_and_tools.py
+  solver.py
+  generic_solver.py
   fix_sparsity.py
-  planner_l1.py
-  planner.py
+  problem_data.py
+  constraints.py
+  constraints_biped.py
+  planner_generic.py
+  planner_biped.py
   problem_definition.py
-  qp.py
   )
 
-SET(${PROJECT_NAME}_PLANNER_SCENARIOS_SOURCES
+SET(${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES
   __init__.py
-  complex1.py
   complex.py
-  escaliers.py
-  flat_ground.py
-  lp_complex1.py
+  )
+SET(${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_PATH_SOURCES
   lp_complex_path.py
-  lp_complex.py
-  lp_stair_bauzil_10.py
-  lp_stair_bauzil_hrp2_path_10.py
   lp_stair_bauzil_hrp2_path.py
-  lp_stair_bauzil.py
-  stairs_10cm.py
+  lp_stair_bauzil_hrp2_path_10.py
   )
 
 SET(${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES
   __init__.py
-
-  complex1.py
-  constraints.py
-  lp_complex1_path.py
-  lp_complex1.py
+  complex.py
+  stairs.py
+  rubbles.py
+  )
+SET(${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_PATH_SOURCES
+  lp_complex_path.py
   lp_ramp_path.py
   lp_rubbles_path.py
-  lp_slalom_debris_path.py
-  lp_slalom_debris.py
-  maze.py
-  ramp_noGuide.py
-  rubbles.py
-  rubble_stairs.py
-  slalom_debris.py
+  lp_stairs_path.py
   )
 
 SET(${PROJECT_NAME}_RBPRM_SOURCES
   __init__.py
+  narrow_convex_hull.py
   constants_and_tools.py
   surfaces_from_planning.py
   )
 
 SET(${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES
   __init__.py
-  complex.py
-  constraints.py
-  escaliers.py
+  hrp2_complex.py
+  hrp2_stairs.py
+  talos_ramp.py
+  talos_rubble_stairs.py
+  problem_definition_talos.py
+  problem_definition_hrp2.py
   )
 
+  SET(${PROJECT_NAME}_STANDALONE_SURFACES_SOURCES
+  __init__.py
+  stair_surfaces.py
+  complex_surfaces.py
+  flat_ground.py
+  ramp_surfaces.py
+  inclined_surfaces.py
+  )
 SET(${PROJECT_NAME}_TOOLS_SOURCES
   __init__.py
   geom_utils.py
   obj_to_constraints.py
-  plot_plytopes.py
   plot_utils.py
-  polytope_conversion_utils.py
+  plot_tools.py
+  heightmap_tools.py
   transformations.py
   )
 
@@ -97,10 +102,25 @@ ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_SOURCES)
 FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/talos ${src})
 ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_SOURCES)
+FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_PATH_SOURCES})
+  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/talos/path_files ${src})
+ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_TALOS_PATH_SOURCES)
+
+FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES})
+  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/hrp2 ${src})
+ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_SOURCES)
+
+FOREACH(src ${${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_PATH_SOURCES})
+  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/planner_scenarios/hrp2/path_files/ ${src})
+ENDFOREACH(src ${PROJECT_NAME}_PLANNER_SCENARIOS_HRP2_PATH_SOURCES)
 
 FOREACH(src ${${PROJECT_NAME}_RBPRM_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/rbprm ${src})
 ENDFOREACH(src ${PROJECT_NAME}_RBPRM_SOURCES)
+
+FOREACH(src ${${PROJECT_NAME}_STANDALONE_SURFACES_SOURCES})
+  PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/stand_alone_scenarios/surfaces ${src})
+ENDFOREACH(src ${PROJECT_NAME}_STANDALONE_SURFACES_SOURCES)
 
 FOREACH(src ${${PROJECT_NAME}_STANDALONE_SCENARIOS_SOURCES})
   PYTHON_INSTALL_ON_SITE(${PROJECT_NAME}/stand_alone_scenarios ${src})
